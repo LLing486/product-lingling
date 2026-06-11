@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI 产品机会雷达</title>
+  <style>
+    :root {
+      --bg: #f1f5f9;
+      --surface: #fff;
+      --surface-2: #f8fafc;
+      --sidebar: #0f172a;
+      --ink: #0f172a;
+      --ink-2: #334155;
+      --muted: #64748b;
+      --subtle: #94a3b8;
+      --line: #e2e8f0;
+      --accent: #6366f1;
+      --accent-dim: #4f46e5;
+      --accent-bg: #eef2ff;
+      --accent-bd: #c7d2fe;
+      --good: #10b981;
+      --warn: #f59e0b;
+      --danger: #ef4444;
+      --shadow-sm: 0 1px 3px rgba(15,23,42,.06),0 1px 2px rgba(15,23,42,.04);
+      --shadow: 0 4px 16px rgba(15,23,42,.08),0 1px 4px rgba(15,23,42,.04);
+      --r: 10px; --r-sm: 6px;
+    }
+    *,*::before,*::after{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--ink);
+      font-family:Inter,"PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+      font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased}
+    button,input,textarea{font:inherit}
+
+    /* ── App shell ── */
+    .app{display:flex;min-height:100vh}
+
+    /* ── Sidebar ── */
+    .sidebar{width:228px;flex:0 0 228px;background:var(--sidebar);
+      display:flex;flex-direction:column;padding:20px 14px 24px;
+      position:sticky;top:0;height:100vh;overflow-y:auto}
+    .brand{display:flex;align-items:center;gap:10px;
+      padding:4px 6px 18px;border-bottom:1px solid rgba(255,255,255,.08);margin-bottom:8px}
+    .brand-icon{width:36px;height:36px;border-radius:9px;
+      background:linear-gradient(135deg,#818cf8,#38bdf8);
+      display:grid;place-items:center;flex:0 0 auto}
+    .brand-icon svg{width:20px;height:20px}
+    .brand-text strong{display:block;color:#f1f5f9;font-size:14px;font-weight:600;letter-spacing:-.01em}
+    .brand-text span{display:block;color:#475569;font-size:11px;margin-top:1px}
+    .nav{flex:1;display:flex;flex-direction:column;gap:2px}
+    .nav-item{display:flex;align-items:center;gap:9px;padding:9px 10px;
+      border-radius:var(--r-sm);border:0;background:transparent;color:#94a3b8;
+      cursor:pointer;text-align:left;font-size:13.5px;font-weight:500;transition:all .15s ease}
+    .nav-item:hover{background:rgba(255,255,255,.07);color:#e2e8f0}
+    .nav-item.active{background:rgba(99,102,241,.2);color:#a5b4fc}
+    .nav-item svg{width:16px;height:16px;stroke:currentColor;fill:none;
+      stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:0 0 auto}
+    .nav-badge{margin-left:auto;background:rgba(99,102,241,.3);color:#a5b4fc;
+      font-size:11px;font-weight:600;padding:1px 7px;border-radius:999px}
+    .sidebar-footer{margin-top:auto;padding-top:16px;border-top:1px solid rgba(255,255,255,.06)}
+    .src-badge{display:flex;align-items:center;gap:8px;padding:8px 10px;
+      border-radius:var(--r-sm);background:rgba(255,255,255,.04)}
+    .src-dot{width:7px;height:7px;border-radius:50%;background:#34d399;flex:0 0 auto}
+    .src-badge span{color:#475569;font-size:12px}
+    .src-badge strong{color:#94a3b8;font-size:12px}
+
+    /* ── Main ── */
+    .main{flex:1;min-width:0;display:flex;flex-direction:column}
+    .topbar{background:rgba(255,255,255,.88);backdrop-filter:blur(12px);
+      border-bottom:1px solid var(--line);padding:14px 28px;
+      position:sticky;top:0;z-index:20;
+      display:flex;align-items:center;justify-content:space-between;gap:16px}
+    .topbar-left h1{margin:0;font-size:18px;font-weight:700;letter-spacing:-.02em}
+    .topbar-left p{margin:3px 0 0;color:var(--muted);font-size:12.5px}
+    .topbar-right{display:flex;align-items:center;gap:8px}
+
+    /* ── Stat bar ── */
+    .stat-bar{display:flex;align-items:center;gap:18px;
+      padding:10px 28px;background:#fff;border-bottom:1px solid var(--line);
+      font-size:12.5px;color:var(--muted)}
+    .stat-item{display:flex;align-items:center;gap:6px}
+    .stat-item svg{width:13px;height:13px;stroke:currentColor;fill:none;
+      stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+    .stat-item strong{color:var(--ink-2);font-weight:600}
+    .stat-sep{color:var(--line)}
+
+    /* ── Views ── */
+    .view{display:none}
+    .view.active{display:block}
+
+    /* ── Today view ── */
+    .today-layout{padding:24px 28px}
+    .section-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+    .section-hd h2{margin:0;font-size:15px;font-weight:700}
+    .section-hd p{margin:4px 0 0;font-size:12.5px;color:var(--muted)}
+
+    /* loading */
+    .loading-wrap{display:flex;flex-direction:column;align-items:center;
+      justify-content:center;padding:80px 20px;gap:14px}
+    .spinner{width:32px;height:32px;border:3px solid var(--line);
+      border-top-color:var(--accent);border-radius:50%;
+      animation:spin .65s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .loading-wrap p{color:var(--muted);font-size:13px;margin:0}
+    .loading-steps{display:flex;flex-direction:column;gap:4px;align-items:center}
+    .loading-steps span{font-size:12px;color:var(--subtle)}
+    .loading-steps span.active{color:var(--accent)}
+
+    /* card grid */
+    .card-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+
+    .opp-card{background:var(--surface);border:1px solid var(--line);
+      border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow-sm);
+      cursor:pointer;transition:all .15s ease}
+    .opp-card:hover{box-shadow:var(--shadow);transform:translateY(-2px)}
+
+    .card-top{padding:18px 18px 14px;
+      background:linear-gradient(135deg,#1e1b4b 0%,#312e81 100%)}
+    .card-top-row{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px}
+    .card-score{display:flex;align-items:baseline;gap:2px}
+    .card-score .n{font-size:32px;font-weight:800;color:#fff;line-height:1;letter-spacing:-.02em}
+    .card-score .d{font-size:14px;color:rgba(255,255,255,.4)}
+    .dir-pill{padding:4px 9px;border-radius:999px;
+      background:rgba(255,255,255,.12);color:rgba(255,255,255,.8);
+      font-size:11.5px;font-weight:500;white-space:nowrap}
+    .card-top h3{margin:0;font-size:15px;font-weight:700;color:#fff;
+      line-height:1.35;letter-spacing:-.01em}
+
+    .card-body{padding:14px 18px}
+    .card-source{display:inline-flex;align-items:center;gap:5px;
+      padding:4px 10px;border-radius:999px;border:1px solid var(--accent-bd);
+      background:var(--accent-bg);color:var(--accent);font-size:11.5px;
+      font-weight:500;text-decoration:none;margin-bottom:10px;
+      max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .card-source svg{width:11px;height:11px;stroke:currentColor;fill:none;
+      stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:0 0 auto}
+    .card-pain{font-size:13px;color:var(--ink-2);line-height:1.55;
+      display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+    .card-footer{padding:10px 18px;border-top:1px solid var(--line);
+      display:flex;align-items:center;justify-content:space-between}
+    .card-footer-tags{display:flex;gap:5px;flex-wrap:wrap}
+    .tag{padding:2px 7px;border-radius:999px;background:#f1f5f9;
+      color:#475569;font-size:11.5px;font-weight:500}
+    .read-more{font-size:12px;color:var(--accent);display:flex;align-items:center;gap:4px;white-space:nowrap}
+    .read-more svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+    /* ── Detail Panel ── */
+    .detail-overlay{position:fixed;inset:0;background:rgba(15,23,42,.35);
+      z-index:30;opacity:0;pointer-events:none;transition:opacity .2s ease}
+    .detail-overlay.open{opacity:1;pointer-events:all}
+
+    .detail-panel{position:fixed;top:0;right:0;bottom:0;width:480px;
+      background:var(--surface);overflow-y:auto;z-index:31;
+      transform:translateX(100%);transition:transform .25s cubic-bezier(.22,1,.36,1);
+      box-shadow:-8px 0 32px rgba(15,23,42,.12)}
+    .detail-panel.open{transform:translateX(0)}
+
+    .detail-close{position:sticky;top:0;z-index:2;
+      display:flex;align-items:center;justify-content:space-between;
+      padding:14px 18px;background:rgba(255,255,255,.95);
+      backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+    .detail-close span{font-size:14px;font-weight:600;color:var(--ink-2)}
+    .close-btn{border:0;background:transparent;cursor:pointer;
+      color:var(--muted);padding:4px;border-radius:var(--r-sm)}
+    .close-btn:hover{background:#f1f5f9;color:var(--ink)}
+    .close-btn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+    .detail-hero{padding:22px 20px 18px;
+      background:linear-gradient(135deg,#1e1b4b 0%,#312e81 100%)}
+    .dh-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px}
+    .dh-score .n{font-size:42px;font-weight:800;color:#fff;line-height:1;letter-spacing:-.02em}
+    .dh-score .d{font-size:18px;color:rgba(255,255,255,.4)}
+    .dh-score .sub{font-size:11px;color:rgba(255,255,255,.45);margin-top:3px}
+    .detail-hero h2{margin:0;font-size:18px;font-weight:700;color:#fff;line-height:1.35}
+
+    .detail-source{padding:12px 20px;border-bottom:1px solid var(--line);
+      display:flex;align-items:center;gap:8px;background:#fafbfc}
+    .detail-source span{font-size:12px;color:var(--muted)}
+    .detail-source a{display:inline-flex;align-items:center;gap:5px;
+      color:var(--accent);font-size:12.5px;font-weight:500;text-decoration:none;
+      flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .detail-source a:hover{text-decoration:underline}
+    .detail-source a svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:0 0 auto}
+
+    .detail-fields{padding:16px 20px;border-bottom:1px solid var(--line);display:grid;gap:10px}
+    .df{display:grid;grid-template-columns:82px 1fr;gap:6px;font-size:13px}
+    .df-lbl{color:var(--muted);font-weight:500;padding-top:1px}
+    .df-val{color:var(--ink-2);line-height:1.55}
+
+    .detail-score-section{padding:14px 20px;border-bottom:1px solid var(--line)}
+    .sec-label{font-size:11px;font-weight:600;color:var(--muted);
+      text-transform:uppercase;letter-spacing:.06em;margin-bottom:11px}
+    .dim-row{display:grid;grid-template-columns:82px 1fr 34px;gap:8px;
+      align-items:center;margin-bottom:7px}
+    .dim-row:last-child{margin-bottom:0}
+    .dm-meta{display:flex;flex-direction:column;gap:1px}
+    .dm-name{font-size:12px;font-weight:500;color:var(--ink-2)}
+    .dm-wt{font-size:11px;color:var(--subtle)}
+    .bar-wrap{height:6px;background:#f1f5f9;border-radius:999px;overflow:hidden}
+    .bar-fill{height:100%;border-radius:999px;transition:width .85s cubic-bezier(.22,1,.36,1)}
+    .bar-fill.s5{background:linear-gradient(90deg,#10b981,#34d399)}
+    .bar-fill.s4{background:linear-gradient(90deg,#3b82f6,#60a5fa)}
+    .bar-fill.s3{background:linear-gradient(90deg,#f59e0b,#fbbf24)}
+    .bar-fill.s2{background:linear-gradient(90deg,#f97316,#fb923c)}
+    .bar-fill.s1{background:linear-gradient(90deg,#ef4444,#f87171)}
+    .dm-score{font-size:12px;font-weight:600;color:var(--ink-2);text-align:right}
+    .score-total-row{margin-top:11px;padding-top:10px;border-top:1px dashed var(--line);
+      display:flex;align-items:center;justify-content:space-between}
+    .score-total-row span{font-size:12px;color:var(--muted)}
+    .score-total-row strong{font-size:20px;font-weight:800;color:var(--accent)}
+
+    .detail-notes{padding:12px 20px;display:grid;gap:8px}
+    .note{padding:10px 12px;border-radius:7px;font-size:12.5px;line-height:1.55}
+    .note.risk{background:#fff7ed;border:1px solid #fed7aa;color:#7c2d12}
+    .note.check{background:#f0fdf4;border:1px solid #bbf7d0;color:#14532d}
+    .note strong{display:block;margin-bottom:3px;font-size:11px;text-transform:uppercase;letter-spacing:.05em;opacity:.7}
+
+    /* ── Library view ── */
+    .library-layout{padding:24px 28px}
+    .lib-toolbar{display:flex;align-items:center;gap:12px;margin-bottom:18px;flex-wrap:wrap}
+    .search-wrap{flex:0 0 260px;position:relative}
+    .search-input{width:100%;height:38px;border:1.5px solid var(--line);border-radius:var(--r-sm);
+      padding:0 12px 0 36px;background:var(--surface);color:var(--ink);
+      font-size:13.5px;outline:none;transition:border-color .15s ease}
+    .search-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(99,102,241,.1)}
+    .search-ico{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--subtle);pointer-events:none}
+    .search-ico svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+    .chips{display:flex;gap:6px;flex-wrap:wrap}
+    .chip{padding:5px 12px;border-radius:999px;border:1.5px solid var(--line);
+      background:var(--surface);color:var(--muted);font-size:12.5px;font-weight:500;
+      cursor:pointer;transition:all .12s ease}
+    .chip:hover{border-color:var(--accent-bd);color:var(--accent);background:var(--accent-bg)}
+    .chip.active{border-color:var(--accent);background:var(--accent);color:white}
+    .lib-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+    .lib-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
+      overflow:hidden;box-shadow:var(--shadow-sm);cursor:pointer;transition:all .15s ease}
+    .lib-card:hover{box-shadow:var(--shadow);transform:translateY(-2px)}
+    .lib-top{padding:12px 14px 10px;background:linear-gradient(135deg,#1e1b4b,#2d2777)}
+    .lib-score{display:flex;align-items:baseline;gap:2px;margin-bottom:6px}
+    .lib-score .n{font-size:22px;font-weight:800;color:#fff;line-height:1}
+    .lib-score .d{font-size:12px;color:rgba(255,255,255,.4)}
+    .lib-card h3{margin:0;font-size:13px;font-weight:600;color:#fff;line-height:1.35}
+    .lib-body{padding:10px 14px;display:grid;gap:5px}
+    .lf{font-size:12px}
+    .lf-l{font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+    .lf-v{color:var(--ink-2);margin-top:1px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+    .lib-foot{padding:8px 14px;border-top:1px solid var(--line);display:flex;gap:4px;flex-wrap:wrap}
+    .lib-empty{grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--subtle);font-size:13px}
+
+    /* ── Feed view ── */
+    .feed-layout{padding:24px 28px}
+    .feed-meta{font-size:12.5px;color:var(--muted);margin-bottom:16px}
+    .feed-meta a{color:var(--accent);text-decoration:none}
+    .feed-meta a:hover{text-decoration:underline}
+    .feed-list{display:grid;gap:8px}
+    .feed-item{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);
+      padding:12px 16px;display:flex;align-items:flex-start;gap:12px}
+    .feed-item.converted{border-left:3px solid var(--accent)}
+    .feed-item-main{flex:1;min-width:0}
+    .feed-item-main a{color:var(--ink);font-size:13.5px;font-weight:500;
+      text-decoration:none;line-height:1.4}
+    .feed-item-main a:hover{color:var(--accent)}
+    .feed-item-meta{margin-top:3px;font-size:12px;color:var(--subtle)}
+    .conv-badge{flex:0 0 auto;padding:3px 8px;border-radius:999px;
+      background:var(--accent-bg);color:var(--accent);font-size:11px;font-weight:600}
+    .feed-empty{text-align:center;padding:60px 20px;color:var(--subtle);font-size:13px}
+
+    /* ── Btn ── */
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;
+      height:36px;padding:0 14px;border-radius:var(--r-sm);border:1px solid var(--line);
+      background:var(--surface);color:var(--ink-2);font-size:13px;font-weight:500;
+      cursor:pointer;transition:all .15s ease;white-space:nowrap}
+    .btn:hover{background:#f8fafc;border-color:#cbd5e1}
+    .btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+    .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+    .btn.primary:hover{background:var(--accent-dim);border-color:var(--accent-dim)}
+
+    /* ── Anim ── */
+    @keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+    .fade-up{animation:fadeUp .2s ease forwards}
+
+    /* ── Responsive ── */
+    @media(max-width:1100px){
+      .card-grid{grid-template-columns:1fr}
+      .lib-grid{grid-template-columns:repeat(2,1fr)}
+      .sidebar{display:none}
+      .detail-panel{width:100%}
+    }
+    @media(max-width:720px){
+      .lib-grid{grid-template-columns:1fr}
+      .today-layout,.library-layout,.feed-layout{padding:14px}
+      .topbar{padding:12px 16px}
+      .stat-bar{padding:8px 16px;flex-wrap:wrap;gap:10px}
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-icon">
+        <svg viewBox="0 0 24 24" fill="white"><path d="M12 2 9.1 9.1 2 12l7.1 2.9L12 22l2.9-7.1L22 12l-7.1-2.9z"/></svg>
+      </div>
+      <div class="brand-text">
+        <strong>机会雷达</strong>
+        <span>AI Product Radar</span>
+      </div>
+    </div>
+    <nav class="nav">
+      <button class="nav-item active" data-view="today" type="button">
+        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></svg>
+        今日机会
+        <span class="nav-badge" id="today-badge">—</span>
+      </button>
+      <button class="nav-item" data-view="library" type="button">
+        <svg viewBox="0 0 24 24"><path d="M4 19V5a2 2 0 0 1 2-2h14"/><path d="M8 21h12a2 2 0 0 0 2-2V7a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v13a2 2 0 0 0 2 2"/></svg>
+        机会库
+        <span class="nav-badge" id="lib-badge">—</span>
+      </button>
+      <button class="nav-item" data-view="feed" type="button">
+        <svg viewBox="0 0 24 24"><path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="2"/></svg>
+        信息源
+      </button>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="src-badge">
+        <div class="src-dot"></div>
+        <span>来源</span>
+        <strong>AI HOT 精选</strong>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+    <header class="topbar">
+      <div class="topbar-left">
+        <h1 id="page-title">今日机会</h1>
+        <p id="page-sub">正在从 AI HOT 精选加载今日内容…</p>
+      </div>
+      <div class="topbar-right">
+        <button class="btn" id="refresh-btn" type="button">
+          <svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.3-6.1"/><path d="M21 3v6h-6"/></svg>
+          刷新
+        </button>
+      </div>
+    </header>
+
+    <div class="stat-bar" id="stat-bar" style="display:none">
+      <span class="stat-item">
+        <svg viewBox="0 0 24 24"><path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="2"/></svg>
+        <span>抓取</span><strong id="stat-fetched">—</strong><span>条</span>
+      </span>
+      <span class="stat-sep">·</span>
+      <span class="stat-item">
+        <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        <span>生成</span><strong id="stat-cards">4</strong><span>张机会卡</span>
+      </span>
+      <span class="stat-sep">·</span>
+      <span class="stat-item">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+        <span>更新于</span><strong id="stat-time">—</strong>
+      </span>
+    </div>
+
+    <!-- Today view -->
+    <section class="view active" id="view-today">
+      <div class="today-layout">
+        <!-- Loading state -->
+        <div id="today-loading" class="loading-wrap">
+          <div class="spinner"></div>
+          <div class="loading-steps">
+            <span id="ls1" class="active">正在订阅 AI HOT 精选 feed…</span>
+            <span id="ls2">DeepSeek 分析行业信号中…</span>
+            <span id="ls3">生成产品机会卡…</span>
+          </div>
+        </div>
+        <!-- Error state -->
+        <div id="today-error" style="display:none">
+          <div class="loading-wrap">
+            <svg viewBox="0 0 24 24" width="40" height="40" stroke="#ef4444" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+            <p id="today-error-msg">加载失败，请稍后重试</p>
+            <button class="btn primary" onclick="init()">重新加载</button>
+          </div>
+        </div>
+        <!-- Cards -->
+        <div id="today-cards" style="display:none">
+          <div class="section-hd">
+            <div><h2 id="today-date-hd">今日机会</h2></div>
+          </div>
+          <div class="card-grid" id="card-grid"></div>
+        </div>
+        <!-- Empty state -->
+        <div id="today-empty" style="display:none">
+          <div class="loading-wrap">
+            <svg viewBox="0 0 24 24" width="40" height="40" stroke="#94a3b8" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+            <p>暂无今日机会卡，请先生成</p>
+            <button class="btn primary" id="generate-btn">手动生成</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Library view -->
+    <section class="view" id="view-library">
+      <div class="library-layout">
+        <div class="lib-toolbar">
+          <div class="search-wrap">
+            <div class="search-ico"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></div>
+            <input class="search-input" type="text" id="lib-search" placeholder="搜索机会标题或关键词…">
+          </div>
+          <div class="chips" id="filter-chips">
+            <button class="chip active" data-f="" type="button">全部</button>
+            <button class="chip" data-f="Agent" type="button">Agent</button>
+            <button class="chip" data-f="AI 办公" type="button">AI 办公</button>
+            <button class="chip" data-f="AI 编程" type="button">AI 编程</button>
+            <button class="chip" data-f="大模型" type="button">大模型</button>
+            <button class="chip" data-f="AI 营销" type="button">AI 营销</button>
+          </div>
+        </div>
+        <!-- Loading -->
+        <div id="lib-loading" class="loading-wrap" style="display:none">
+          <div class="spinner"></div>
+          <p>加载机会库…</p>
+        </div>
+        <!-- Grid -->
+        <div class="lib-grid" id="lib-grid"></div>
+      </div>
+    </section>
+
+    <!-- Feed view -->
+    <section class="view" id="view-feed">
+      <div class="feed-layout">
+        <div class="feed-meta">
+          订阅源：<a href="https://aihot.virxact.com/feed.xml" target="_blank">https://aihot.virxact.com/feed.xml</a>
+          &nbsp;·&nbsp; AI HOT 精选，每日精编候选池
+        </div>
+        <!-- Loading -->
+        <div id="feed-loading" class="loading-wrap">
+          <div class="spinner"></div>
+          <p>正在加载信息源…</p>
+        </div>
+        <!-- Error -->
+        <div id="feed-error" style="display:none">
+          <div class="loading-wrap">
+            <p id="feed-error-msg">加载失败</p>
+            <button class="btn" onclick="loadFeed()">重试</button>
+          </div>
+        </div>
+        <div class="feed-list" id="feed-list" style="display:none"></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- Detail panel overlay -->
+<div class="detail-overlay" id="overlay"></div>
+
+<!-- Detail panel -->
+<div class="detail-panel" id="detail-panel">
+  <div class="detail-close">
+    <span>机会卡详情</span>
+    <button class="close-btn" id="close-detail" type="button">
+      <svg viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+    </button>
+  </div>
+
+  <div class="detail-hero">
+    <div class="dh-top">
+      <div class="dh-score">
+        <div style="display:flex;align-items:baseline;gap:3px">
+          <span class="n" id="d-score-n">8.2</span>
+          <span class="d">/10</span>
+        </div>
+        <div class="sub">综合机会评分</div>
+      </div>
+      <span class="dir-pill" id="d-dir">Agent</span>
+    </div>
+    <h2 id="d-title"></h2>
+  </div>
+
+  <div class="detail-source">
+    <span>来源</span>
+    <a id="d-source-link" href="#" target="_blank">
+      <svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+      <span id="d-source-text"></span>
+    </a>
+  </div>
+
+  <div class="detail-fields">
+    <div class="df"><span class="df-lbl">用户是谁</span><span class="df-val" id="d-user"></span></div>
+    <div class="df"><span class="df-lbl">用户痛点</span><span class="df-val" id="d-pain"></span></div>
+    <div class="df"><span class="df-lbl">为什么 AI</span><span class="df-val" id="d-why"></span></div>
+    <div class="df"><span class="df-lbl">MVP 方案</span><span class="df-val" id="d-mvp"></span></div>
+  </div>
+
+  <div class="detail-score-section">
+    <div class="sec-label">6 维度评分明细</div>
+    <div id="d-dims"></div>
+    <div class="score-total-row">
+      <span>加权总分（满分 10 分）</span>
+      <strong id="d-total"></strong>
+    </div>
+  </div>
+
+  <div class="detail-notes">
+    <div class="note risk"><strong>主要风险</strong><span id="d-risk"></span></div>
+    <div class="note check"><strong>下一步验证</strong><span id="d-check"></span></div>
+  </div>
+</div>
+
+<script>
+// ── Constants ──
+const API_BASE = 'http://localhost:8000';
+
+// 6 dimensions config — keys match backend DeepSeek output
+const DIMS = [
+  { key:'pain_real',         name:'痛点真实性', weight:.20 },
+  { key:'ai_fit',            name:'AI 适配度',  weight:.20 },
+  { key:'market_size',       name:'市场规模',   weight:.15 },
+  { key:'competition',       name:'竞争强度',   weight:.10 },
+  { key:'tech_feasibility',  name:'技术可行性', weight:.15 },
+  { key:'monetization',      name:'商业化潜力', weight:.20 },
+];
+
+function scoreCls(v) {
+  return v>=5?'s5':v>=4?'s4':v>=3?'s3':v>=2?'s2':'s1';
+}
+
+// ── State ──
+let todayCards   = [];
+let allCards     = [];
+let allFeedItems = [];
+let activeFilter = '';
+let searchTimer  = null;
+
+// ── Utilities ──
+function today() {
+  const d = new Date();
+  return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;
+}
+
+function stripHtml(s) {
+  return (s||'').replace(/<[^>]+>/g,'').replace(/&nbsp;/g,' ').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').trim();
+}
+
+function shortTitle(s, max=36) {
+  const t = stripHtml(s);
+  return t.length > max ? t.slice(0, max)+'…' : t;
+}
+
+function sourceHost(url) {
+  try { return new URL(url).hostname.replace('www.',''); } catch { return url; }
+}
+
+function fmtDate(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  if (isNaN(d)) return dateStr;
+  return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;
+}
+
+/** Get total score from a card's score object */
+function getScoreTotal(score) {
+  if (!score) return 0;
+  if (typeof score.total === 'number') return score.total;
+  // Fallback: calculate from values
+  let weighted = 0, totalW = 0;
+  for (const d of DIMS) {
+    const entry = score[d.key];
+    const val = typeof entry === 'object' ? (entry.value || 0) : (entry || 0);
+    weighted += val * d.weight;
+    totalW += d.weight;
+  }
+  return Math.round(weighted / (5 * totalW) * 10 * 10) / 10;
+}
+
+/** Get dimension value (handles both {value, reason} and plain number) */
+function getDimValue(score, key) {
+  if (!score) return 0;
+  const entry = score[key];
+  if (entry && typeof entry === 'object') return entry.value || 0;
+  return entry || 0;
+}
+
+// ── API helpers ──
+async function apiFetch(path, opts = {}) {
+  const res = await fetch(API_BASE + path, {
+    ...opts,
+    signal: AbortSignal.timeout(30000),
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`API ${res.status}: ${text}`);
+  }
+  return res.json();
+}
+
+// ── Loading steps animation ──
+function animateLoadingSteps() {
+  const steps = ['ls1','ls2','ls3'];
+  let i = 0;
+  const iv = setInterval(() => {
+    if (i > 0) document.getElementById(steps[i-1])?.classList.remove('active');
+    if (i < steps.length) document.getElementById(steps[i])?.classList.add('active');
+    else clearInterval(iv);
+    i++;
+  }, 700);
+  return iv;
+}
+
+// ── Init: load today's cards ──
+async function init() {
+  // Show loading
+  document.getElementById('today-loading').style.display = '';
+  document.getElementById('today-cards').style.display   = 'none';
+  document.getElementById('today-error').style.display   = 'none';
+  document.getElementById('today-empty').style.display    = 'none';
+  document.getElementById('stat-bar').style.display       = 'none';
+  document.getElementById('page-sub').textContent = '正在从 AI HOT 精选加载今日内容…';
+
+  const iv = animateLoadingSteps();
+
+  try {
+    const data = await apiFetch('/api/today');
+    todayCards = data.cards || [];
+
+    clearInterval(iv);
+
+    if (todayCards.length === 0) {
+      document.getElementById('today-loading').style.display = 'none';
+      document.getElementById('today-empty').style.display   = '';
+      document.getElementById('page-sub').textContent = '暂无今日机会卡，可手动触发生成';
+      return;
+    }
+
+    // Update stats
+    document.getElementById('stat-fetched').textContent = '—';
+    document.getElementById('stat-cards').textContent   = todayCards.length;
+    document.getElementById('stat-time').textContent    = new Date().toLocaleTimeString('zh-CN', { hour:'2-digit', minute:'2-digit' });
+    document.getElementById('stat-bar').style.display   = '';
+    document.getElementById('today-badge').textContent  = todayCards.length;
+    document.getElementById('page-sub').textContent     = `${today()} · AI HOT 精选 · 已生成 ${todayCards.length} 张机会卡`;
+    document.getElementById('today-date-hd').textContent = `${today()} 机会`;
+
+    renderTodayCards();
+
+    document.getElementById('today-loading').style.display = 'none';
+    document.getElementById('today-cards').style.display   = '';
+
+  } catch (e) {
+    clearInterval(iv);
+    console.error('Failed to load today cards:', e);
+    document.getElementById('today-loading').style.display = 'none';
+    document.getElementById('today-error').style.display   = '';
+    document.getElementById('today-error-msg').textContent = `加载失败：${e.message}`;
+    document.getElementById('page-sub').textContent = '加载失败';
+  }
+}
+
+// ── Render today cards ──
+function renderTodayCards() {
+  const grid = document.getElementById('card-grid');
+  grid.innerHTML = '';
+  todayCards.forEach((card, i) => {
+    const score = getScoreTotal(card.score);
+    const el = document.createElement('div');
+    el.className = 'opp-card fade-up';
+    el.style.animationDelay = (i * 80) + 'ms';
+    el.innerHTML = `
+      <div class="card-top">
+        <div class="card-top-row">
+          <div class="card-score"><span class="n">${score.toFixed(1)}</span><span class="d">/10</span></div>
+          <span class="dir-pill">${card.direction || ''}</span>
+        </div>
+        <h3>${card.title || ''}</h3>
+      </div>
+      <div class="card-body">
+        <a class="card-source" href="${card.source_url || '#'}" target="_blank" onclick="event.stopPropagation()">
+          <svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+          ${shortTitle(card.source_title || card.source_url || '', 40)}
+        </a>
+        <div class="card-pain">${card.pain_point || ''}</div>
+      </div>
+      <div class="card-footer">
+        <div class="card-footer-tags"><span class="tag">${card.direction || ''}</span></div>
+        <span class="read-more">查看分析 <svg viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg></span>
+      </div>`;
+    el.addEventListener('click', () => openDetail(card));
+    grid.appendChild(el);
+  });
+}
+
+// ── Library: fetch & render ──
+async function loadLibrary() {
+  const grid = document.getElementById('lib-grid');
+  const loading = document.getElementById('lib-loading');
+  loading.style.display = '';
+  grid.innerHTML = '';
+
+  const keyword = document.getElementById('lib-search').value || '';
+  const direction = activeFilter;
+
+  const params = new URLSearchParams();
+  if (keyword) params.set('keyword', keyword);
+  if (direction) params.set('direction', direction);
+  const qs = params.toString();
+
+  try {
+    const data = await apiFetch('/api/cards' + (qs ? '?' + qs : ''));
+    allCards = data.cards || [];
+    document.getElementById('lib-badge').textContent = allCards.length;
+    renderLibraryCards(allCards);
+  } catch (e) {
+    console.error('Failed to load library:', e);
+    grid.innerHTML = `<div class="lib-empty">加载失败：${e.message}</div>`;
+  } finally {
+    loading.style.display = 'none';
+  }
+}
+
+function renderLibraryCards(cards) {
+  const grid = document.getElementById('lib-grid');
+  grid.innerHTML = '';
+  if (!cards.length) {
+    grid.innerHTML = '<div class="lib-empty">暂无匹配的机会卡</div>';
+    return;
+  }
+  cards.forEach(c => {
+    const score = getScoreTotal(c.score);
+    const el = document.createElement('div');
+    el.className = 'lib-card fade-up';
+    el.innerHTML = `
+      <div class="lib-top">
+        <div class="lib-score"><span class="n">${score.toFixed(1)}</span><span class="d">/10</span></div>
+        <h3>${c.title || ''}</h3>
+      </div>
+      <div class="lib-body">
+        <div class="lf"><div class="lf-l">目标用户</div><div class="lf-v">${c.user_persona || ''}</div></div>
+        <div class="lf"><div class="lf-l">核心痛点</div><div class="lf-v">${c.pain_point || ''}</div></div>
+      </div>
+      <div class="lib-foot"><span class="tag">${c.direction || ''}</span></div>`;
+    el.addEventListener('click', () => openDetail(c));
+    grid.appendChild(el);
+  });
+}
+
+// ── Feed: fetch & render ──
+async function loadFeed() {
+  const list = document.getElementById('feed-list');
+  const loading = document.getElementById('feed-loading');
+  const error = document.getElementById('feed-error');
+  loading.style.display = '';
+  error.style.display = 'none';
+  list.style.display = 'none';
+
+  try {
+    const data = await apiFetch('/api/rss');
+    allFeedItems = data.items || [];
+    loading.style.display = 'none';
+    list.style.display = '';
+    renderFeed();
+  } catch (e) {
+    console.error('Failed to load feed:', e);
+    loading.style.display = 'none';
+    error.style.display = '';
+    document.getElementById('feed-error-msg').textContent = `加载失败：${e.message}`;
+  }
+}
+
+function renderFeed() {
+  const list = document.getElementById('feed-list');
+  list.innerHTML = '';
+  if (!allFeedItems.length) {
+    list.innerHTML = '<div class="feed-empty">暂无内容</div>';
+    return;
+  }
+  // Collect source URLs from today's cards to mark "converted"
+  const convertedLinks = new Set(todayCards.map(c => c.source_url).filter(Boolean));
+
+  allFeedItems.forEach(item => {
+    const url = item.url || '';
+    const isConv = convertedLinks.has(url);
+    const el = document.createElement('div');
+    el.className = 'feed-item' + (isConv ? ' converted' : '');
+    el.innerHTML = `
+      <div class="feed-item-main">
+        <a href="${url}" target="_blank">${stripHtml(item.title || '(无标题)')}</a>
+        <div class="feed-item-meta">${item.published_at ? fmtDate(item.published_at) : ''} · ${sourceHost(url)}</div>
+      </div>
+      ${isConv ? '<span class="conv-badge">已生成机会卡</span>' : ''}`;
+    list.appendChild(el);
+  });
+}
+
+// ── Detail panel ──
+function openDetail(card) {
+  const score = getScoreTotal(card.score);
+  document.getElementById('d-score-n').textContent = score.toFixed(1);
+  document.getElementById('d-dir').textContent     = card.direction || '';
+  document.getElementById('d-title').textContent   = card.title || '';
+  document.getElementById('d-source-link').href    = card.source_url || '#';
+  document.getElementById('d-source-text').textContent = shortTitle(card.source_title || card.source_url || '', 50);
+  document.getElementById('d-user').textContent    = card.user_persona || '';
+  document.getElementById('d-pain').textContent    = card.pain_point || '';
+  document.getElementById('d-why').textContent     = card.ai_solution || '';
+  document.getElementById('d-mvp').textContent     = card.mvp_plan || '';
+  document.getElementById('d-risk').textContent    = card.risks || '';
+  document.getElementById('d-check').textContent   = card.next_step || '';
+  document.getElementById('d-total').textContent   = score.toFixed(1) + ' / 10';
+  renderDims(card.score, document.getElementById('d-dims'));
+  document.getElementById('overlay').classList.add('open');
+  document.getElementById('detail-panel').classList.add('open');
+}
+
+function closeDetail() {
+  document.getElementById('overlay').classList.remove('open');
+  document.getElementById('detail-panel').classList.remove('open');
+}
+
+document.getElementById('close-detail').addEventListener('click', closeDetail);
+document.getElementById('overlay').addEventListener('click', closeDetail);
+
+function renderDims(scoreObj, container) {
+  container.innerHTML = '';
+  DIMS.forEach(d => {
+    const v = getDimValue(scoreObj, d.key);
+    const row = document.createElement('div');
+    row.className = 'dim-row';
+    row.innerHTML = `
+      <div class="dm-meta"><span class="dm-name">${d.name}</span><span class="dm-wt">×${Math.round(d.weight*100)}%</span></div>
+      <div class="bar-wrap"><div class="bar-fill ${scoreCls(v)}" style="width:0" data-w="${v/5*100}%"></div></div>
+      <span class="dm-score">${v}/5</span>`;
+    container.appendChild(row);
+  });
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    container.querySelectorAll('.bar-fill').forEach(el => { el.style.width = el.dataset.w; });
+  }));
+}
+
+// ── Navigation ──
+let libraryLoaded = false;
+let feedLoaded = false;
+
+document.querySelectorAll('.nav-item[data-view]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const v = btn.dataset.view;
+    document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+    document.getElementById('view-'+v).classList.add('active');
+    if (v === 'today') {
+      document.getElementById('page-title').textContent = '今日机会';
+      document.getElementById('page-sub').textContent   = `${today()} · AI HOT 精选 · 已生成 ${todayCards.length} 张机会卡`;
+    } else if (v === 'library') {
+      document.getElementById('page-title').textContent = '机会库';
+      document.getElementById('page-sub').textContent   = '正在加载…';
+      loadLibrary().then(() => {
+        document.getElementById('page-sub').textContent = `共 ${allCards.length} 张机会卡`;
+      });
+    } else if (v === 'feed') {
+      document.getElementById('page-title').textContent = '信息源';
+      document.getElementById('page-sub').textContent   = 'AI HOT 精选';
+      if (!feedLoaded) {
+        loadFeed().then(() => {
+          feedLoaded = true;
+          document.getElementById('page-sub').textContent = `AI HOT 精选 · ${allFeedItems.length} 条`;
+        });
+      } else {
+        document.getElementById('page-sub').textContent = `AI HOT 精选 · ${allFeedItems.length} 条`;
+      }
+    }
+  });
+});
+
+// ── Library filters ──
+document.getElementById('filter-chips').addEventListener('click', e => {
+  const chip = e.target.closest('.chip');
+  if (!chip) return;
+  activeFilter = chip.dataset.f;
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  chip.classList.add('active');
+  loadLibrary();
+});
+
+document.getElementById('lib-search').addEventListener('input', () => {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => loadLibrary(), 300);
+});
+
+// ── Refresh ──
+document.getElementById('refresh-btn').addEventListener('click', () => {
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  document.querySelector('.nav-item[data-view="today"]').classList.add('active');
+  document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+  document.getElementById('view-today').classList.add('active');
+  document.getElementById('page-title').textContent = '今日机会';
+  feedLoaded = false;
+  init();
+});
+
+// ── Generate button (manual trigger) ──
+document.getElementById('generate-btn').addEventListener('click', async () => {
+  const btn = document.getElementById('generate-btn');
+  btn.disabled = true;
+  btn.textContent = '生成中…';
+  try {
+    await apiFetch('/api/generate', { method: 'POST' });
+    await init();
+  } catch (e) {
+    alert('生成失败：' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '手动生成';
+  }
+});
+
+// ── Start ──
+init();
+</script>
+</body>
+</html>
