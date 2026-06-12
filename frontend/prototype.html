@@ -58,6 +58,19 @@
     .nav-badge{margin-left:auto;background:rgba(99,102,241,.3);color:#a5b4fc;
       font-size:11px;font-weight:600;padding:1px 7px;border-radius:999px}
     .sidebar-footer{margin-top:auto;padding-top:16px;border-top:1px solid rgba(255,255,255,.06)}
+
+    /* ── Hamburger (hidden on desktop) ── */
+    .hamburger{display:none;align-items:center;justify-content:center;
+      width:36px;height:36px;border:0;background:transparent;cursor:pointer;
+      padding:0;flex:0 0 auto;border-radius:var(--r-sm)}
+    .hamburger:hover{background:#f1f5f9}
+    .hamburger span{display:block;width:20px;height:2px;background:var(--ink);
+      border-radius:2px;transition:all .2s ease}
+    .hamburger span+span{margin-top:5px}
+
+    /* ── Sidebar overlay (mobile) ── */
+    .sidebar-overlay{display:none}
+
     .src-badge{display:flex;align-items:center;gap:8px;padding:8px 10px;
       border-radius:var(--r-sm);background:rgba(255,255,255,.04)}
     .src-dot{width:7px;height:7px;border-radius:50%;background:#34d399;flex:0 0 auto}
@@ -283,7 +296,14 @@
     @media(max-width:1100px){
       .card-grid{grid-template-columns:1fr}
       .lib-grid{grid-template-columns:repeat(2,1fr)}
-      .sidebar{display:none}
+      .hamburger{display:flex}
+      .sidebar{position:fixed;top:0;left:0;bottom:0;z-index:1000;
+        transform:translateX(-100%);transition:transform .25s cubic-bezier(.22,1,.36,1);
+        box-shadow:none}
+      .sidebar.open{transform:translateX(0);box-shadow:8px 0 32px rgba(15,23,42,.2)}
+      .sidebar-overlay{display:block;position:fixed;inset:0;background:rgba(15,23,42,.35);
+        z-index:999;opacity:0;pointer-events:none;transition:opacity .2s ease}
+      .sidebar-overlay.open{opacity:1;pointer-events:all}
       .detail-panel{width:100%}
     }
     @media(max-width:720px){
@@ -296,6 +316,9 @@
 </head>
 <body>
 <div class="app">
+
+  <!-- Sidebar overlay (mobile) -->
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
   <!-- Sidebar -->
   <aside class="sidebar">
@@ -312,12 +335,12 @@
       <button class="nav-item active" data-view="today" type="button">
         <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></svg>
         今日机会
-        <span class="nav-badge" id="today-badge">—</span>
+        <span class="nav-badge" id="today-badge">4</span>
       </button>
       <button class="nav-item" data-view="library" type="button">
         <svg viewBox="0 0 24 24"><path d="M4 19V5a2 2 0 0 1 2-2h14"/><path d="M8 21h12a2 2 0 0 0 2-2V7a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v13a2 2 0 0 0 2 2"/></svg>
         机会库
-        <span class="nav-badge" id="lib-badge">—</span>
+        <span class="nav-badge" id="lib-badge">3</span>
       </button>
       <button class="nav-item" data-view="feed" type="button">
         <svg viewBox="0 0 24 24"><path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="2"/></svg>
@@ -337,6 +360,9 @@
   <main class="main">
     <header class="topbar">
       <div class="topbar-left">
+        <button class="hamburger" id="hamburger-btn" type="button" aria-label="菜单">
+          <span></span><span></span><span></span>
+        </button>
         <h1 id="page-title">今日机会</h1>
         <p id="page-sub">正在从 AI HOT 精选加载今日内容…</p>
       </div>
@@ -377,28 +403,12 @@
             <span id="ls3">生成产品机会卡…</span>
           </div>
         </div>
-        <!-- Error state -->
-        <div id="today-error" style="display:none">
-          <div class="loading-wrap">
-            <svg viewBox="0 0 24 24" width="40" height="40" stroke="#ef4444" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
-            <p id="today-error-msg">加载失败，请稍后重试</p>
-            <button class="btn primary" onclick="init()">重新加载</button>
-          </div>
-        </div>
         <!-- Cards -->
         <div id="today-cards" style="display:none">
           <div class="section-hd">
             <div><h2 id="today-date-hd">今日机会</h2></div>
           </div>
           <div class="card-grid" id="card-grid"></div>
-        </div>
-        <!-- Empty state -->
-        <div id="today-empty" style="display:none">
-          <div class="loading-wrap">
-            <svg viewBox="0 0 24 24" width="40" height="40" stroke="#94a3b8" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
-            <p>暂无今日机会卡，请先生成</p>
-            <button class="btn primary" id="generate-btn">手动生成</button>
-          </div>
         </div>
       </div>
     </section>
@@ -412,7 +422,7 @@
             <input class="search-input" type="text" id="lib-search" placeholder="搜索机会标题或关键词…">
           </div>
           <div class="chips" id="filter-chips">
-            <button class="chip active" data-f="" type="button">全部</button>
+            <button class="chip active" data-f="全部" type="button">全部</button>
             <button class="chip" data-f="Agent" type="button">Agent</button>
             <button class="chip" data-f="AI 办公" type="button">AI 办公</button>
             <button class="chip" data-f="AI 编程" type="button">AI 编程</button>
@@ -420,12 +430,6 @@
             <button class="chip" data-f="AI 营销" type="button">AI 营销</button>
           </div>
         </div>
-        <!-- Loading -->
-        <div id="lib-loading" class="loading-wrap" style="display:none">
-          <div class="spinner"></div>
-          <p>加载机会库…</p>
-        </div>
-        <!-- Grid -->
         <div class="lib-grid" id="lib-grid"></div>
       </div>
     </section>
@@ -435,21 +439,11 @@
       <div class="feed-layout">
         <div class="feed-meta">
           订阅源：<a href="https://aihot.virxact.com/feed.xml" target="_blank">https://aihot.virxact.com/feed.xml</a>
-          &nbsp;·&nbsp; AI HOT 精选，每日精编候选池
+          &nbsp;·&nbsp; AI HOT 精选，每日精编候选池，最新 50 条
         </div>
-        <!-- Loading -->
-        <div id="feed-loading" class="loading-wrap">
-          <div class="spinner"></div>
-          <p>正在加载信息源…</p>
+        <div class="feed-list" id="feed-list">
+          <div class="feed-empty">正在加载信息源…</div>
         </div>
-        <!-- Error -->
-        <div id="feed-error" style="display:none">
-          <div class="loading-wrap">
-            <p id="feed-error-msg">加载失败</p>
-            <button class="btn" onclick="loadFeed()">重试</button>
-          </div>
-        </div>
-        <div class="feed-list" id="feed-list" style="display:none"></div>
       </div>
     </section>
   </main>
@@ -513,30 +507,113 @@
 
 <script>
 // ── Constants ──
-const API_BASE = '';
+const FEED_URL  = 'https://aihot.virxact.com/feed.xml';
+const RSS_API   = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(FEED_URL)}&count=30`;
+const CARDS_PER_DAY = 4;
 
-// 6 dimensions config — keys match backend DeepSeek output
 const DIMS = [
-  { key:'pain_real',         name:'痛点真实性', weight:.20 },
-  { key:'ai_fit',            name:'AI 适配度',  weight:.20 },
-  { key:'market_size',       name:'市场规模',   weight:.15 },
-  { key:'competition',       name:'竞争强度',   weight:.10 },
-  { key:'tech_feasibility',  name:'技术可行性', weight:.15 },
-  { key:'monetization',      name:'商业化潜力', weight:.20 },
+  { key:'pain',  name:'痛点真实性', weight:.25 },
+  { key:'aifit', name:'AI 适配度',  weight:.25 },
+  { key:'mkt',   name:'市场规模',   weight:.15 },
+  { key:'comp',  name:'竞争强度',   weight:.15 },
+  { key:'tech',  name:'技术可行性', weight:.10 },
+  { key:'biz',   name:'商业化潜力', weight:.10 },
 ];
+
+function calcScore(s) {
+  return DIMS.reduce((sum,d) => sum + (s[d.key]||0)*d.weight, 0)*2;
+}
 
 function scoreCls(v) {
   return v>=5?'s5':v>=4?'s4':v>=3?'s3':v>=2?'s2':'s1';
 }
 
+// ── Templates (5 types) ──
+const TEMPLATES = [
+  {
+    dir:'Agent',
+    match:/agent|工作流|auto|自动化|multi.agent|任务|execute/i,
+    user:'中小团队里的运营、销售、客服等非技术岗位',
+    pain:'能用 AI 对话，但无法将重复工作串联成稳定的自动化流程',
+    why:'大模型能理解自然语言任务并拆解为可执行步骤，在关键节点触发人工确认',
+    mvp:'岗位工作流模板 + 自然语言配置 + 人工确认节点 + 执行记录',
+    risk:'大厂通用 Agent 可能快速覆盖；垂直场景需深入业务理解',
+    check:'访谈 5 位目标岗位用户，确认最想自动化的重复任务及风险边界',
+    scores:{ pain:4, aifit:5, mkt:3, comp:3, tech:5, biz:3 },
+    tags:['Agent','B端效率'],
+  },
+  {
+    dir:'AI 编程',
+    match:/code|代码|编程|cursor|github|开发者|dev|ide|copilot|coding/i,
+    user:'独立开发者、前端/后端工程师、产品经理',
+    pain:'AI 能生成代码片段，但在大型项目的上下文理解、代码审查和重构上仍频繁出错',
+    why:'大模型具备跨文件上下文推理能力，可辅助理解代码意图而非只生成语法',
+    mvp:'聚焦代码审查和重构场景，给出修改理由而非仅给结果',
+    risk:'Cursor、GitHub Copilot 等已形成强势竞争；需要在垂直场景或体验细节上差异化',
+    check:'招募 10 位开发者参与 Beta，统计 AI 建议的采纳率和修改频率',
+    scores:{ pain:4, aifit:5, mkt:4, comp:2, tech:4, biz:4 },
+    tags:['AI 编程','开发工具'],
+  },
+  {
+    dir:'大模型',
+    match:/模型|llm|gpt|claude|gemini|openai|发布|开源|fine.?tun|训练|参数/i,
+    user:'想用 AI 能力构建产品但缺乏模型选型判断力的产品经理和独立开发者',
+    pain:'模型能力迭代太快，难以判断哪个模型最适合自己的使用场景',
+    why:'大模型可以基于结构化测试用例自动评估不同模型在特定任务上的表现',
+    mvp:'输入使用场景和样本，自动对主流模型跑基准测试并给出选型建议',
+    risk:'评测维度选择主观性强；大厂可能直接在模型文档中提供对比',
+    check:'找 5 家 AI 初创公司了解模型选型的真实决策流程',
+    scores:{ pain:4, aifit:4, mkt:3, comp:3, tech:4, biz:3 },
+    tags:['大模型','开发工具'],
+  },
+  {
+    dir:'AI 办公',
+    match:/办公|效率|工作|会议|文档|邮件|email|ppt|报告|knowledge|知识/i,
+    user:'知识型工作者：产品经理、分析师、顾问、研究人员',
+    pain:'每天阅读大量报告、会议纪要、邮件，信息过载但难以快速提炼关键判断',
+    why:'大模型具备长文本理解和结构化摘要能力，可自动提炼要点并关联历史上下文',
+    mvp:'一键摘要 + 关键问题提取 + 跨文档关联，结果可直接引用到工作输出',
+    risk:'Notion AI、Microsoft 365 Copilot 等已覆盖通用场景；需聚焦特定工种',
+    check:'招募 8 位目标用户进行 2 周试用，对比使用前后信息处理时间',
+    scores:{ pain:4, aifit:4, mkt:4, comp:2, tech:4, biz:3 },
+    tags:['AI 办公','知识管理'],
+  },
+  {
+    dir:'AI 营销',
+    match:/营销|市场|内容|content|seo|social|广告|品牌|用户增长|growth/i,
+    user:'中小企业市场负责人、内容运营、独立创作者',
+    pain:'AI 能批量生成内容，但生成物缺乏品牌一致性，还需大量人工修改才能发布',
+    why:'大模型可学习品牌风格样本，在生成时保持语调、关键词和表达习惯的一致性',
+    mvp:'品牌风格配置 + 内容生成 + 一键发布到主流平台',
+    risk:'Jasper、Copy.ai 等已有成熟市场；品牌风格学习效果难以量化评估',
+    check:'找 5 位内容运营测试品牌一致性评分，对比人工内容与 AI 内容的差异',
+    scores:{ pain:3, aifit:4, mkt:4, comp:2, tech:4, biz:4 },
+    tags:['AI 营销','内容创作'],
+  },
+];
+
+function matchTemplate(item) {
+  const text = (item.title||'') + ' ' + (item.description||'');
+  for (const t of TEMPLATES) {
+    if (t.match.test(text)) return t;
+  }
+  // Cycle based on index
+  return TEMPLATES[0];
+}
+
 // ── State ──
-let todayCards   = [];
-let allCards     = [];
 let allFeedItems = [];
-let activeFilter = '';
-let searchTimer  = null;
+let todayCards   = [];
+let library      = [];
+let activeFilter = '全部';
 
 // ── Utilities ──
+function fmtDate(dateStr) {
+  const d = new Date(dateStr);
+  if (isNaN(d)) return dateStr;
+  return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;
+}
+
 function today() {
   const d = new Date();
   return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;
@@ -555,47 +632,65 @@ function sourceHost(url) {
   try { return new URL(url).hostname.replace('www.',''); } catch { return url; }
 }
 
-function fmtDate(dateStr) {
-  if (!dateStr) return '';
-  const d = new Date(dateStr);
-  if (isNaN(d)) return dateStr;
-  return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;
-}
-
-/** Get total score from a card's score object */
-function getScoreTotal(score) {
-  if (!score) return 0;
-  if (typeof score.total === 'number') return score.total;
-  // Fallback: calculate from values
-  let weighted = 0, totalW = 0;
-  for (const d of DIMS) {
-    const entry = score[d.key];
-    const val = typeof entry === 'object' ? (entry.value || 0) : (entry || 0);
-    weighted += val * d.weight;
-    totalW += d.weight;
-  }
-  return Math.round(weighted / (5 * totalW) * 10 * 10) / 10;
-}
-
-/** Get dimension value (handles both {value, reason} and plain number) */
-function getDimValue(score, key) {
-  if (!score) return 0;
-  const entry = score[key];
-  if (entry && typeof entry === 'object') return entry.value || 0;
-  return entry || 0;
-}
-
-// ── API helpers ──
-async function apiFetch(path, opts = {}) {
-  const res = await fetch(API_BASE + path, {
-    ...opts,
-    signal: AbortSignal.timeout(30000),
+// ── Generate opportunity cards from feed items ──
+function generateCards(items) {
+  // Select first CARDS_PER_DAY items (real app would rank by signal quality)
+  const selected = items.slice(0, CARDS_PER_DAY);
+  return selected.map((item, i) => {
+    const tmpl = matchTemplate(item);
+    const score = calcScore(tmpl.scores);
+    // Build opportunity title from article title
+    const srcTitle = stripHtml(item.title||'');
+    const oppTitle = buildOppTitle(srcTitle, tmpl);
+    return {
+      id: i,
+      title: oppTitle,
+      direction: tmpl.dir,
+      sourceTitle: srcTitle,
+      sourceLink: item.link || '#',
+      sourceDate: item.pubDate ? fmtDate(item.pubDate) : '',
+      user: tmpl.user,
+      pain: tmpl.pain,
+      why: tmpl.why,
+      mvp: tmpl.mvp,
+      risk: tmpl.risk,
+      check: tmpl.check,
+      scores: tmpl.scores,
+      score: score,
+      tags: tmpl.tags,
+    };
   });
-  if (!res.ok) {
-    const text = await res.text().catch(() => '');
-    throw new Error(`API ${res.status}: ${text}`);
-  }
-  return res.json();
+}
+
+function buildOppTitle(srcTitle, tmpl) {
+  // Try to derive a relevant opportunity title from the source
+  // Keep source title as context but frame as product opportunity
+  const prefixes = {
+    'Agent': '基于',
+    'AI 编程': '面向开发者的',
+    '大模型': '利用',
+    'AI 办公': '面向知识工作者的',
+    'AI 营销': '面向中小企业的',
+  };
+  const p = prefixes[tmpl.dir] || '';
+  const words = srcTitle.split(/[：:，,、\s]+/).filter(w => w.length >= 2).slice(0,3).join('');
+  return `${p}${words}产品机会`;
+}
+
+// ── Demo data (fallback if API fails) ──
+const DEMO_ITEMS = [
+  { title:'Claude 推出新版 Agent 功能，支持多步骤工作流自动执行', link:'https://www.anthropic.com/news/claude-agent', pubDate:'2026-06-11', description:'Anthropic 发布 Claude Agent 功能，允许用户创建跨应用的多步任务工作流，内置任务暂停和人工确认节点。' },
+  { title:'Cursor 1.0 正式发布，AI 代码审查精度大幅提升', link:'https://cursor.sh/blog/1-0', pubDate:'2026-06-11', description:'Cursor 发布 1.0 版本，新增全仓库上下文理解能力，代码审查错误率降低 40%，支持大型 monorepo 项目。' },
+  { title:'国内多家企业宣布接入 DeepSeek V3 知识库功能', link:'https://www.deepseek.com/news', pubDate:'2026-06-10', description:'DeepSeek 发布知识库 API，多家国内 SaaS 企业宣布接入，用于私有文档问答和内容生成场景。' },
+  { title:'AI 内容营销工具 Jasper 用户突破 500 万，品牌一致性成新痛点', link:'https://jasper.ai/blog', pubDate:'2026-06-10', description:'Jasper 公布用户数据，但调研显示 60% 企业用户表示 AI 生成内容与品牌调性不符是主要挑战。' },
+];
+
+// ── Fetch feed ──
+async function fetchFeed() {
+  const res = await fetch(RSS_API, { signal: AbortSignal.timeout(8000) });
+  const data = await res.json();
+  if (data.status !== 'ok') throw new Error('RSS API error');
+  return (data.items || []).slice(0, 30);
 }
 
 // ── Loading steps animation ──
@@ -603,61 +698,54 @@ function animateLoadingSteps() {
   const steps = ['ls1','ls2','ls3'];
   let i = 0;
   const iv = setInterval(() => {
-    if (i > 0) document.getElementById(steps[i-1])?.classList.remove('active');
-    if (i < steps.length) document.getElementById(steps[i])?.classList.add('active');
+    if (i > 0) document.getElementById(steps[i-1]).classList.remove('active');
+    if (i < steps.length) document.getElementById(steps[i]).classList.add('active');
     else clearInterval(iv);
     i++;
   }, 700);
   return iv;
 }
 
-// ── Init: load today's cards ──
+// ── Main init ──
 async function init() {
-  // Show loading
   document.getElementById('today-loading').style.display = '';
   document.getElementById('today-cards').style.display   = 'none';
-  document.getElementById('today-error').style.display   = 'none';
-  document.getElementById('today-empty').style.display    = 'none';
-  document.getElementById('stat-bar').style.display       = 'none';
+  document.getElementById('stat-bar').style.display      = 'none';
   document.getElementById('page-sub').textContent = '正在从 AI HOT 精选加载今日内容…';
 
   const iv = animateLoadingSteps();
 
   try {
-    const data = await apiFetch('/api/today');
-    todayCards = data.cards || [];
-
-    clearInterval(iv);
-
-    if (todayCards.length === 0) {
-      document.getElementById('today-loading').style.display = 'none';
-      document.getElementById('today-empty').style.display   = '';
-      document.getElementById('page-sub').textContent = '暂无今日机会卡，可手动触发生成';
-      return;
-    }
-
-    // Update stats
-    document.getElementById('stat-fetched').textContent = '—';
-    document.getElementById('stat-cards').textContent   = todayCards.length;
-    document.getElementById('stat-time').textContent    = new Date().toLocaleTimeString('zh-CN', { hour:'2-digit', minute:'2-digit' });
-    document.getElementById('stat-bar').style.display   = '';
-    document.getElementById('today-badge').textContent  = todayCards.length;
-    document.getElementById('page-sub').textContent     = `${today()} · AI HOT 精选 · 已生成 ${todayCards.length} 张机会卡`;
-    document.getElementById('today-date-hd').textContent = `${today()} 机会`;
-
-    renderTodayCards();
-
-    document.getElementById('today-loading').style.display = 'none';
-    document.getElementById('today-cards').style.display   = '';
-
+    allFeedItems = await fetchFeed();
   } catch (e) {
-    clearInterval(iv);
-    console.error('Failed to load today cards:', e);
-    document.getElementById('today-loading').style.display = 'none';
-    document.getElementById('today-error').style.display   = '';
-    document.getElementById('today-error-msg').textContent = `加载失败：${e.message}`;
-    document.getElementById('page-sub').textContent = '加载失败';
+    allFeedItems = DEMO_ITEMS;
   }
+
+  clearInterval(iv);
+
+  // Simulate analysis delay
+  await new Promise(r => setTimeout(r, 2200));
+
+  todayCards = generateCards(allFeedItems);
+  // Prepend today's cards to library
+  library = [...todayCards.map(c => ({ ...c, savedAt: new Date().toISOString() })),
+             ...SEED_LIBRARY];
+
+  // Update stats
+  document.getElementById('stat-fetched').textContent = allFeedItems.length;
+  document.getElementById('stat-cards').textContent   = todayCards.length;
+  document.getElementById('stat-time').textContent    = new Date().toLocaleTimeString('zh-CN', { hour:'2-digit', minute:'2-digit' });
+  document.getElementById('stat-bar').style.display   = '';
+  document.getElementById('today-badge').textContent  = todayCards.length;
+  document.getElementById('lib-badge').textContent    = library.length;
+  document.getElementById('page-sub').textContent     = `${today()} · AI HOT 精选 · 已生成 ${todayCards.length} 张机会卡`;
+  document.getElementById('today-date-hd').textContent = `${today()} 机会`;
+
+  renderTodayCards();
+  renderFeed();
+
+  document.getElementById('today-loading').style.display = 'none';
+  document.getElementById('today-cards').style.display   = '';
 }
 
 // ── Render today cards ──
@@ -665,27 +753,26 @@ function renderTodayCards() {
   const grid = document.getElementById('card-grid');
   grid.innerHTML = '';
   todayCards.forEach((card, i) => {
-    const score = getScoreTotal(card.score);
     const el = document.createElement('div');
     el.className = 'opp-card fade-up';
     el.style.animationDelay = (i * 80) + 'ms';
     el.innerHTML = `
       <div class="card-top">
         <div class="card-top-row">
-          <div class="card-score"><span class="n">${score.toFixed(1)}</span><span class="d">/10</span></div>
-          <span class="dir-pill">${card.direction || ''}</span>
+          <div class="card-score"><span class="n">${card.score.toFixed(1)}</span><span class="d">/10</span></div>
+          <span class="dir-pill">${card.direction}</span>
         </div>
-        <h3>${card.title || ''}</h3>
+        <h3>${card.title}</h3>
       </div>
       <div class="card-body">
-        <a class="card-source" href="${card.source_url || '#'}" target="_blank" onclick="event.stopPropagation()">
+        <a class="card-source" href="${card.sourceLink}" target="_blank" onclick="event.stopPropagation()">
           <svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-          ${shortTitle(card.source_title || card.source_url || '', 40)}
+          ${shortTitle(card.sourceTitle, 40)}
         </a>
-        <div class="card-pain">${card.pain_point || ''}</div>
+        <div class="card-pain">${card.pain}</div>
       </div>
       <div class="card-footer">
-        <div class="card-footer-tags"><span class="tag">${card.direction || ''}</span></div>
+        <div class="card-footer-tags">${card.tags.map(t=>`<span class="tag">${t}</span>`).join('')}</div>
         <span class="read-more">查看分析 <svg viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg></span>
       </div>`;
     el.addEventListener('click', () => openDetail(card));
@@ -693,83 +780,7 @@ function renderTodayCards() {
   });
 }
 
-// ── Library: fetch & render ──
-async function loadLibrary() {
-  const grid = document.getElementById('lib-grid');
-  const loading = document.getElementById('lib-loading');
-  loading.style.display = '';
-  grid.innerHTML = '';
-
-  const keyword = document.getElementById('lib-search').value || '';
-  const direction = activeFilter;
-
-  const params = new URLSearchParams();
-  if (keyword) params.set('keyword', keyword);
-  if (direction) params.set('direction', direction);
-  const qs = params.toString();
-
-  try {
-    const data = await apiFetch('/api/cards' + (qs ? '?' + qs : ''));
-    allCards = data.cards || [];
-    document.getElementById('lib-badge').textContent = allCards.length;
-    renderLibraryCards(allCards);
-  } catch (e) {
-    console.error('Failed to load library:', e);
-    grid.innerHTML = `<div class="lib-empty">加载失败：${e.message}</div>`;
-  } finally {
-    loading.style.display = 'none';
-  }
-}
-
-function renderLibraryCards(cards) {
-  const grid = document.getElementById('lib-grid');
-  grid.innerHTML = '';
-  if (!cards.length) {
-    grid.innerHTML = '<div class="lib-empty">暂无匹配的机会卡</div>';
-    return;
-  }
-  cards.forEach(c => {
-    const score = getScoreTotal(c.score);
-    const el = document.createElement('div');
-    el.className = 'lib-card fade-up';
-    el.innerHTML = `
-      <div class="lib-top">
-        <div class="lib-score"><span class="n">${score.toFixed(1)}</span><span class="d">/10</span></div>
-        <h3>${c.title || ''}</h3>
-      </div>
-      <div class="lib-body">
-        <div class="lf"><div class="lf-l">目标用户</div><div class="lf-v">${c.user_persona || ''}</div></div>
-        <div class="lf"><div class="lf-l">核心痛点</div><div class="lf-v">${c.pain_point || ''}</div></div>
-      </div>
-      <div class="lib-foot"><span class="tag">${c.direction || ''}</span></div>`;
-    el.addEventListener('click', () => openDetail(c));
-    grid.appendChild(el);
-  });
-}
-
-// ── Feed: fetch & render ──
-async function loadFeed() {
-  const list = document.getElementById('feed-list');
-  const loading = document.getElementById('feed-loading');
-  const error = document.getElementById('feed-error');
-  loading.style.display = '';
-  error.style.display = 'none';
-  list.style.display = 'none';
-
-  try {
-    const data = await apiFetch('/api/rss');
-    allFeedItems = data.items || [];
-    loading.style.display = 'none';
-    list.style.display = '';
-    renderFeed();
-  } catch (e) {
-    console.error('Failed to load feed:', e);
-    loading.style.display = 'none';
-    error.style.display = '';
-    document.getElementById('feed-error-msg').textContent = `加载失败：${e.message}`;
-  }
-}
-
+// ── Render feed items ──
 function renderFeed() {
   const list = document.getElementById('feed-list');
   list.innerHTML = '';
@@ -777,40 +788,95 @@ function renderFeed() {
     list.innerHTML = '<div class="feed-empty">暂无内容</div>';
     return;
   }
-  // Collect source URLs from today's cards to mark "converted"
-  const convertedLinks = new Set(todayCards.map(c => c.source_url).filter(Boolean));
-
+  const convertedLinks = new Set(todayCards.map(c => c.sourceLink));
   allFeedItems.forEach(item => {
-    const url = item.url || '';
-    const isConv = convertedLinks.has(url);
+    const isConv = convertedLinks.has(item.link);
     const el = document.createElement('div');
     el.className = 'feed-item' + (isConv ? ' converted' : '');
     el.innerHTML = `
       <div class="feed-item-main">
-        <a href="${url}" target="_blank">${stripHtml(item.title || '(无标题)')}</a>
-        <div class="feed-item-meta">${item.published_at ? fmtDate(item.published_at) : ''} · ${sourceHost(url)}</div>
+        <a href="${item.link||'#'}" target="_blank">${stripHtml(item.title||'(无标题)')}</a>
+        <div class="feed-item-meta">${item.pubDate ? fmtDate(item.pubDate) : ''} · ${sourceHost(item.link||'')}</div>
       </div>
       ${isConv ? '<span class="conv-badge">已生成机会卡</span>' : ''}`;
     list.appendChild(el);
   });
 }
 
+// ── Library ──
+const SEED_LIBRARY = [
+  {
+    id:100, title:'AI 产品经理竞品变化追踪助手', direction:'AI 办公',
+    sourceTitle:'多家 SaaS 产品密集发布 AI 功能更新', sourceLink:'https://aihot.virxact.com',
+    user:'AI 产品经理、创业者、咨询顾问', pain:'竞品更新散落在博客、更新日志、社媒和社区，难以系统追踪',
+    why:'大模型可自动摘要竞品变化并判断对自身产品的影响',
+    mvp:'订阅竞品 → 变更摘要 → 影响判断 → 分析报告',
+    risk:'信息采集依赖公开渠道，付费壁垒内信息无法覆盖',
+    check:'找 5 位 AI PM 试用，记录付费意愿',
+    scores:{ pain:4, aifit:4, mkt:3, comp:3, tech:4, biz:4 },
+    score:7.6, tags:['AI 办公','PM 工具'],
+  },
+  {
+    id:101, title:'面向知识工作者的个人 AI 资料库', direction:'AI 办公',
+    sourceTitle:'笔记类 AI 产品用户留存数据分析', sourceLink:'https://aihot.virxact.com',
+    user:'研究员、产品经理、内容创作者',
+    pain:'资料收集容易，后续查找、复用和输出困难，笔记沉没严重',
+    why:'大模型自动摘要、打标、语义问答，把散乱资料变成可对话知识库',
+    mvp:'收藏入口 + 自动摘要 + 语义问答 + 写作引用',
+    risk:'已有 Notion AI、Mem 等成熟竞品，差异化需更清晰',
+    check:'找 10 位知识工作者试用，看 7 天留存率',
+    scores:{ pain:4, aifit:4, mkt:4, comp:2, tech:4, biz:3 },
+    score:7.4, tags:['AI 办公','知识管理'],
+  },
+];
+
+function renderLibrary() {
+  const grid = document.getElementById('lib-grid');
+  const q = (document.getElementById('lib-search').value||'').toLowerCase();
+  const filtered = library.filter(c => {
+    const mf = activeFilter==='全部' || c.direction===activeFilter || (c.tags||[]).includes(activeFilter);
+    const mq = !q || c.title.toLowerCase().includes(q) || (c.pain||'').toLowerCase().includes(q);
+    return mf && mq;
+  });
+  grid.innerHTML = '';
+  if (!filtered.length) {
+    grid.innerHTML = '<div class="lib-empty">暂无匹配的机会卡</div>';
+    return;
+  }
+  filtered.forEach(c => {
+    const el = document.createElement('div');
+    el.className = 'lib-card fade-up';
+    el.innerHTML = `
+      <div class="lib-top">
+        <div class="lib-score"><span class="n">${c.score.toFixed(1)}</span><span class="d">/10</span></div>
+        <h3>${c.title}</h3>
+      </div>
+      <div class="lib-body">
+        <div class="lf"><div class="lf-l">目标用户</div><div class="lf-v">${c.user}</div></div>
+        <div class="lf"><div class="lf-l">核心痛点</div><div class="lf-v">${c.pain}</div></div>
+      </div>
+      <div class="lib-foot">${(c.tags||[]).map(t=>`<span class="tag">${t}</span>`).join('')}</div>`;
+    el.addEventListener('click', () => openDetail(c));
+    grid.appendChild(el);
+  });
+}
+
 // ── Detail panel ──
 function openDetail(card) {
-  const score = getScoreTotal(card.score);
+  const score = card.score || calcScore(card.scores);
   document.getElementById('d-score-n').textContent = score.toFixed(1);
-  document.getElementById('d-dir').textContent     = card.direction || '';
-  document.getElementById('d-title').textContent   = card.title || '';
-  document.getElementById('d-source-link').href    = card.source_url || '#';
-  document.getElementById('d-source-text').textContent = shortTitle(card.source_title || card.source_url || '', 50);
-  document.getElementById('d-user').textContent    = card.user_persona || '';
-  document.getElementById('d-pain').textContent    = card.pain_point || '';
-  document.getElementById('d-why').textContent     = card.ai_solution || '';
-  document.getElementById('d-mvp').textContent     = card.mvp_plan || '';
-  document.getElementById('d-risk').textContent    = card.risks || '';
-  document.getElementById('d-check').textContent   = card.next_step || '';
+  document.getElementById('d-dir').textContent     = card.direction;
+  document.getElementById('d-title').textContent   = card.title;
+  document.getElementById('d-source-link').href    = card.sourceLink || '#';
+  document.getElementById('d-source-text').textContent = shortTitle(card.sourceTitle||card.sourceLink||'', 50);
+  document.getElementById('d-user').textContent    = card.user;
+  document.getElementById('d-pain').textContent    = card.pain;
+  document.getElementById('d-why').textContent     = card.why;
+  document.getElementById('d-mvp').textContent     = card.mvp;
+  document.getElementById('d-risk').textContent    = card.risk;
+  document.getElementById('d-check').textContent   = card.check;
   document.getElementById('d-total').textContent   = score.toFixed(1) + ' / 10';
-  renderDims(card.score, document.getElementById('d-dims'));
+  renderDims(card.scores, document.getElementById('d-dims'));
   document.getElementById('overlay').classList.add('open');
   document.getElementById('detail-panel').classList.add('open');
 }
@@ -823,10 +889,10 @@ function closeDetail() {
 document.getElementById('close-detail').addEventListener('click', closeDetail);
 document.getElementById('overlay').addEventListener('click', closeDetail);
 
-function renderDims(scoreObj, container) {
+function renderDims(scores, container) {
   container.innerHTML = '';
   DIMS.forEach(d => {
-    const v = getDimValue(scoreObj, d.key);
+    const v = scores[d.key] || 0;
     const row = document.createElement('div');
     row.className = 'dim-row';
     row.innerHTML = `
@@ -840,12 +906,30 @@ function renderDims(scoreObj, container) {
   }));
 }
 
-// ── Navigation ──
-let libraryLoaded = false;
-let feedLoaded = false;
+// ── Hamburger / Sidebar toggle (mobile) ──
+const hamburgerBtn = document.getElementById('hamburger-btn');
+const sidebarEl    = document.querySelector('.sidebar');
+const sidebarOverlay = document.getElementById('sidebar-overlay');
 
+function openSidebar() {
+  sidebarEl.classList.add('open');
+  sidebarOverlay.classList.add('open');
+}
+function closeSidebar() {
+  sidebarEl.classList.remove('open');
+  sidebarOverlay.classList.remove('open');
+}
+
+hamburgerBtn.addEventListener('click', () => {
+  sidebarEl.classList.contains('open') ? closeSidebar() : openSidebar();
+});
+sidebarOverlay.addEventListener('click', closeSidebar);
+
+// ── Navigation ──
 document.querySelectorAll('.nav-item[data-view]').forEach(btn => {
   btn.addEventListener('click', () => {
+    // Close sidebar on mobile after nav selection
+    if (window.innerWidth <= 1100) closeSidebar();
     document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     const v = btn.dataset.view;
@@ -856,21 +940,11 @@ document.querySelectorAll('.nav-item[data-view]').forEach(btn => {
       document.getElementById('page-sub').textContent   = `${today()} · AI HOT 精选 · 已生成 ${todayCards.length} 张机会卡`;
     } else if (v === 'library') {
       document.getElementById('page-title').textContent = '机会库';
-      document.getElementById('page-sub').textContent   = '正在加载…';
-      loadLibrary().then(() => {
-        document.getElementById('page-sub').textContent = `共 ${allCards.length} 张机会卡`;
-      });
-    } else if (v === 'feed') {
+      document.getElementById('page-sub').textContent   = `共 ${library.length} 张机会卡`;
+      renderLibrary();
+    } else {
       document.getElementById('page-title').textContent = '信息源';
-      document.getElementById('page-sub').textContent   = 'AI HOT 精选';
-      if (!feedLoaded) {
-        loadFeed().then(() => {
-          feedLoaded = true;
-          document.getElementById('page-sub').textContent = `AI HOT 精选 · ${allFeedItems.length} 条`;
-        });
-      } else {
-        document.getElementById('page-sub').textContent = `AI HOT 精选 · ${allFeedItems.length} 条`;
-      }
+      document.getElementById('page-sub').textContent   = `AI HOT 精选 · ${allFeedItems.length} 条`;
     }
   });
 });
@@ -882,13 +956,9 @@ document.getElementById('filter-chips').addEventListener('click', e => {
   activeFilter = chip.dataset.f;
   document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
   chip.classList.add('active');
-  loadLibrary();
+  renderLibrary();
 });
-
-document.getElementById('lib-search').addEventListener('input', () => {
-  clearTimeout(searchTimer);
-  searchTimer = setTimeout(() => loadLibrary(), 300);
-});
+document.getElementById('lib-search').addEventListener('input', renderLibrary);
 
 // ── Refresh ──
 document.getElementById('refresh-btn').addEventListener('click', () => {
@@ -897,24 +967,7 @@ document.getElementById('refresh-btn').addEventListener('click', () => {
   document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
   document.getElementById('view-today').classList.add('active');
   document.getElementById('page-title').textContent = '今日机会';
-  feedLoaded = false;
   init();
-});
-
-// ── Generate button (manual trigger) ──
-document.getElementById('generate-btn').addEventListener('click', async () => {
-  const btn = document.getElementById('generate-btn');
-  btn.disabled = true;
-  btn.textContent = '生成中…';
-  try {
-    await apiFetch('/api/generate', { method: 'POST' });
-    await init();
-  } catch (e) {
-    alert('生成失败：' + e.message);
-  } finally {
-    btn.disabled = false;
-    btn.textContent = '手动生成';
-  }
 });
 
 // ── Start ──

@@ -58,6 +58,19 @@
     .nav-badge{margin-left:auto;background:rgba(99,102,241,.3);color:#a5b4fc;
       font-size:11px;font-weight:600;padding:1px 7px;border-radius:999px}
     .sidebar-footer{margin-top:auto;padding-top:16px;border-top:1px solid rgba(255,255,255,.06)}
+
+    /* ── Hamburger (hidden on desktop) ── */
+    .hamburger{display:none;align-items:center;justify-content:center;
+      width:36px;height:36px;border:0;background:transparent;cursor:pointer;
+      padding:0;flex:0 0 auto;border-radius:var(--r-sm)}
+    .hamburger:hover{background:#f1f5f9}
+    .hamburger span{display:block;width:20px;height:2px;background:var(--ink);
+      border-radius:2px;transition:all .2s ease}
+    .hamburger span+span{margin-top:5px}
+
+    /* ── Sidebar overlay (mobile) ── */
+    .sidebar-overlay{display:none}
+
     .src-badge{display:flex;align-items:center;gap:8px;padding:8px 10px;
       border-radius:var(--r-sm);background:rgba(255,255,255,.04)}
     .src-dot{width:7px;height:7px;border-radius:50%;background:#34d399;flex:0 0 auto}
@@ -283,7 +296,14 @@
     @media(max-width:1100px){
       .card-grid{grid-template-columns:1fr}
       .lib-grid{grid-template-columns:repeat(2,1fr)}
-      .sidebar{display:none}
+      .hamburger{display:flex}
+      .sidebar{position:fixed;top:0;left:0;bottom:0;z-index:1000;
+        transform:translateX(-100%);transition:transform .25s cubic-bezier(.22,1,.36,1);
+        box-shadow:none}
+      .sidebar.open{transform:translateX(0);box-shadow:8px 0 32px rgba(15,23,42,.2)}
+      .sidebar-overlay{display:block;position:fixed;inset:0;background:rgba(15,23,42,.35);
+        z-index:999;opacity:0;pointer-events:none;transition:opacity .2s ease}
+      .sidebar-overlay.open{opacity:1;pointer-events:all}
       .detail-panel{width:100%}
     }
     @media(max-width:720px){
@@ -296,6 +316,9 @@
 </head>
 <body>
 <div class="app">
+
+  <!-- Sidebar overlay (mobile) -->
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
   <!-- Sidebar -->
   <aside class="sidebar">
@@ -337,6 +360,9 @@
   <main class="main">
     <header class="topbar">
       <div class="topbar-left">
+        <button class="hamburger" id="hamburger-btn" type="button" aria-label="菜单">
+          <span></span><span></span><span></span>
+        </button>
         <h1 id="page-title">今日机会</h1>
         <p id="page-sub">正在从 AI HOT 精选加载今日内容…</p>
       </div>
@@ -880,9 +906,30 @@ function renderDims(scores, container) {
   }));
 }
 
+// ── Hamburger / Sidebar toggle (mobile) ──
+const hamburgerBtn = document.getElementById('hamburger-btn');
+const sidebarEl    = document.querySelector('.sidebar');
+const sidebarOverlay = document.getElementById('sidebar-overlay');
+
+function openSidebar() {
+  sidebarEl.classList.add('open');
+  sidebarOverlay.classList.add('open');
+}
+function closeSidebar() {
+  sidebarEl.classList.remove('open');
+  sidebarOverlay.classList.remove('open');
+}
+
+hamburgerBtn.addEventListener('click', () => {
+  sidebarEl.classList.contains('open') ? closeSidebar() : openSidebar();
+});
+sidebarOverlay.addEventListener('click', closeSidebar);
+
 // ── Navigation ──
 document.querySelectorAll('.nav-item[data-view]').forEach(btn => {
   btn.addEventListener('click', () => {
+    // Close sidebar on mobile after nav selection
+    if (window.innerWidth <= 1100) closeSidebar();
     document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     const v = btn.dataset.view;
