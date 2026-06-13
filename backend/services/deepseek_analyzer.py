@@ -120,4 +120,6 @@ def analyze_items(items: list[dict]) -> list[dict]:
         score["total"] = round(weighted_sum / (5 * total_weight) * 10, 1)
         card["score"] = score
 
-    return cards
+    # Re-sort by recalculated total score (descending), keep top 4
+    cards.sort(key=lambda c: c.get("score", {}).get("total", 0), reverse=True)
+    return cards[:4]
