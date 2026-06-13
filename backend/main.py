@@ -1,7 +1,7 @@
 """Product LingLing — FastAPI backend."""
 
+import logging
 import os
-import sys
 from pathlib import Path
 from contextlib import asynccontextmanager
 
@@ -15,20 +15,24 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.models import init_db
-from backend.services.rss_fetcher import fetch_and_store, get_all_rss_items
-from backend.services.deepseek_analyzer import analyze_items
+from backend.services.rss_fetcher import get_all_rss_items
 from backend.services.opportunity_store import (
-    save_cards,
     get_today_cards,
     get_card_by_id,
     get_all_cards,
 )
+from backend.services.scheduler import start_scheduler, stop_scheduler, run_generation_once
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_db()
+    start_scheduler()
     yield
+    stop_scheduler()
 
 
 app = FastAPI(title="Product LingLing", version="1.0.0", lifespan=lifespan)
@@ -47,44 +51,24 @@ def health():
     return {"status": "ok"}
 
 
-@app.get("/api/today")
-def today():
-    """Return today's 4 opportunity cards. Generate them if they don't exist yet."""
-    cards = get_today_cards()
-    if cards:
-        return {"cards": cards, "generated": False}
-
-    # Auto-generate: fetch RSS → analyze → save
-    try:
-        unanalyzed = fetch_and_store()
-    except Exception as e:
-        raise HTTPException(status_code=502, detail=f"RSS fetch failed: {e}")
-
-    if not unanalyzed:
-        return {"cards": [], "generated": False, "message": "No new RSS items to analyze"}
-
-    try:
-        new_cards = analyze_items(unanalyzed)
-    except Exception as e:
-        raise HTTPException(status_code=502, detail=f"DeepSeek analysis failed: {e}")
-
-    if new_cards:
-        save_cards(new_cards)
-        from backend.services.rss_fetcher import mark_analyzed
-        mark_analyzed([item["id"] for item in unanalyzed])
-
-    cards = get_today_cards()
-    return {"cards": cards, "generated": True}
-
+# ── Cards ──
 
 @app.get("/api/cards")
 def list_cards(
     keyword: str = Query("", description="Search keyword"),
     direction: str = Query("", description="Filter by direction"),
+    date: str = Query("", description="Filter by date (YYYY-MM-DD)"),
 ):
     """List all opportunity cards with optional filters."""
-    cards = get_all_cards(keyword=keyword, direction=direction)
+    cards = get_all_cards(keyword=keyword, direction=direction, date_filter=date)
     return {"cards": cards, "total": len(cards)}
+
+
+@app.get("/api/cards/today")
+def today_cards():
+    """Return today's opportunity cards (read-only — generation is scheduled)."""
+    cards = get_today_cards()
+    return {"cards": cards, "generated": len(cards) > 0}
 
 
 @app.get("/api/cards/{card_id}")
@@ -96,36 +80,22 @@ def card_detail(card_id: int):
     return card
 
 
-@app.post("/api/generate")
-def generate():
-    """Manually trigger RSS fetch + DeepSeek analysis."""
+@app.post("/api/cards/generate")
+def generate_cards():
+    """Manually trigger RSS fetch + DeepSeek analysis (dev only)."""
+    if os.environ.get("LING_ENV", "") != "development":
+        raise HTTPException(status_code=404, detail="Not found")
     try:
-        unanalyzed = fetch_and_store()
+        result = run_generation_once()
     except Exception as e:
-        raise HTTPException(status_code=502, detail=f"RSS fetch failed: {e}")
-
-    if not unanalyzed:
-        return {"message": "No new RSS items to analyze", "cards": []}
-
-    try:
-        new_cards = analyze_items(unanalyzed)
-    except Exception as e:
-        raise HTTPException(status_code=502, detail=f"DeepSeek analysis failed: {e}")
-
-    saved_ids = []
-    if new_cards:
-        saved_ids = save_cards(new_cards)
-        from backend.services.rss_fetcher import mark_analyzed
-        mark_analyzed([item["id"] for item in unanalyzed])
-
-    return {
-        "message": f"Generated {len(new_cards)} cards",
-        "cards": get_all_cards()[: len(new_cards)],
-    }
+        raise HTTPException(status_code=502, detail=f"Generation failed: {e}")
+    return result
 
 
-@app.get("/api/rss")
-def rss_list():
-    """Return all raw RSS items."""
+# ── Sources ──
+
+@app.get("/api/sources")
+def list_sources():
+    """Return all cached feed items from the information source."""
     items = get_all_rss_items()
     return {"items": items, "total": len(items)}
