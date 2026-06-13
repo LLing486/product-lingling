@@ -633,8 +633,33 @@ function sourceHost(url) {
 }
 
 // ── Generate opportunity cards from feed items ──
-function generateCards(items) {
-  // Select first CARDS_PER_DAY items (real app would rank by signal quality)
+async function generateCards(items) {
+  try {
+    const res = await fetch('/api/generate', { method: 'POST', headers: {'Content-Type':'application/json'}, body: '{}' });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.cards && data.cards.length > 0) {
+        return data.cards.map(c => ({
+          id: c.id,
+          title: c.title,
+          direction: c.direction,
+          sourceTitle: c.source_title || '',
+          sourceLink: c.source_url || '#',
+          sourceDate: '',
+          user: c.user_persona,
+          pain: c.pain_point,
+          why: c.ai_solution,
+          mvp: c.mvp_plan,
+          risk: c.risks,
+          check: c.next_step,
+          scores: typeof c.score === 'object' ? c.score : {},
+          score: typeof c.score === 'object' ? calcScore(c.score) : (c.score || 0),
+          tags: [c.direction],
+        }));
+      }
+    }
+  } catch (e) { console.warn('Backend generate failed, falling back to client-side:', e); }
+  // Fallback: client-side template matching
   const selected = items.slice(0, CARDS_PER_DAY);
   return selected.map((item, i) => {
     const tmpl = matchTemplate(item);
@@ -687,10 +712,18 @@ const DEMO_ITEMS = [
 
 // ── Fetch feed ──
 async function fetchFeed() {
-  const res = await fetch(RSS_API, { signal: AbortSignal.timeout(8000) });
+  // Sync RSS from backend first, then fetch items
+  await fetch('/api/rss/sync', { method: 'POST' }).catch(() => {});
+  const res = await fetch('/api/rss', { signal: AbortSignal.timeout(8000) });
+  if (!res.ok) throw new Error('RSS API error');
   const data = await res.json();
-  if (data.status !== 'ok') throw new Error('RSS API error');
-  return (data.items || []).slice(0, 30);
+  // Normalize backend format to match frontend expectations
+  return (data.items || data || []).map(item => ({
+    title: item.title || '',
+    link: item.url || item.link || '',
+    description: item.description || '',
+    pubDate: item.published_at || item.pubDate || '',
+  }));
 }
 
 // ── Loading steps animation ──
@@ -726,10 +759,32 @@ async function init() {
   // Simulate analysis delay
   await new Promise(r => setTimeout(r, 2200));
 
-  todayCards = generateCards(allFeedItems);
-  // Prepend today's cards to library
-  library = [...todayCards.map(c => ({ ...c, savedAt: new Date().toISOString() })),
-             ...SEED_LIBRARY];
+  todayCards = await generateCards(allFeedItems);
+  // Load full library from backend (accumulated over time)
+  let backendCards = [];
+  try {
+    const res = await fetch('/api/cards');
+    if (res.ok) {
+      const data = await res.json();
+      backendCards = (data.cards || data || []).map(c => ({
+        id: c.id, title: c.title, direction: c.direction,
+        sourceTitle: c.source_title || '', sourceLink: c.source_url || '#',
+        sourceDate: c.created_at ? fmtDate(c.created_at) : '',
+        user: c.user_persona, pain: c.pain_point, why: c.ai_solution,
+        mvp: c.mvp_plan, risk: c.risks, check: c.next_step,
+        scores: typeof c.score === 'object' ? c.score : {},
+        score: typeof c.score === 'object' ? calcScore(c.score) : (c.score || 0),
+        tags: [c.direction], savedAt: c.created_at || new Date().toISOString(),
+      }));
+    }
+  } catch (e) { console.warn('Failed to load library from backend:', e); }
+  if (backendCards.length > 0) {
+    library = backendCards;
+  } else {
+    // Fallback if backend has no cards yet
+    library = [...todayCards.map(c => ({ ...c, savedAt: new Date().toISOString() })),
+               ...SEED_LIBRARY];
+  }
 
   // Update stats
   document.getElementById('stat-fetched').textContent = allFeedItems.length;
