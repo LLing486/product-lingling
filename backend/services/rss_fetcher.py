@@ -37,10 +37,11 @@ def fetch_and_store() -> list[dict]:
 
     conn.commit()
 
-    # Return all unanalyzed items
+    # Return today's unanalyzed items only (prevent stale accumulation)
     rows = conn.execute(
         "SELECT id, title, url, description, published_at, fetched_at, is_analyzed "
-        "FROM rss_items WHERE is_analyzed = 0 ORDER BY id"
+        "FROM rss_items WHERE is_analyzed = 0 AND date(fetched_at) = date('now') "
+        "ORDER BY id"
     ).fetchall()
     conn.close()
 

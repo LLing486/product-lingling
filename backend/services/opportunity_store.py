@@ -57,8 +57,8 @@ def get_card_by_id(card_id: int) -> dict | None:
     return None
 
 
-def get_all_cards(keyword: str = "", direction: str = "") -> list[dict]:
-    """Get all cards with optional keyword search and direction filter."""
+def get_all_cards(keyword: str = "", direction: str = "", date_filter: str = "") -> list[dict]:
+    """Get all cards with optional keyword search, direction filter, and date filter."""
     conn = get_db()
     query = "SELECT * FROM opportunity_cards WHERE 1=1"
     params: list = []
@@ -71,6 +71,10 @@ def get_all_cards(keyword: str = "", direction: str = "") -> list[dict]:
     if direction:
         query += " AND direction = ?"
         params.append(direction)
+
+    if date_filter:
+        query += " AND created_at = ?"
+        params.append(date_filter)
 
     query += " ORDER BY created_at DESC, id DESC"
     rows = conn.execute(query, params).fetchall()

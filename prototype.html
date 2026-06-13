@@ -261,22 +261,22 @@
     .lib-empty{grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--subtle);font-size:13px}
 
     /* ── Feed view ── */
-    .feed-layout{padding:24px 28px}
-    .feed-meta{font-size:12.5px;color:var(--muted);margin-bottom:16px}
-    .feed-meta a{color:var(--accent);text-decoration:none}
-    .feed-meta a:hover{text-decoration:underline}
-    .feed-list{display:grid;gap:8px}
-    .feed-item{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);
+    .source-layout{padding:24px 28px}
+    .source-meta{font-size:12.5px;color:var(--muted);margin-bottom:16px}
+    .source-meta a{color:var(--accent);text-decoration:none}
+    .source-meta a:hover{text-decoration:underline}
+    .source-list{display:grid;gap:8px}
+    .source-item{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);
       padding:12px 16px;display:flex;align-items:flex-start;gap:12px}
-    .feed-item.converted{border-left:3px solid var(--accent)}
-    .feed-item-main{flex:1;min-width:0}
-    .feed-item-main a{color:var(--ink);font-size:13.5px;font-weight:500;
+    .source-item.converted{border-left:3px solid var(--accent)}
+    .source-item-main{flex:1;min-width:0}
+    .source-item-main a{color:var(--ink);font-size:13.5px;font-weight:500;
       text-decoration:none;line-height:1.4}
-    .feed-item-main a:hover{color:var(--accent)}
-    .feed-item-meta{margin-top:3px;font-size:12px;color:var(--subtle)}
+    .source-item-main a:hover{color:var(--accent)}
+    .source-item-meta{margin-top:3px;font-size:12px;color:var(--subtle)}
     .conv-badge{flex:0 0 auto;padding:3px 8px;border-radius:999px;
       background:var(--accent-bg);color:var(--accent);font-size:11px;font-weight:600}
-    .feed-empty{text-align:center;padding:60px 20px;color:var(--subtle);font-size:13px}
+    .source-empty{text-align:center;padding:60px 20px;color:var(--subtle);font-size:13px}
 
     /* ── Btn ── */
     .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;
@@ -308,7 +308,7 @@
     }
     @media(max-width:720px){
       .lib-grid{grid-template-columns:1fr}
-      .today-layout,.library-layout,.feed-layout{padding:14px}
+      .today-layout,.library-layout,.source-layout{padding:14px}
       .topbar{padding:12px 16px}
       .stat-bar{padding:8px 16px;flex-wrap:wrap;gap:10px}
     }
@@ -342,7 +342,7 @@
         机会库
         <span class="nav-badge" id="lib-badge">3</span>
       </button>
-      <button class="nav-item" data-view="feed" type="button">
+      <button class="nav-item" data-view="sources" type="button">
         <svg viewBox="0 0 24 24"><path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="2"/></svg>
         信息源
       </button>
@@ -435,14 +435,14 @@
     </section>
 
     <!-- Feed view -->
-    <section class="view" id="view-feed">
-      <div class="feed-layout">
-        <div class="feed-meta">
+    <section class="view" id="view-sources">
+      <div class="source-layout">
+        <div class="source-meta">
           订阅源：<a href="https://aihot.virxact.com/feed.xml" target="_blank">https://aihot.virxact.com/feed.xml</a>
           &nbsp;·&nbsp; AI HOT 精选，每日精编候选池，最新 50 条
         </div>
-        <div class="feed-list" id="feed-list">
-          <div class="feed-empty">正在加载信息源…</div>
+        <div class="source-list" id="source-list">
+          <div class="source-empty">正在加载信息源…</div>
         </div>
       </div>
     </section>
@@ -507,102 +507,36 @@
 
 <script>
 // ── Constants ──
-const FEED_URL  = 'https://aihot.virxact.com/feed.xml';
-const RSS_API   = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(FEED_URL)}&count=30`;
-const CARDS_PER_DAY = 4;
+const FEED_URL = 'https://aihot.virxact.com/feed.xml';
 
+// Dimension keys matching backend deepseek_analyzer.py weights
 const DIMS = [
-  { key:'pain',  name:'痛点真实性', weight:.25 },
-  { key:'aifit', name:'AI 适配度',  weight:.25 },
-  { key:'mkt',   name:'市场规模',   weight:.15 },
-  { key:'comp',  name:'竞争强度',   weight:.15 },
-  { key:'tech',  name:'技术可行性', weight:.10 },
-  { key:'biz',   name:'商业化潜力', weight:.10 },
+  { key:'pain_real',       name:'痛点真实性', weight:2.0 },
+  { key:'ai_fit',          name:'AI 适配度',  weight:2.0 },
+  { key:'market_size',     name:'市场规模',   weight:1.5 },
+  { key:'competition',     name:'竞争强度',   weight:1.0, hint:'竞争越少分越高 — 反向指标' },
+  { key:'tech_feasibility',name:'技术可行性', weight:1.5 },
+  { key:'monetization',    name:'商业化潜力', weight:2.0 },
 ];
+const DIMS_TOTAL_WEIGHT = 10.0;
 
 function calcScore(s) {
-  return DIMS.reduce((sum,d) => sum + (s[d.key]||0)*d.weight, 0)*2;
+  // Backend formula: weighted_sum / (5 * total_weight) * 10
+  let weightedSum = 0;
+  for (const d of DIMS) {
+    const raw = s[d.key];
+    const v = (raw && typeof raw === 'object') ? (raw.value || 0) : (Number(raw) || 0);
+    weightedSum += v * d.weight;
+  }
+  return Math.round(weightedSum / 5 * 10) / 10;
 }
 
 function scoreCls(v) {
   return v>=5?'s5':v>=4?'s4':v>=3?'s3':v>=2?'s2':'s1';
 }
 
-// ── Templates (5 types) ──
-const TEMPLATES = [
-  {
-    dir:'Agent',
-    match:/agent|工作流|auto|自动化|multi.agent|任务|execute/i,
-    user:'中小团队里的运营、销售、客服等非技术岗位',
-    pain:'能用 AI 对话，但无法将重复工作串联成稳定的自动化流程',
-    why:'大模型能理解自然语言任务并拆解为可执行步骤，在关键节点触发人工确认',
-    mvp:'岗位工作流模板 + 自然语言配置 + 人工确认节点 + 执行记录',
-    risk:'大厂通用 Agent 可能快速覆盖；垂直场景需深入业务理解',
-    check:'访谈 5 位目标岗位用户，确认最想自动化的重复任务及风险边界',
-    scores:{ pain:4, aifit:5, mkt:3, comp:3, tech:5, biz:3 },
-    tags:['Agent','B端效率'],
-  },
-  {
-    dir:'AI 编程',
-    match:/code|代码|编程|cursor|github|开发者|dev|ide|copilot|coding/i,
-    user:'独立开发者、前端/后端工程师、产品经理',
-    pain:'AI 能生成代码片段，但在大型项目的上下文理解、代码审查和重构上仍频繁出错',
-    why:'大模型具备跨文件上下文推理能力，可辅助理解代码意图而非只生成语法',
-    mvp:'聚焦代码审查和重构场景，给出修改理由而非仅给结果',
-    risk:'Cursor、GitHub Copilot 等已形成强势竞争；需要在垂直场景或体验细节上差异化',
-    check:'招募 10 位开发者参与 Beta，统计 AI 建议的采纳率和修改频率',
-    scores:{ pain:4, aifit:5, mkt:4, comp:2, tech:4, biz:4 },
-    tags:['AI 编程','开发工具'],
-  },
-  {
-    dir:'大模型',
-    match:/模型|llm|gpt|claude|gemini|openai|发布|开源|fine.?tun|训练|参数/i,
-    user:'想用 AI 能力构建产品但缺乏模型选型判断力的产品经理和独立开发者',
-    pain:'模型能力迭代太快，难以判断哪个模型最适合自己的使用场景',
-    why:'大模型可以基于结构化测试用例自动评估不同模型在特定任务上的表现',
-    mvp:'输入使用场景和样本，自动对主流模型跑基准测试并给出选型建议',
-    risk:'评测维度选择主观性强；大厂可能直接在模型文档中提供对比',
-    check:'找 5 家 AI 初创公司了解模型选型的真实决策流程',
-    scores:{ pain:4, aifit:4, mkt:3, comp:3, tech:4, biz:3 },
-    tags:['大模型','开发工具'],
-  },
-  {
-    dir:'AI 办公',
-    match:/办公|效率|工作|会议|文档|邮件|email|ppt|报告|knowledge|知识/i,
-    user:'知识型工作者：产品经理、分析师、顾问、研究人员',
-    pain:'每天阅读大量报告、会议纪要、邮件，信息过载但难以快速提炼关键判断',
-    why:'大模型具备长文本理解和结构化摘要能力，可自动提炼要点并关联历史上下文',
-    mvp:'一键摘要 + 关键问题提取 + 跨文档关联，结果可直接引用到工作输出',
-    risk:'Notion AI、Microsoft 365 Copilot 等已覆盖通用场景；需聚焦特定工种',
-    check:'招募 8 位目标用户进行 2 周试用，对比使用前后信息处理时间',
-    scores:{ pain:4, aifit:4, mkt:4, comp:2, tech:4, biz:3 },
-    tags:['AI 办公','知识管理'],
-  },
-  {
-    dir:'AI 营销',
-    match:/营销|市场|内容|content|seo|social|广告|品牌|用户增长|growth/i,
-    user:'中小企业市场负责人、内容运营、独立创作者',
-    pain:'AI 能批量生成内容，但生成物缺乏品牌一致性，还需大量人工修改才能发布',
-    why:'大模型可学习品牌风格样本，在生成时保持语调、关键词和表达习惯的一致性',
-    mvp:'品牌风格配置 + 内容生成 + 一键发布到主流平台',
-    risk:'Jasper、Copy.ai 等已有成熟市场；品牌风格学习效果难以量化评估',
-    check:'找 5 位内容运营测试品牌一致性评分，对比人工内容与 AI 内容的差异',
-    scores:{ pain:3, aifit:4, mkt:4, comp:2, tech:4, biz:4 },
-    tags:['AI 营销','内容创作'],
-  },
-];
-
-function matchTemplate(item) {
-  const text = (item.title||'') + ' ' + (item.description||'');
-  for (const t of TEMPLATES) {
-    if (t.match.test(text)) return t;
-  }
-  // Cycle based on index
-  return TEMPLATES[0];
-}
-
-// ── State ──
-let allFeedItems = [];
+// ── Generate opportunity cards from backend ──
+let allSources = [];
 let todayCards   = [];
 let library      = [];
 let activeFilter = '全部';
@@ -632,93 +566,47 @@ function sourceHost(url) {
   try { return new URL(url).hostname.replace('www.',''); } catch { return url; }
 }
 
-// ── Generate opportunity cards from feed items ──
-async function generateCards(items) {
-  // Only read today's cards from backend — never trigger generation
-  try {
-    const res = await fetch('/api/today');
-    if (res.ok) {
-      const data = await res.json();
-      const cards = data.cards || [];
-      if (cards.length > 0) {
-        return cards.map(c => ({
-          id: c.id,
-          title: c.title,
-          direction: c.direction,
-          sourceTitle: c.source_title || '',
-          sourceLink: c.source_url || '#',
-          sourceDate: c.created_at ? fmtDate(c.created_at) : '',
-          user: c.user_persona,
-          pain: c.pain_point,
-          why: c.ai_solution,
-          mvp: c.mvp_plan,
-          risk: c.risks,
-          check: c.next_step,
-          scores: typeof c.score === 'object' ? c.score : {},
-          score: typeof c.score === 'object' ? calcScore(c.score) : (c.score || 0),
-          tags: [c.direction],
-        }));
-      }
-    }
-  } catch (e) { console.warn('Backend read failed, falling back to client-side:', e); }
-  // Fallback: client-side template matching (no API calls)
-  const selected = items.slice(0, CARDS_PER_DAY);
-  return selected.map((item, i) => {
-    const tmpl = matchTemplate(item);
-    const score = calcScore(tmpl.scores);
-    // Build opportunity title from article title
-    const srcTitle = stripHtml(item.title||'');
-    const oppTitle = buildOppTitle(srcTitle, tmpl);
-    return {
-      id: i,
-      title: oppTitle,
-      direction: tmpl.dir,
-      sourceTitle: srcTitle,
-      sourceLink: item.link || '#',
-      sourceDate: item.pubDate ? fmtDate(item.pubDate) : '',
-      user: tmpl.user,
-      pain: tmpl.pain,
-      why: tmpl.why,
-      mvp: tmpl.mvp,
-      risk: tmpl.risk,
-      check: tmpl.check,
-      scores: tmpl.scores,
-      score: score,
-      tags: tmpl.tags,
-    };
-  });
-}
-
-function buildOppTitle(srcTitle, tmpl) {
-  // Try to derive a relevant opportunity title from the source
-  // Keep source title as context but frame as product opportunity
-  const prefixes = {
-    'Agent': '基于',
-    'AI 编程': '面向开发者的',
-    '大模型': '利用',
-    'AI 办公': '面向知识工作者的',
-    'AI 营销': '面向中小企业的',
+// ── Card data mapping (backend → frontend) ──
+function mapCard(c) {
+  return {
+    id: c.id,
+    title: c.title,
+    direction: c.direction,
+    sourceTitle: c.source_title || '',
+    sourceLink: c.source_url || '#',
+    sourceDate: c.created_at ? fmtDate(c.created_at) : '',
+    user: c.user_persona,
+    pain: c.pain_point,
+    why: c.ai_solution,
+    mvp: c.mvp_plan,
+    risk: c.risks,
+    check: c.next_step,
+    scores: typeof c.score === 'object' ? c.score : {},
+    score: typeof c.score === 'object' ? calcScore(c.score) : (c.score || 0),
+    tags: [c.direction],
+    savedAt: c.created_at || new Date().toISOString(),
   };
-  const p = prefixes[tmpl.dir] || '';
-  const words = srcTitle.split(/[：:，,、\s]+/).filter(w => w.length >= 2).slice(0,3).join('');
-  return `${p}${words}产品机会`;
 }
 
-// ── Demo data (fallback if API fails) ──
-const DEMO_ITEMS = [
-  { title:'Claude 推出新版 Agent 功能，支持多步骤工作流自动执行', link:'https://www.anthropic.com/news/claude-agent', pubDate:'2026-06-11', description:'Anthropic 发布 Claude Agent 功能，允许用户创建跨应用的多步任务工作流，内置任务暂停和人工确认节点。' },
-  { title:'Cursor 1.0 正式发布，AI 代码审查精度大幅提升', link:'https://cursor.sh/blog/1-0', pubDate:'2026-06-11', description:'Cursor 发布 1.0 版本，新增全仓库上下文理解能力，代码审查错误率降低 40%，支持大型 monorepo 项目。' },
-  { title:'国内多家企业宣布接入 DeepSeek V3 知识库功能', link:'https://www.deepseek.com/news', pubDate:'2026-06-10', description:'DeepSeek 发布知识库 API，多家国内 SaaS 企业宣布接入，用于私有文档问答和内容生成场景。' },
-  { title:'AI 内容营销工具 Jasper 用户突破 500 万，品牌一致性成新痛点', link:'https://jasper.ai/blog', pubDate:'2026-06-10', description:'Jasper 公布用户数据，但调研显示 60% 企业用户表示 AI 生成内容与品牌调性不符是主要挑战。' },
-];
-
-// ── Fetch feed ──
-async function fetchFeed() {
-  // Only read RSS items from backend — never trigger fetch/generation
-  const res = await fetch('/api/rss', { signal: AbortSignal.timeout(8000) });
-  if (!res.ok) throw new Error('RSS API error');
+async function loadTodayCards() {
+  const res = await fetch('/api/cards/today', { signal: AbortSignal.timeout(10000) });
+  if (!res.ok) throw new Error(`API error: ${res.status}`);
   const data = await res.json();
-  return (data.items || data || []).map(item => ({
+  return (data.cards || []).map(mapCard);
+}
+
+async function loadLibraryCards() {
+  const res = await fetch('/api/cards', { signal: AbortSignal.timeout(10000) });
+  if (!res.ok) throw new Error(`API error: ${res.status}`);
+  const data = await res.json();
+  return (data.cards || []).map(mapCard);
+}
+
+async function loadSources() {
+  const res = await fetch('/api/sources', { signal: AbortSignal.timeout(8000) });
+  if (!res.ok) throw new Error(`API error: ${res.status}`);
+  const data = await res.json();
+  return (data.items || []).map(item => ({
     title: item.title || '',
     link: item.url || item.link || '',
     description: item.description || '',
@@ -726,78 +614,99 @@ async function fetchFeed() {
   }));
 }
 
-// ── Loading steps animation ──
-function animateLoadingSteps() {
-  const steps = ['ls1','ls2','ls3'];
-  let i = 0;
-  const iv = setInterval(() => {
-    if (i > 0) document.getElementById(steps[i-1]).classList.remove('active');
-    if (i < steps.length) document.getElementById(steps[i]).classList.add('active');
-    else clearInterval(iv);
-    i++;
-  }, 700);
-  return iv;
+// ── Loading state ──
+function showLoading(steps) {
+  document.getElementById('today-loading').style.display = '';
+  document.getElementById('today-cards').style.display   = 'none';
+  document.getElementById('stat-bar').style.display      = 'none';
+  const ls1 = document.getElementById('ls1');
+  const ls2 = document.getElementById('ls2');
+  const ls3 = document.getElementById('ls3');
+  ls1.textContent = steps[0] || '正在加载…';
+  ls1.classList.add('active');
+  ls2.textContent = steps[1] || '';
+  ls2.classList.remove('active');
+  ls3.textContent = steps[2] || '';
+  ls3.classList.remove('active');
+  return { ls1, ls2, ls3 };
+}
+
+function showError(title, detail) {
+  document.getElementById('today-loading').style.display = '';
+  document.getElementById('today-cards').style.display   = 'none';
+  document.getElementById('today-loading').innerHTML = `
+    <div style="text-align:center;padding:40px 20px">
+      <div style="font-size:48px;margin-bottom:12px">⚠️</div>
+      <p style="color:var(--ink-2);font-weight:600;margin:0 0 6px">${title}</p>
+      <p style="color:var(--muted);font-size:13px;margin:0">${detail}</p>
+    </div>`;
 }
 
 // ── Main init ──
 async function init() {
-  document.getElementById('today-loading').style.display = '';
-  document.getElementById('today-cards').style.display   = 'none';
-  document.getElementById('stat-bar').style.display      = 'none';
-  document.getElementById('page-sub').textContent = '正在从 AI HOT 精选加载今日内容…';
+  const { ls1, ls2, ls3 } = showLoading([
+    '正在加载今日机会卡…',
+    '正在加载历史机会库…',
+    '正在加载信息源…',
+  ]);
 
-  const iv = animateLoadingSteps();
+  let loadError = null;
 
+  // Load today cards & RSS items in parallel
   try {
-    allFeedItems = await fetchFeed();
+    ls1.textContent = '正在加载今日机会卡…';
+    [todayCards, allSources] = await Promise.all([
+      loadTodayCards(),
+      loadSources(),
+    ]);
+    ls1.textContent = `已加载 ${todayCards.length} 张今日机会卡`;
+    ls1.classList.remove('active');
   } catch (e) {
-    allFeedItems = DEMO_ITEMS;
+    loadError = e;
+    console.error('Failed to load today data:', e);
   }
 
-  clearInterval(iv);
-
-  // Simulate analysis delay
-  await new Promise(r => setTimeout(r, 2200));
-
-  todayCards = await generateCards(allFeedItems);
-  // Load full library from backend (accumulated over time)
-  let backendCards = [];
-  try {
-    const res = await fetch('/api/cards');
-    if (res.ok) {
-      const data = await res.json();
-      backendCards = (data.cards || data || []).map(c => ({
-        id: c.id, title: c.title, direction: c.direction,
-        sourceTitle: c.source_title || '', sourceLink: c.source_url || '#',
-        sourceDate: c.created_at ? fmtDate(c.created_at) : '',
-        user: c.user_persona, pain: c.pain_point, why: c.ai_solution,
-        mvp: c.mvp_plan, risk: c.risks, check: c.next_step,
-        scores: typeof c.score === 'object' ? c.score : {},
-        score: typeof c.score === 'object' ? calcScore(c.score) : (c.score || 0),
-        tags: [c.direction], savedAt: c.created_at || new Date().toISOString(),
-      }));
+  // Load library
+  if (!loadError) {
+    try {
+      ls2.classList.add('active');
+      library = await loadLibraryCards();
+      ls2.textContent = `已加载 ${library.length} 张历史机会卡`;
+      ls2.classList.remove('active');
+    } catch (e) {
+      console.warn('Failed to load library:', e);
+      library = [];
     }
-  } catch (e) { console.warn('Failed to load library from backend:', e); }
-  if (backendCards.length > 0) {
-    library = backendCards;
-  } else {
-    // Fallback if backend has no cards yet
-    library = [...todayCards.map(c => ({ ...c, savedAt: new Date().toISOString() })),
-               ...SEED_LIBRARY];
   }
+
+  if (loadError) {
+    showError('无法连接后端服务',
+      '请确认后端已启动（uvicorn main:app），或稍后刷新页面重试。');
+    document.getElementById('stat-bar').style.display = 'none';
+    return;
+  }
+
+  ls3.classList.add('active');
+  ls3.textContent = `已加载 ${allSources.length} 条信息源`;
+  ls3.classList.remove('active');
 
   // Update stats
-  document.getElementById('stat-fetched').textContent = allFeedItems.length;
+  document.getElementById('stat-fetched').textContent = allSources.length;
   document.getElementById('stat-cards').textContent   = todayCards.length;
   document.getElementById('stat-time').textContent    = new Date().toLocaleTimeString('zh-CN', { hour:'2-digit', minute:'2-digit' });
   document.getElementById('stat-bar').style.display   = '';
   document.getElementById('today-badge').textContent  = todayCards.length;
   document.getElementById('lib-badge').textContent    = library.length;
-  document.getElementById('page-sub').textContent     = `${today()} · AI HOT 精选 · 已生成 ${todayCards.length} 张机会卡`;
+
+  if (todayCards.length === 0) {
+    document.getElementById('page-sub').textContent = `${today()} · 今日机会卡尚未生成，将于每日 08:30 自动生成`;
+  } else {
+    document.getElementById('page-sub').textContent = `${today()} · AI HOT 精选 · 已生成 ${todayCards.length} 张机会卡`;
+  }
   document.getElementById('today-date-hd').textContent = `${today()} 机会`;
 
   renderTodayCards();
-  renderFeed();
+  renderSources();
 
   document.getElementById('today-loading').style.display = 'none';
   document.getElementById('today-cards').style.display   = '';
@@ -807,6 +716,13 @@ async function init() {
 function renderTodayCards() {
   const grid = document.getElementById('card-grid');
   grid.innerHTML = '';
+  if (!todayCards.length) {
+    grid.innerHTML = `<div class="lib-empty">
+      <p style="font-size:14px;color:var(--ink-2);margin:0 0 8px">📭 今日机会卡尚未生成</p>
+      <p style="margin:0">每日 08:30 自动从 AI HOT 精选生成 4 张机会卡，请稍后查看</p>
+    </div>`;
+    return;
+  }
   todayCards.forEach((card, i) => {
     const el = document.createElement('div');
     el.className = 'opp-card fade-up';
@@ -836,22 +752,22 @@ function renderTodayCards() {
 }
 
 // ── Render feed items ──
-function renderFeed() {
-  const list = document.getElementById('feed-list');
+function renderSources() {
+  const list = document.getElementById('source-list');
   list.innerHTML = '';
-  if (!allFeedItems.length) {
-    list.innerHTML = '<div class="feed-empty">暂无内容</div>';
+  if (!allSources.length) {
+    list.innerHTML = '<div class="source-empty">暂无内容</div>';
     return;
   }
   const convertedLinks = new Set(todayCards.map(c => c.sourceLink));
-  allFeedItems.forEach(item => {
+  allSources.forEach(item => {
     const isConv = convertedLinks.has(item.link);
     const el = document.createElement('div');
-    el.className = 'feed-item' + (isConv ? ' converted' : '');
+    el.className = 'source-item' + (isConv ? ' converted' : '');
     el.innerHTML = `
-      <div class="feed-item-main">
+      <div class="source-item-main">
         <a href="${item.link||'#'}" target="_blank">${stripHtml(item.title||'(无标题)')}</a>
-        <div class="feed-item-meta">${item.pubDate ? fmtDate(item.pubDate) : ''} · ${sourceHost(item.link||'')}</div>
+        <div class="source-item-meta">${item.pubDate ? fmtDate(item.pubDate) : ''} · ${sourceHost(item.link||'')}</div>
       </div>
       ${isConv ? '<span class="conv-badge">已生成机会卡</span>' : ''}`;
     list.appendChild(el);
@@ -859,32 +775,6 @@ function renderFeed() {
 }
 
 // ── Library ──
-const SEED_LIBRARY = [
-  {
-    id:100, title:'AI 产品经理竞品变化追踪助手', direction:'AI 办公',
-    sourceTitle:'多家 SaaS 产品密集发布 AI 功能更新', sourceLink:'https://aihot.virxact.com',
-    user:'AI 产品经理、创业者、咨询顾问', pain:'竞品更新散落在博客、更新日志、社媒和社区，难以系统追踪',
-    why:'大模型可自动摘要竞品变化并判断对自身产品的影响',
-    mvp:'订阅竞品 → 变更摘要 → 影响判断 → 分析报告',
-    risk:'信息采集依赖公开渠道，付费壁垒内信息无法覆盖',
-    check:'找 5 位 AI PM 试用，记录付费意愿',
-    scores:{ pain:4, aifit:4, mkt:3, comp:3, tech:4, biz:4 },
-    score:7.6, tags:['AI 办公','PM 工具'],
-  },
-  {
-    id:101, title:'面向知识工作者的个人 AI 资料库', direction:'AI 办公',
-    sourceTitle:'笔记类 AI 产品用户留存数据分析', sourceLink:'https://aihot.virxact.com',
-    user:'研究员、产品经理、内容创作者',
-    pain:'资料收集容易，后续查找、复用和输出困难，笔记沉没严重',
-    why:'大模型自动摘要、打标、语义问答，把散乱资料变成可对话知识库',
-    mvp:'收藏入口 + 自动摘要 + 语义问答 + 写作引用',
-    risk:'已有 Notion AI、Mem 等成熟竞品，差异化需更清晰',
-    check:'找 10 位知识工作者试用，看 7 天留存率',
-    scores:{ pain:4, aifit:4, mkt:4, comp:2, tech:4, biz:3 },
-    score:7.4, tags:['AI 办公','知识管理'],
-  },
-];
-
 function renderLibrary() {
   const grid = document.getElementById('lib-grid');
   const q = (document.getElementById('lib-search').value||'').toLowerCase();
@@ -895,7 +785,10 @@ function renderLibrary() {
   });
   grid.innerHTML = '';
   if (!filtered.length) {
-    grid.innerHTML = '<div class="lib-empty">暂无匹配的机会卡</div>';
+    const emsg = library.length
+      ? '<div class="lib-empty">未找到匹配的机会卡，试试其他关键词或方向</div>'
+      : '<div class="lib-empty"><p style="font-size:14px;color:var(--ink-2);margin:0 0 8px">📚 机会库为空</p><p style="margin:0">每日生成的机会卡将自动累积到这里，支持搜索和筛选</p></div>';
+    grid.innerHTML = emsg;
     return;
   }
   filtered.forEach(c => {
@@ -947,11 +840,15 @@ document.getElementById('overlay').addEventListener('click', closeDetail);
 function renderDims(scores, container) {
   container.innerHTML = '';
   DIMS.forEach(d => {
-    const v = scores[d.key] || 0;
+    const raw = scores[d.key];
+    const v = (raw && typeof raw === 'object') ? (raw.value || 0) : (Number(raw) || 0);
+    const reason = (raw && typeof raw === 'object') ? (raw.reason || '') : '';
+    const pct = Math.round(d.weight / DIMS_TOTAL_WEIGHT * 100);
     const row = document.createElement('div');
     row.className = 'dim-row';
+    const hint = d.hint ? ` <span style="color:var(--warn);font-size:10px">${d.hint}</span>` : '';
     row.innerHTML = `
-      <div class="dm-meta"><span class="dm-name">${d.name}</span><span class="dm-wt">×${Math.round(d.weight*100)}%</span></div>
+      <div class="dm-meta"><span class="dm-name">${d.name}${hint}</span><span class="dm-wt">×${pct}%${reason ? ' — ' + reason : ''}</span></div>
       <div class="bar-wrap"><div class="bar-fill ${scoreCls(v)}" style="width:0" data-w="${v/5*100}%"></div></div>
       <span class="dm-score">${v}/5</span>`;
     container.appendChild(row);
@@ -999,7 +896,7 @@ document.querySelectorAll('.nav-item[data-view]').forEach(btn => {
       renderLibrary();
     } else {
       document.getElementById('page-title').textContent = '信息源';
-      document.getElementById('page-sub').textContent   = `AI HOT 精选 · ${allFeedItems.length} 条`;
+      document.getElementById('page-sub').textContent   = `AI HOT 精选 · ${allSources.length} 条`;
     }
   });
 });
