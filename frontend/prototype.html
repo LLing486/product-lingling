@@ -634,18 +634,20 @@ function sourceHost(url) {
 
 // ── Generate opportunity cards from feed items ──
 async function generateCards(items) {
+  // Only read today's cards from backend — never trigger generation
   try {
-    const res = await fetch('/api/generate', { method: 'POST', headers: {'Content-Type':'application/json'}, body: '{}' });
+    const res = await fetch('/api/today');
     if (res.ok) {
       const data = await res.json();
-      if (data.cards && data.cards.length > 0) {
-        return data.cards.map(c => ({
+      const cards = data.cards || [];
+      if (cards.length > 0) {
+        return cards.map(c => ({
           id: c.id,
           title: c.title,
           direction: c.direction,
           sourceTitle: c.source_title || '',
           sourceLink: c.source_url || '#',
-          sourceDate: '',
+          sourceDate: c.created_at ? fmtDate(c.created_at) : '',
           user: c.user_persona,
           pain: c.pain_point,
           why: c.ai_solution,
@@ -658,8 +660,8 @@ async function generateCards(items) {
         }));
       }
     }
-  } catch (e) { console.warn('Backend generate failed, falling back to client-side:', e); }
-  // Fallback: client-side template matching
+  } catch (e) { console.warn('Backend read failed, falling back to client-side:', e); }
+  // Fallback: client-side template matching (no API calls)
   const selected = items.slice(0, CARDS_PER_DAY);
   return selected.map((item, i) => {
     const tmpl = matchTemplate(item);
@@ -712,12 +714,10 @@ const DEMO_ITEMS = [
 
 // ── Fetch feed ──
 async function fetchFeed() {
-  // Sync RSS from backend first, then fetch items
-  await fetch('/api/rss/sync', { method: 'POST' }).catch(() => {});
+  // Only read RSS items from backend — never trigger fetch/generation
   const res = await fetch('/api/rss', { signal: AbortSignal.timeout(8000) });
   if (!res.ok) throw new Error('RSS API error');
   const data = await res.json();
-  // Normalize backend format to match frontend expectations
   return (data.items || data || []).map(item => ({
     title: item.title || '',
     link: item.url || item.link || '',

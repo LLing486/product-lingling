@@ -59,7 +59,6 @@ uvicorn main:app --reload
 product-lingling/
 ├── PRD.md              # 产品需求文档
 ├── README.md           # 本文件
-├── INTERVIEW-QA.md     # 面试追问准备
 ├── prototype.html      # 前端原型
 ├── .env.example        # 环境变量模板
 ├── .gitignore
