@@ -647,7 +647,7 @@ async function loadSources() {
   return (data.items || []).map(item => {
     const raw = item.published_at || item.pubDate || '';
     let iso = '';
-    if (raw) { try { iso = new Date(raw).toISOString().slice(0,10); } catch(e) { iso = raw; } }
+    if (raw) { try { const d = new Date(raw); iso = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; } catch(e) { iso = raw; } }
     return {
       title: item.title || '',
       link: item.url || item.link || '',
