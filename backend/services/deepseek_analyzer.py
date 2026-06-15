@@ -168,7 +168,7 @@ def _call_deepseek(system_prompt: str, user_prompt: str) -> list[dict]:
             {"role": "user", "content": user_prompt},
         ],
         temperature=0.7,
-        max_tokens=4096,
+        max_tokens=8192,
         response_format={"type": "json_object"},
     )
 
