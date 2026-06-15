@@ -2,9 +2,11 @@
 
 import logging
 import os
-from datetime import date
+from datetime import date, datetime
+from email.utils import parsedate_to_datetime
 from pathlib import Path
 from contextlib import asynccontextmanager
+from zoneinfo import ZoneInfo
 
 from dotenv import load_dotenv
 
@@ -108,4 +110,15 @@ def generate_cards():
 def list_sources():
     """Return all cached feed items from the information source."""
     items = get_all_rss_items()
+    sh_tz = ZoneInfo("Asia/Shanghai")
+    for item in items:
+        raw = item.get("published_at") or ""
+        if raw:
+            try:
+                dt = parsedate_to_datetime(raw).astimezone(sh_tz)
+                item["published_date"] = dt.strftime("%Y-%m-%d")
+            except Exception:
+                item["published_date"] = ""
+        else:
+            item["published_date"] = ""
     return {"items": items, "total": len(items)}
