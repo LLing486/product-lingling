@@ -21,7 +21,7 @@ def fetch_and_store() -> list[dict]:
         if not url:
             continue
         try:
-            conn.execute(
+            cursor = conn.execute(
                 "INSERT OR IGNORE INTO rss_items (title, url, description, published_at) VALUES (?, ?, ?, ?)",
                 (
                     entry.get("title", ""),
@@ -30,7 +30,7 @@ def fetch_and_store() -> list[dict]:
                     entry.get("published", ""),
                 ),
             )
-            if conn.total_changes:
+            if cursor.rowcount > 0:
                 inserted += 1
         except Exception:
             continue
@@ -45,6 +45,30 @@ def fetch_and_store() -> list[dict]:
     ).fetchall()
     conn.close()
 
+    return [dict(r) for r in rows]
+
+
+def get_today_all_items() -> list[dict]:
+    """Return ALL of today's fetched RSS items (analyzed or not), for clustering."""
+    conn = get_db()
+    rows = conn.execute(
+        "SELECT id, title, url, description, published_at, fetched_at, is_analyzed "
+        "FROM rss_items WHERE date(fetched_at) = date('now') "
+        "ORDER BY id"
+    ).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+def get_today_unanalyzed_items() -> list[dict]:
+    """Return today's unanalyzed RSS items."""
+    conn = get_db()
+    rows = conn.execute(
+        "SELECT id, title, url, description, published_at, fetched_at, is_analyzed "
+        "FROM rss_items WHERE is_analyzed = 0 AND date(fetched_at) = date('now') "
+        "ORDER BY id"
+    ).fetchall()
+    conn.close()
     return [dict(r) for r in rows]
 
 
