@@ -242,6 +242,14 @@
     .search-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(99,102,241,.1)}
     .search-ico{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--subtle);pointer-events:none}
     .search-ico svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+    .date-filter{display:flex;align-items:center;gap:6px}
+    .date-input{height:38px;border:1.5px solid var(--line);border-radius:var(--r-sm);
+      padding:0 10px;background:var(--surface);color:var(--ink);
+      font-size:13px;outline:none;transition:border-color .15s ease;cursor:pointer}
+    .date-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(99,102,241,.1)}
+    .date-clear{height:38px;padding:0 10px;border:1.5px solid var(--line);border-radius:var(--r-sm);
+      background:var(--surface);color:var(--muted);font-size:12px;cursor:pointer;transition:all .12s ease;white-space:nowrap}
+    .date-clear:hover{border-color:var(--accent-bd);color:var(--accent);background:var(--accent-bg)}
     .chips{display:flex;gap:6px;flex-wrap:wrap}
     .chip{padding:5px 12px;border-radius:999px;border:1.5px solid var(--line);
       background:var(--surface);color:var(--muted);font-size:12.5px;font-weight:500;
@@ -433,6 +441,10 @@
             <button class="chip" data-f="大模型" type="button">大模型</button>
             <button class="chip" data-f="AI 营销" type="button">AI 营销</button>
           </div>
+          <div class="date-filter">
+            <input class="date-input" type="date" id="lib-date">
+            <button class="date-clear" id="lib-date-clear" type="button">清除日期</button>
+          </div>
         </div>
         <div class="lib-grid" id="lib-grid"></div>
       </div>
@@ -444,6 +456,16 @@
         <div class="source-meta">
           订阅源：<a href="https://aihot.virxact.com/feed.xml" target="_blank">https://aihot.virxact.com/feed.xml</a>
           &nbsp;·&nbsp; AI HOT 精选，每日精编候选池，最新 50 条
+        </div>
+        <div class="lib-toolbar" style="margin-bottom:16px">
+          <div class="date-filter">
+            <input class="date-input" type="date" id="source-date">
+            <button class="date-clear" id="source-date-clear" type="button">清除日期</button>
+          </div>
+          <div class="search-wrap">
+            <div class="search-ico"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></div>
+            <input class="search-input" type="text" id="source-search" placeholder="搜索信息源…">
+          </div>
         </div>
         <div class="source-list" id="source-list">
           <div class="source-empty">正在加载信息源…</div>
@@ -557,6 +579,11 @@ function today() {
   return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;
 }
 
+function todayISO() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
 function stripHtml(s) {
   return (s||'').replace(/<[^>]+>/g,'').replace(/&nbsp;/g,' ').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').trim();
 }
@@ -597,7 +624,7 @@ async function loadTodayCards() {
   const res = await fetch('/api/cards/today', { signal: AbortSignal.timeout(10000) });
   if (!res.ok) throw new Error(`API error: ${res.status}`);
   const data = await res.json();
-  return (data.cards || []).map(mapCard);
+  return { cards: (data.cards || []).map(mapCard), date: data.date || '', generated: data.generated || 0 };
 }
 
 async function loadLibraryCards() {
@@ -660,10 +687,13 @@ async function init() {
   // Load today cards & RSS items in parallel
   try {
     ls1.textContent = '正在加载今日机会卡…';
-    [todayCards, allSources] = await Promise.all([
+    const [todayResult, sourcesResult] = await Promise.all([
       loadTodayCards(),
       loadSources(),
     ]);
+    todayCards = todayResult.cards;
+    window._todayDate = todayResult.date;
+    allSources = sourcesResult;
     ls1.textContent = `已加载 ${todayCards.length} 张今日机会卡`;
     ls1.classList.remove('active');
   } catch (e) {
@@ -703,12 +733,17 @@ async function init() {
   document.getElementById('today-badge').textContent  = todayCards.length;
   document.getElementById('lib-badge').textContent    = library.length;
 
+  const displayDate = window._todayDate || today();
   if (todayCards.length === 0) {
-    document.getElementById('page-sub').textContent = `${today()} · 今日机会卡尚未生成，将于每日 08:30 自动生成`;
+    document.getElementById('page-sub').textContent = `📅 ${displayDate} · 今日机会卡尚未生成，将于每日 08:30 自动生成`;
   } else {
-    document.getElementById('page-sub').textContent = `${today()} · AI HOT 精选 · 已生成 ${todayCards.length} 张机会卡`;
+    document.getElementById('page-sub').textContent = `📅 ${displayDate} · AI HOT 精选 · 已生成 ${todayCards.length} 张机会卡`;
   }
-  document.getElementById('today-date-hd').textContent = `${today()} 机会`;
+  if (window._todayDate && window._todayDate !== todayISO()) {
+    document.getElementById('today-date-hd').textContent = `${displayDate} 机会`;
+  } else {
+    document.getElementById('today-date-hd').textContent = `${today()} 机会`;
+  }
 
   renderTodayCards();
   renderSources();
@@ -760,12 +795,19 @@ function renderTodayCards() {
 function renderSources() {
   const list = document.getElementById('source-list');
   list.innerHTML = '';
-  if (!allSources.length) {
+  const dateVal = document.getElementById('source-date') ? document.getElementById('source-date').value : '';
+  const q = (document.getElementById('source-search') ? document.getElementById('source-search').value : '').toLowerCase();
+  const filtered = allSources.filter(item => {
+    const md = !dateVal || (item.pubDate && item.pubDate.startsWith(dateVal));
+    const mq = !q || (item.title||'').toLowerCase().includes(q) || (item.description||'').toLowerCase().includes(q);
+    return md && mq;
+  });
+  if (!filtered.length) {
     list.innerHTML = '<div class="source-empty">暂无内容</div>';
     return;
   }
   const convertedLinks = new Set(todayCards.map(c => c.sourceLink));
-  allSources.forEach(item => {
+  filtered.forEach(item => {
     const isConv = convertedLinks.has(item.link);
     const el = document.createElement('div');
     el.className = 'source-item' + (isConv ? ' converted' : '');
@@ -783,10 +825,12 @@ function renderSources() {
 function renderLibrary() {
   const grid = document.getElementById('lib-grid');
   const q = (document.getElementById('lib-search').value||'').toLowerCase();
+  const dateVal = document.getElementById('lib-date').value;
   const filtered = library.filter(c => {
     const mf = activeFilter==='全部' || c.direction===activeFilter || (c.tags||[]).includes(activeFilter);
     const mq = !q || c.title.toLowerCase().includes(q) || (c.pain||'').toLowerCase().includes(q);
-    return mf && mq;
+    const md = !dateVal || (c.savedAt && c.savedAt.startsWith(dateVal));
+    return mf && mq && md;
   });
   grid.innerHTML = '';
   if (!filtered.length) {
@@ -917,6 +961,17 @@ document.getElementById('filter-chips').addEventListener('click', e => {
   renderLibrary();
 });
 document.getElementById('lib-search').addEventListener('input', renderLibrary);
+document.getElementById('lib-date').addEventListener('input', renderLibrary);
+document.getElementById('lib-date-clear').addEventListener('click', () => {
+  document.getElementById('lib-date').value = '';
+  renderLibrary();
+});
+document.getElementById('source-date').addEventListener('input', renderSources);
+document.getElementById('source-date-clear').addEventListener('click', () => {
+  document.getElementById('source-date').value = '';
+  renderSources();
+});
+document.getElementById('source-search').addEventListener('input', renderSources);
 
 // ── Refresh ──
 document.getElementById('refresh-btn').addEventListener('click', () => {

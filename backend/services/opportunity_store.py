@@ -1,7 +1,7 @@
 """CRUD operations for opportunity cards."""
 
 import json
-from datetime import date
+from datetime import date, timedelta
 from backend.models import get_db
 
 
@@ -43,6 +43,27 @@ def get_today_cards() -> list[dict]:
     ).fetchall()
     conn.close()
     return [_row_to_card(r) for r in rows]
+
+
+def get_latest_cards() -> tuple[list[dict], str]:
+    """Get today's cards; fall back to yesterday if today is empty.
+
+    Returns (cards, actual_date_iso).
+    """
+    today_iso = date.today().isoformat()
+    cards = get_today_cards()
+    if cards:
+        return cards, today_iso
+
+    yesterday_iso = (date.today() - timedelta(days=1)).isoformat()
+    conn = get_db()
+    rows = conn.execute(
+        "SELECT * FROM opportunity_cards WHERE created_at = ? ORDER BY id",
+        (yesterday_iso,),
+    ).fetchall()
+    conn.close()
+    cards = [_row_to_card(r) for r in rows]
+    return cards, yesterday_iso if cards else today_iso
 
 
 def get_card_by_id(card_id: int) -> dict | None:
