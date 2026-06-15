@@ -157,6 +157,10 @@
     .read-more{font-size:12px;color:var(--accent);display:flex;align-items:center;gap:4px;white-space:nowrap}
     .read-more svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 
+    .type-badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600;margin-left:6px}
+    .type-related{background:var(--accent-bg);color:var(--accent)}
+    .type-crossdomain{background:linear-gradient(135deg,#f0e6ff,#ffe6f0);color:#9333ea}
+
     /* ── Detail Panel ── */
     .detail-overlay{position:fixed;inset:0;background:rgba(15,23,42,.35);
       z-index:30;opacity:0;pointer-events:none;transition:opacity .2s ease}
@@ -583,6 +587,7 @@ function mapCard(c) {
     check: c.next_step,
     scores: typeof c.score === 'object' ? c.score : {},
     score: typeof c.score === 'object' ? calcScore(c.score) : (c.score || 0),
+    cardType: c.card_type || 'related',
     tags: [c.direction],
     savedAt: c.created_at || new Date().toISOString(),
   };
@@ -731,7 +736,7 @@ function renderTodayCards() {
       <div class="card-top">
         <div class="card-top-row">
           <div class="card-score"><span class="n">${card.score.toFixed(1)}</span><span class="d">/10</span></div>
-          <span class="dir-pill">${card.direction}</span>
+          <span class="dir-pill">${card.direction}</span>${card.cardType === 'crossdomain' ? "<span class='type-badge type-crossdomain'>✨ 跨界创新</span>" : "<span class='type-badge type-related'>🔍 相关洞察</span>"}
         </div>
         <h3>${card.title}</h3>
       </div>
@@ -797,6 +802,7 @@ function renderLibrary() {
     el.innerHTML = `
       <div class="lib-top">
         <div class="lib-score"><span class="n">${c.score.toFixed(1)}</span><span class="d">/10</span></div>
+        <div>${c.cardType === 'crossdomain' ? "<span class='type-badge type-crossdomain'>✨ 跨界创新</span>" : "<span class='type-badge type-related'>🔍 相关洞察</span>"}</div>
         <h3>${c.title}</h3>
       </div>
       <div class="lib-body">
