@@ -1,7 +1,10 @@
 """Fetch RSS items from AI HOT and store new entries."""
 
+import logging
 import feedparser
 from backend.models import get_db
+
+logger = logging.getLogger(__name__)
 
 FEED_URL = "https://aihot.virxact.com/feed.xml"
 
@@ -32,7 +35,8 @@ def fetch_and_store() -> list[dict]:
             )
             if cursor.rowcount > 0:
                 inserted += 1
-        except Exception:
+        except Exception as e:
+            logger.warning(f"Failed to insert RSS item '{url[:60]}': {e}")
             continue
 
     conn.commit()
