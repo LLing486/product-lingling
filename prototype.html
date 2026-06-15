@@ -272,7 +272,8 @@
     .lf{font-size:12px}
     .lf-l{font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
     .lf-v{color:var(--ink-2);margin-top:1px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-    .lib-foot{padding:8px 14px;border-top:1px solid var(--line);display:flex;gap:4px;flex-wrap:wrap}
+    .lib-foot{padding:8px 14px;border-top:1px solid var(--line);display:flex;gap:4px;flex-wrap:wrap;align-items:center}
+    .lib-date{font-size:11px;color:var(--muted);margin-right:auto}
     .lib-empty{grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--subtle);font-size:13px}
 
     /* ── Feed view ── */
@@ -885,7 +886,7 @@ function renderLibrary() {
         <div class="lf"><div class="lf-l">目标用户</div><div class="lf-v">${escapeHtml(c.user)}</div></div>
         <div class="lf"><div class="lf-l">核心痛点</div><div class="lf-v">${escapeHtml(c.pain)}</div></div>
       </div>
-      <div class="lib-foot">${(c.tags||[]).map(t=>`<span class="tag">${escapeHtml(t)}</span>`).join('')}</div>`;
+      <div class="lib-foot"><span class="lib-date">${c.savedAt ? fmtDateISO(c.savedAt.slice(0,10)) : ''}</span>${(c.tags||[]).map(t=>`<span class="tag">${escapeHtml(t)}</span>`).join('')}</div>`;
     el.addEventListener('click', () => openDetail(c));
     grid.appendChild(el);
   });
