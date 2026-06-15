@@ -40,7 +40,7 @@ def fetch_and_store() -> list[dict]:
     # Return today's unanalyzed items only (prevent stale accumulation)
     rows = conn.execute(
         "SELECT id, title, url, description, published_at, fetched_at, is_analyzed "
-        "FROM rss_items WHERE is_analyzed = 0 AND date(fetched_at) = date('now') "
+        "FROM rss_items WHERE is_analyzed = 0 AND date(fetched_at) = date('now', 'localtime') "
         "ORDER BY id"
     ).fetchall()
     conn.close()
@@ -53,7 +53,7 @@ def get_today_all_items() -> list[dict]:
     conn = get_db()
     rows = conn.execute(
         "SELECT id, title, url, description, published_at, fetched_at, is_analyzed "
-        "FROM rss_items WHERE date(fetched_at) = date('now') "
+        "FROM rss_items WHERE date(fetched_at) = date('now', 'localtime') "
         "ORDER BY id"
     ).fetchall()
     conn.close()
@@ -65,7 +65,7 @@ def get_today_unanalyzed_items() -> list[dict]:
     conn = get_db()
     rows = conn.execute(
         "SELECT id, title, url, description, published_at, fetched_at, is_analyzed "
-        "FROM rss_items WHERE is_analyzed = 0 AND date(fetched_at) = date('now') "
+        "FROM rss_items WHERE is_analyzed = 0 AND date(fetched_at) = date('now', 'localtime') "
         "ORDER BY id"
     ).fetchall()
     conn.close()
