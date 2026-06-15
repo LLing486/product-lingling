@@ -30,7 +30,7 @@ def init_db():
             source_url      TEXT,
             direction       TEXT,
             card_type       TEXT NOT NULL DEFAULT 'related',
-            created_at      TEXT NOT NULL DEFAULT (date('now'))
+            created_at      TEXT NOT NULL DEFAULT (date('now', 'localtime'))
         );
 
         CREATE TABLE IF NOT EXISTS rss_items (
@@ -39,7 +39,7 @@ def init_db():
             url             TEXT NOT NULL UNIQUE,
             description     TEXT,
             published_at    TEXT,
-            fetched_at      TEXT NOT NULL DEFAULT (datetime('now')),
+            fetched_at      TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
             is_analyzed     INTEGER NOT NULL DEFAULT 0
         );
 
