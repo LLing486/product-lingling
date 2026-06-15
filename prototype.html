@@ -579,6 +579,16 @@ function fmtDate(dateStr) {
   return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;
 }
 
+/* Convert a local-time YYYY-MM-DD string to the display format "YYYY年M月D日".
+   This is used instead of fmtDate(pubDateRaw) so the displayed date always
+   matches the date used for filtering (both derive from the same pubDate). */
+function fmtDateISO(iso) {
+  if (!iso) return '';
+  const parts = iso.split('-');
+  if (parts.length !== 3) return iso;
+  return `${parts[0]}年${parseInt(parts[1],10)}月${parseInt(parts[2],10)}日`;
+}
+
 function today() {
   const d = new Date();
   return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;
@@ -836,7 +846,7 @@ function renderSources() {
       <div class="source-item-main">
         <a href="${item.link||'#'}" target="_blank">${stripHtml(item.title||'(无标题)')}</a>
         ${item.description ? '<div style="color:var(--muted);font-size:12.5px;line-height:1.5;margin-top:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">'+stripHtml(item.description)+'</div>' : ''}
-        <div class="source-item-meta">${item.pubDateRaw ? fmtDate(item.pubDateRaw) : (item.pubDate||'')} · ${sourceHost(item.link||'')}</div>
+        <div class="source-item-meta">${item.pubDate ? fmtDateISO(item.pubDate) : (item.pubDateRaw ? fmtDate(item.pubDateRaw) : '')} · ${sourceHost(item.link||'')}</div>
       </div>
       ${isConv ? '<span class="conv-badge">已生成机会卡</span>' : ''}`;
     list.appendChild(el);
