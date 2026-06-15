@@ -250,6 +250,9 @@
     .date-clear{height:38px;padding:0 10px;border:1.5px solid var(--line);border-radius:var(--r-sm);
       background:var(--surface);color:var(--muted);font-size:12px;cursor:pointer;transition:all .12s ease;white-space:nowrap}
     .date-clear:hover{border-color:var(--accent-bd);color:var(--accent);background:var(--accent-bg)}
+    .sort-btn{height:38px;padding:0 12px;border:1.5px solid var(--line);border-radius:var(--r-sm);
+      background:var(--surface);color:var(--muted);font-size:12px;cursor:pointer;transition:all .12s ease;white-space:nowrap}
+    .sort-btn:hover{border-color:var(--accent-bd);color:var(--accent);background:var(--accent-bg)}
     .chips{display:flex;gap:6px;flex-wrap:wrap}
     .chip{padding:5px 12px;border-radius:999px;border:1.5px solid var(--line);
       background:var(--surface);color:var(--muted);font-size:12.5px;font-weight:500;
@@ -462,6 +465,7 @@
             <input class="date-input" type="date" id="source-date">
             <button class="date-clear" id="source-date-clear" type="button">清除日期</button>
           </div>
+          <button class="sort-btn" id="source-sort" type="button" title="切换排序">↓ 最新在前</button>
           <div class="search-wrap">
             <div class="search-ico"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></div>
             <input class="search-input" type="text" id="source-search" placeholder="搜索信息源…">
@@ -566,6 +570,7 @@ let allSources = [];
 let todayCards   = [];
 let library      = [];
 let activeFilter = '全部';
+let sourceSortDesc = true; // true=最新在前，false=最旧在前
 
 // ── Utilities ──
 function fmtDate(dateStr) {
@@ -814,6 +819,9 @@ function renderSources() {
     const md = !dateVal || (item.pubDate && item.pubDate.startsWith(dateVal));
     const mq = !q || (item.title||'').toLowerCase().includes(q) || (item.description||'').toLowerCase().includes(q);
     return md && mq;
+  }).sort((a, b) => {
+    const da = a.pubDate || '', db = b.pubDate || '';
+    return sourceSortDesc ? db.localeCompare(da) : da.localeCompare(db);
   });
   if (!filtered.length) {
     list.innerHTML = '<div class="source-empty">暂无内容</div>';
@@ -983,6 +991,11 @@ document.getElementById('lib-date-clear').addEventListener('click', () => {
 document.getElementById('source-date').addEventListener('input', renderSources);
 document.getElementById('source-date-clear').addEventListener('click', () => {
   document.getElementById('source-date').value = '';
+  renderSources();
+});
+document.getElementById('source-sort').addEventListener('click', () => {
+  sourceSortDesc = !sourceSortDesc;
+  document.getElementById('source-sort').textContent = sourceSortDesc ? '↓ 最新在前' : '↑ 最旧在前';
   renderSources();
 });
 document.getElementById('source-search').addEventListener('input', renderSources);
