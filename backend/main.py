@@ -89,6 +89,10 @@ def generate_cards():
     """Manually trigger RSS fetch + DeepSeek analysis (dev only)."""
     if os.environ.get("LING_ENV", "") != "development":
         raise HTTPException(status_code=404, detail="Not found")
+    # Prevent duplicate generation if today already has cards
+    existing = get_today_cards()
+    if existing:
+        return {"message": f"Today already has {len(existing)} cards. Skip.", "cards": []}
     try:
         result = run_generation_once()
     except Exception as e:
