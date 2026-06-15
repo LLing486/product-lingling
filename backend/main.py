@@ -18,6 +18,7 @@ from backend.models import init_db
 from backend.services.rss_fetcher import get_all_rss_items
 from backend.services.opportunity_store import (
     get_today_cards,
+    get_latest_cards,
     get_card_by_id,
     get_all_cards,
 )
@@ -66,9 +67,12 @@ def list_cards(
 
 @app.get("/api/cards/today")
 def today_cards():
-    """Return today's opportunity cards (read-only — generation is scheduled)."""
-    cards = get_today_cards()
-    return {"cards": cards, "generated": len(cards) > 0}
+    """Return today's opportunity cards (read-only — generation is scheduled).
+
+    Falls back to yesterday's cards when today has none yet.
+    """
+    cards, actual_date = get_latest_cards()
+    return {"cards": cards, "generated": len(cards) > 0, "date": actual_date}
 
 
 @app.get("/api/cards/{card_id}")
