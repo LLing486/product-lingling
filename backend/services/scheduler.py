@@ -116,6 +116,6 @@ def stop_scheduler():
     """Shut down the scheduler gracefully."""
     global _scheduler
     if _scheduler is not None:
-        _scheduler.shutdown(wait=False)
+        _scheduler.shutdown(wait=True)
         _scheduler = None
         logger.info("Scheduler stopped")
