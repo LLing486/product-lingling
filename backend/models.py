@@ -29,6 +29,7 @@ def init_db():
             source_title    TEXT,
             source_url      TEXT,
             direction       TEXT,
+            card_type       TEXT NOT NULL DEFAULT 'related',
             created_at      TEXT NOT NULL DEFAULT (date('now'))
         );
 
@@ -50,4 +51,12 @@ def init_db():
             ON rss_items(is_analyzed);
     """)
     conn.commit()
+
+    # Migration: add card_type column if table exists without it
+    cursor = conn.execute("PRAGMA table_info(opportunity_cards)")
+    columns = [row[1] for row in cursor.fetchall()]
+    if "card_type" not in columns:
+        conn.execute("ALTER TABLE opportunity_cards ADD COLUMN card_type TEXT NOT NULL DEFAULT 'related'")
+        conn.commit()
+
     conn.close()
