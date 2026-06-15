@@ -2,6 +2,7 @@
 
 import logging
 import os
+from datetime import date
 from pathlib import Path
 from contextlib import asynccontextmanager
 
@@ -72,7 +73,8 @@ def today_cards():
     Falls back to yesterday's cards when today has none yet.
     """
     cards, actual_date = get_latest_cards()
-    return {"cards": cards, "generated": len(cards) > 0, "date": actual_date}
+    today_iso = date.today().isoformat()
+    return {"cards": cards, "generated": len(cards) > 0, "date": actual_date, "is_today": actual_date == today_iso}
 
 
 @app.get("/api/cards/{card_id}")

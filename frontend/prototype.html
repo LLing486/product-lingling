@@ -705,6 +705,7 @@ async function init() {
     ]);
     todayCards = todayResult.cards;
     window._todayDate = todayResult.date;
+    window._isToday = todayResult.is_today !== false;
     allSources = sourcesResult;
     ls1.textContent = `已加载 ${todayCards.length} 张今日机会卡`;
     ls1.classList.remove('active');
@@ -751,7 +752,7 @@ async function init() {
   } else {
     document.getElementById('page-sub').textContent = `📅 ${displayDate} · AI HOT 精选 · 已生成 ${todayCards.length} 张机会卡`;
   }
-  if (window._todayDate && window._todayDate !== todayISO()) {
+  if (!window._isToday) {
     document.getElementById('today-date-hd').textContent = `${displayDate} 机会`;
   } else {
     document.getElementById('today-date-hd').textContent = `${today()} 机会`;
