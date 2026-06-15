@@ -554,7 +554,7 @@ function calcScore(s) {
     const v = (raw && typeof raw === 'object') ? (raw.value || 0) : (Number(raw) || 0);
     weightedSum += v * d.weight;
   }
-  return Math.round(weightedSum / 5 * 10) / 10;
+  return Math.round(weightedSum / (5 * DIMS_TOTAL_WEIGHT) * 10 * 10) / 10;
 }
 
 function scoreCls(v) {
@@ -613,7 +613,7 @@ function mapCard(c) {
     risk: c.risks,
     check: c.next_step,
     scores: typeof c.score === 'object' ? c.score : {},
-    score: typeof c.score === 'object' ? calcScore(c.score) : (c.score || 0),
+    score: (c.score && typeof c.score === 'object' && c.score.total) ? c.score.total : (typeof c.score === 'object' ? calcScore(c.score) : (c.score || 0)),
     cardType: c.card_type || 'related',
     tags: [c.direction],
     savedAt: c.created_at || new Date().toISOString(),
