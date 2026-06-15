@@ -588,6 +588,12 @@ function stripHtml(s) {
   return (s||'').replace(/<[^>]+>/g,'').replace(/&nbsp;/g,' ').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').trim();
 }
 
+function escapeHtml(s) {
+  const d = document.createElement('div');
+  d.textContent = s || '';
+  return d.innerHTML;
+}
+
 function shortTitle(s, max=36) {
   const t = stripHtml(s);
   return t.length > max ? t.slice(0, max)+'…' : t;
@@ -777,19 +783,19 @@ function renderTodayCards() {
       <div class="card-top">
         <div class="card-top-row">
           <div class="card-score"><span class="n">${card.score.toFixed(1)}</span><span class="d">/10</span></div>
-          <span class="dir-pill">${card.direction}</span>${card.cardType === 'crossdomain' ? "<span class='type-badge type-crossdomain'>✨ 跨界创新</span>" : "<span class='type-badge type-related'>🔍 相关洞察</span>"}
+          <span class="dir-pill">${escapeHtml(card.direction)}</span>${card.cardType === 'crossdomain' ? "<span class='type-badge type-crossdomain'>✨ 跨界创新</span>" : "<span class='type-badge type-related'>🔍 相关洞察</span>"}
         </div>
-        <h3>${card.title}</h3>
+        <h3>${escapeHtml(card.title)}</h3>
       </div>
       <div class="card-body">
         <a class="card-source" href="${card.sourceLink}" target="_blank" onclick="event.stopPropagation()">
           <svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-          ${shortTitle(card.sourceTitle, 40)}
+          ${escapeHtml(shortTitle(card.sourceTitle, 40))}
         </a>
-        <div class="card-pain">${card.pain}</div>
+        <div class="card-pain">${escapeHtml(card.pain)}</div>
       </div>
       <div class="card-footer">
-        <div class="card-footer-tags">${card.tags.map(t=>`<span class="tag">${t}</span>`).join('')}</div>
+        <div class="card-footer-tags">${card.tags.map(t=>`<span class="tag">${escapeHtml(t)}</span>`).join('')}</div>
         <span class="read-more">查看分析 <svg viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg></span>
       </div>`;
     el.addEventListener('click', () => openDetail(card));
@@ -854,13 +860,13 @@ function renderLibrary() {
       <div class="lib-top">
         <div class="lib-score"><span class="n">${c.score.toFixed(1)}</span><span class="d">/10</span></div>
         <div>${c.cardType === 'crossdomain' ? "<span class='type-badge type-crossdomain'>✨ 跨界创新</span>" : "<span class='type-badge type-related'>🔍 相关洞察</span>"}</div>
-        <h3>${c.title}</h3>
+        <h3>${escapeHtml(c.title)}</h3>
       </div>
       <div class="lib-body">
-        <div class="lf"><div class="lf-l">目标用户</div><div class="lf-v">${c.user}</div></div>
-        <div class="lf"><div class="lf-l">核心痛点</div><div class="lf-v">${c.pain}</div></div>
+        <div class="lf"><div class="lf-l">目标用户</div><div class="lf-v">${escapeHtml(c.user)}</div></div>
+        <div class="lf"><div class="lf-l">核心痛点</div><div class="lf-v">${escapeHtml(c.pain)}</div></div>
       </div>
-      <div class="lib-foot">${(c.tags||[]).map(t=>`<span class="tag">${t}</span>`).join('')}</div>`;
+      <div class="lib-foot">${(c.tags||[]).map(t=>`<span class="tag">${escapeHtml(t)}</span>`).join('')}</div>`;
     el.addEventListener('click', () => openDetail(c));
     grid.appendChild(el);
   });
