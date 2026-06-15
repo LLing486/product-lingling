@@ -103,7 +103,7 @@ def start_scheduler():
     _scheduler = BackgroundScheduler(daemon=True)
     _scheduler.add_job(
         _daily_job,
-        trigger=CronTrigger(hour=8, minute=30),
+        trigger=CronTrigger(hour=8, minute=30, timezone='Asia/Shanghai'),
         id="daily_opportunity_gen",
         name="Daily opportunity card generation",
         replace_existing=True,
