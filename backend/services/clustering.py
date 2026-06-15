@@ -46,7 +46,17 @@ def get_related_groups(
     # Clusters with enough items
     eligible = [name for name, items in clustered.items() if len(items) >= 2]
     if not eligible:
-        return []
+        # Fallback: pair random items from any cluster
+        all_items = [item for items in clustered.values() for item in items]
+        if len(all_items) < 2:
+            return []
+        random.shuffle(all_items)
+        groups = []
+        for i in range(0, min(n_groups * items_per_group, len(all_items)), items_per_group):
+            chunk = all_items[i:i + items_per_group]
+            if len(chunk) >= 2:
+                groups.append(chunk)
+        return groups[:n_groups]
 
     chosen = random.sample(eligible, min(n_groups, len(eligible)))
     groups = []
@@ -73,14 +83,19 @@ def get_crossdomain_groups(
         return []
 
     groups = []
+    used_urls: set[str] = set()
     for _ in range(n_groups):
-        # Pick 2-3 different clusters
+        # Pick 2-3 different clusters, prefer unused items
         n_clusters = min(items_per_group, len(eligible))
         chosen_clusters = random.sample(eligible, n_clusters)
         group = []
         for cname in chosen_clusters:
-            item = random.choice(clustered[cname])
+            pool = [it for it in clustered[cname] if it.get("url") not in used_urls]
+            if not pool:
+                pool = clustered[cname]  # Fallback to any item in cluster
+            item = random.choice(pool)
             group.append(item)
+            used_urls.add(item.get("url", ""))
         if len(group) >= 2:
             groups.append(group)
 
