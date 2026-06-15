@@ -638,12 +638,18 @@ async function loadSources() {
   const res = await fetch('/api/sources', { signal: AbortSignal.timeout(8000) });
   if (!res.ok) throw new Error(`API error: ${res.status}`);
   const data = await res.json();
-  return (data.items || []).map(item => ({
-    title: item.title || '',
-    link: item.url || item.link || '',
-    description: item.description || '',
-    pubDate: item.published_at || item.pubDate || '',
-  }));
+  return (data.items || []).map(item => {
+    const raw = item.published_at || item.pubDate || '';
+    let iso = '';
+    if (raw) { try { iso = new Date(raw).toISOString().slice(0,10); } catch(e) { iso = raw; } }
+    return {
+      title: item.title || '',
+      link: item.url || item.link || '',
+      description: item.description || '',
+      pubDate: iso,
+      pubDateRaw: raw,
+    };
+  });
 }
 
 // ── Loading state ──
@@ -814,7 +820,8 @@ function renderSources() {
     el.innerHTML = `
       <div class="source-item-main">
         <a href="${item.link||'#'}" target="_blank">${stripHtml(item.title||'(无标题)')}</a>
-        <div class="source-item-meta">${item.pubDate ? fmtDate(item.pubDate) : ''} · ${sourceHost(item.link||'')}</div>
+        ${item.description ? '<div style="color:var(--muted);font-size:12.5px;line-height:1.5;margin-top:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">'+stripHtml(item.description)+'</div>' : ''}
+        <div class="source-item-meta">${item.pubDateRaw ? fmtDate(item.pubDateRaw) : (item.pubDate||'')} · ${sourceHost(item.link||'')}</div>
       </div>
       ${isConv ? '<span class="conv-badge">已生成机会卡</span>' : ''}`;
     list.appendChild(el);
