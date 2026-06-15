@@ -877,7 +877,7 @@ function renderLibrary() {
 function openDetail(card) {
   const score = card.score || calcScore(card.scores);
   document.getElementById('d-score-n').textContent = score.toFixed(1);
-  document.getElementById('d-dir').textContent     = card.direction;
+  document.getElementById('d-dir').textContent     = card.direction || '未分类';
   document.getElementById('d-title').textContent   = card.title;
   document.getElementById('d-source-link').href    = card.sourceLink || '#';
   document.getElementById('d-source-text').textContent = shortTitle(card.sourceTitle||card.sourceLink||'', 50);
