@@ -160,6 +160,16 @@ def _normalize_sources(cards: list[dict]) -> list[dict]:
             card["source_titles"] = [card.get("source_title", "")]
         if "source_urls" not in card or not card["source_urls"]:
             card["source_urls"] = [card.get("source_url", "")]
+        # Split combined "A + B" style source_titles into separate entries
+        if len(card["source_titles"]) == 1 and " + " in card["source_titles"][0]:
+            parts = [p.strip() for p in card["source_titles"][0].split(" + ") if p.strip()]
+            if len(parts) > 1:
+                card["source_titles"] = parts
+                # If URLs also combined, split them too; otherwise pad with "#"
+                if len(card["source_urls"]) == 1 and " + " in card["source_urls"][0]:
+                    card["source_urls"] = [u.strip() for u in card["source_urls"][0].split(" + ") if u.strip()]
+                while len(card["source_urls"]) < len(card["source_titles"]):
+                    card["source_urls"].append("#")
         # Backward compat: set singular fields from first element
         if not card.get("source_title"):
             card["source_title"] = card["source_titles"][0] if card["source_titles"] else ""
