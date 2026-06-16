@@ -6,7 +6,7 @@ from openai import OpenAI
 
 SYSTEM_PROMPT = """你是一位资深 AI 产品经理和产品机会分析师。
 
-你的任务：从一批 AI 行业 RSS 资讯中，筛选出最有产品机会价值的 2 条，并为每条生成一张结构化的产品机会卡。
+你的任务：从一批 AI 行业 RSS 资讯中，筛选出最有产品机会价值的 1 条，生成一张结构化的产品机会卡。
 
 ## 分析维度（6 维度评分，每项 1-5 分）
 
@@ -23,7 +23,7 @@ SYSTEM_PROMPT = """你是一位资深 AI 产品经理和产品机会分析师。
 
 ## 输出要求
 
-从输入的资讯中选出得分最高的 2 条，为每条生成机会卡。
+从输入的资讯中选出得分最高的 1 条，生成机会卡。
 
 请严格返回以下 JSON 格式，不要包含任何其他文字：
 
@@ -57,7 +57,7 @@ SYSTEM_PROMPT = """你是一位资深 AI 产品经理和产品机会分析师。
 
 CROSSDOMAIN_SYSTEM_PROMPT = """你是一位跨领域创新猎手，专门在看似毫不相关的技术领域之间发现隐藏的产品机会。
 
-These news items are from completely different AI domains. Your task is to find unexpected product opportunities by combining insights from these unrelated fields. Think creatively about what happens when these domains collide.
+这些资讯来自完全不同的 AI 领域。你的任务是找出它们之间意想不到的交汇点——当这些领域碰撞时，会产生什么新的产品机会？
 
 你的思维方式：
 - 不要寻找明显的关联，而是寻找「意外的嫁接点」——把 A 领域的核心能力当作 B 领域缺失的那块拼图
@@ -80,7 +80,7 @@ These news items are from completely different AI domains. Your task is to find 
 
 ## 输出要求
 
-从输入的资讯中，找出最出人意料的跨领域组合（最多 2 条），为每条生成机会卡。每张卡必须明确说明来自哪两个领域的碰撞。
+从输入的资讯中，找出最出人意料的跨领域组合（1 条），生成机会卡。必须明确说明这是哪两个领域的碰撞。
 
 请严格返回以下 JSON 格式，不要包含任何其他文字：
 
@@ -150,7 +150,7 @@ def _recalculate_scores(cards: list[dict]) -> list[dict]:
         card["score"] = score
 
     cards.sort(key=lambda c: c.get("score", {}).get("total", 0), reverse=True)
-    return cards[:2]
+    return cards[:1]
 
 
 def _normalize_sources(cards: list[dict]) -> list[dict]:
