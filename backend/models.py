@@ -28,6 +28,8 @@ def init_db():
             next_step       TEXT NOT NULL,
             source_title    TEXT,
             source_url      TEXT,
+            source_titles   TEXT,
+            source_urls     TEXT,
             direction       TEXT,
             card_type       TEXT NOT NULL DEFAULT 'related',
             created_at      TEXT NOT NULL DEFAULT (date('now', 'localtime'))
@@ -57,6 +59,16 @@ def init_db():
     columns = [row[1] for row in cursor.fetchall()]
     if "card_type" not in columns:
         conn.execute("ALTER TABLE opportunity_cards ADD COLUMN card_type TEXT NOT NULL DEFAULT 'related'")
+        conn.commit()
+
+    # Migration: add source_titles and source_urls columns if missing
+    cursor = conn.execute("PRAGMA table_info(opportunity_cards)")
+    columns = [row[1] for row in cursor.fetchall()]
+    if "source_titles" not in columns:
+        conn.execute("ALTER TABLE opportunity_cards ADD COLUMN source_titles TEXT")
+        conn.commit()
+    if "source_urls" not in columns:
+        conn.execute("ALTER TABLE opportunity_cards ADD COLUMN source_urls TEXT")
         conn.commit()
 
     conn.close()

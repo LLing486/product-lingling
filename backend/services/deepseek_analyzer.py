@@ -6,7 +6,7 @@ from openai import OpenAI
 
 SYSTEM_PROMPT = """你是一位资深 AI 产品经理和产品机会分析师。
 
-你的任务：从一批 AI 行业 RSS 资讯中，筛选出最有产品机会价值的 4 条，并为每条生成一张结构化的产品机会卡。
+你的任务：从一批 AI 行业 RSS 资讯中，筛选出最有产品机会价值的 2 条，并为每条生成一张结构化的产品机会卡。
 
 ## 分析维度（6 维度评分，每项 1-5 分）
 
@@ -23,7 +23,7 @@ SYSTEM_PROMPT = """你是一位资深 AI 产品经理和产品机会分析师。
 
 ## 输出要求
 
-从输入的资讯中选出得分最高的 4 条，为每条生成机会卡。
+从输入的资讯中选出得分最高的 2 条，为每条生成机会卡。
 
 请严格返回以下 JSON 格式，不要包含任何其他文字：
 
@@ -47,8 +47,8 @@ SYSTEM_PROMPT = """你是一位资深 AI 产品经理和产品机会分析师。
       },
       "risks": "主要风险点，如大厂覆盖、商业化困难、技术瓶颈等",
       "next_step": "具体可执行的下一步验证动作",
-      "source_title": "原始资讯标题",
-      "source_url": "原始资讯链接",
+      "source_titles": ["原始资讯标题1", "原始资讯标题2"],
+      "source_urls": ["原始资讯链接1", "原始资讯链接2"],
       "direction": "方向分类，如 Agent、AI 办公、AI 教育、AI 营销、AI 编程、AI 设计、AI 数据、AI 安全 等"
     }
   ]
@@ -80,7 +80,7 @@ These news items are from completely different AI domains. Your task is to find 
 
 ## 输出要求
 
-从输入的资讯中，找出最出人意料的跨领域组合（最多 4 条），为每条生成机会卡。每张卡必须明确说明来自哪两个领域的碰撞。
+从输入的资讯中，找出最出人意料的跨领域组合（最多 2 条），为每条生成机会卡。每张卡必须明确说明来自哪两个领域的碰撞。
 
 请严格返回以下 JSON 格式，不要包含任何其他文字：
 
@@ -104,8 +104,8 @@ These news items are from completely different AI domains. Your task is to find 
       },
       "risks": "主要风险点",
       "next_step": "具体可执行的下一步验证动作",
-      "source_title": "原始资讯标题（用 + 连接多条）",
-      "source_url": "原始资讯链接（第一条）",
+      "source_titles": ["资讯标题1", "资讯标题2"],
+      "source_urls": ["资讯链接1", "资讯链接2"],
       "direction": "方向分类"
     }
   ]
@@ -114,7 +114,7 @@ These news items are from completely different AI domains. Your task is to find 
 
 
 def _build_user_prompt(items: list[dict]) -> str:
-    lines = ["以下是今日 AI 行业资讯，请分析并选出最有产品机会价值的 4 条：\n"]
+    lines = ["以下是今日 AI 行业资讯，请分析以下资讯：\n"]
     for i, item in enumerate(items, 1):
         lines.append(f"--- 资讯 {i} ---")
         lines.append(f"标题: {item['title']}")
@@ -150,7 +150,22 @@ def _recalculate_scores(cards: list[dict]) -> list[dict]:
         card["score"] = score
 
     cards.sort(key=lambda c: c.get("score", {}).get("total", 0), reverse=True)
-    return cards[:4]
+    return cards[:2]
+
+
+def _normalize_sources(cards: list[dict]) -> list[dict]:
+    """Ensure each card has source_titles and source_urls arrays, plus backward-compat singular fields."""
+    for card in cards:
+        if "source_titles" not in card or not card["source_titles"]:
+            card["source_titles"] = [card.get("source_title", "")]
+        if "source_urls" not in card or not card["source_urls"]:
+            card["source_urls"] = [card.get("source_url", "")]
+        # Backward compat: set singular fields from first element
+        if not card.get("source_title"):
+            card["source_title"] = card["source_titles"][0] if card["source_titles"] else ""
+        if not card.get("source_url"):
+            card["source_url"] = card["source_urls"][0] if card["source_urls"] else ""
+    return cards
 
 
 def _call_deepseek(system_prompt: str, user_prompt: str) -> list[dict]:
@@ -185,6 +200,7 @@ def analyze_items(items: list[dict], card_type: str = "related") -> list[dict]:
     batch = items[:50]
     cards = _call_deepseek(SYSTEM_PROMPT, _build_user_prompt(batch))
     cards = _recalculate_scores(cards)
+    cards = _normalize_sources(cards)
 
     for card in cards:
         card["card_type"] = card_type
@@ -200,6 +216,7 @@ def analyze_items_crossdomain(items: list[dict], card_type: str = "crossdomain")
     batch = items[:3]  # Cross-domain works best with fewer, more diverse items
     cards = _call_deepseek(CROSSDOMAIN_SYSTEM_PROMPT, _build_user_prompt(batch))
     cards = _recalculate_scores(cards)
+    cards = _normalize_sources(cards)
 
     for card in cards:
         card["card_type"] = card_type
