@@ -508,10 +508,7 @@
 
   <div class="detail-source">
     <span>来源</span>
-    <a id="d-source-link" href="#" target="_blank">
-      <svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-      <span id="d-source-text"></span>
-    </a>
+    <div id="d-source-links" style="display:flex;flex-direction:column;gap:4px;flex:1;min-width:0"></div>
   </div>
 
   <div class="detail-fields">
@@ -621,12 +618,27 @@ function sourceHost(url) {
 
 // ── Card data mapping (backend → frontend) ──
 function mapCard(c) {
+  // Parse source arrays from backend (stored as JSON strings or native arrays)
+  let sourceTitles = [];
+  let sourceLinks = [];
+  if (c.source_titles) {
+    sourceTitles = typeof c.source_titles === 'string' ? JSON.parse(c.source_titles) : c.source_titles;
+  }
+  if (c.source_urls) {
+    sourceLinks = typeof c.source_urls === 'string' ? JSON.parse(c.source_urls) : c.source_urls;
+  }
+  // Fallback to singular fields if arrays are empty
+  if (!sourceTitles.length && c.source_title) sourceTitles = [c.source_title];
+  if (!sourceLinks.length && c.source_url) sourceLinks = [c.source_url];
+
   return {
     id: c.id,
     title: c.title,
     direction: c.direction,
-    sourceTitle: c.source_title || '',
-    sourceLink: c.source_url || '#',
+    sourceTitles: sourceTitles,
+    sourceLinks: sourceLinks,
+    sourceTitle: sourceTitles[0] || c.source_title || '',
+    sourceLink: sourceLinks[0] || c.source_url || '#',
     sourceDate: c.created_at ? fmtDate(c.created_at) : '',
     user: c.user_persona,
     pain: c.pain_point,
@@ -803,10 +815,7 @@ function renderTodayCards() {
         <h3>${escapeHtml(card.title)}</h3>
       </div>
       <div class="card-body">
-        <a class="card-source" href="${card.sourceLink}" target="_blank" onclick="event.stopPropagation()">
-          <svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-          ${escapeHtml(shortTitle(card.sourceTitle, 40))}
-        </a>
+        ${card.sourceTitles.map((t, idx) => `<a class="card-source" href="${card.sourceLinks[idx] || '#'}" target="_blank" onclick="event.stopPropagation()"><svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>${escapeHtml(shortTitle(t, 40))}</a>`).join('')}
         <div class="card-pain">${escapeHtml(card.pain)}</div>
       </div>
       <div class="card-footer">
@@ -836,7 +845,7 @@ function renderSources() {
     list.innerHTML = '<div class="source-empty">暂无内容</div>';
     return;
   }
-  const convertedLinks = new Set(todayCards.map(c => c.sourceLink));
+  const convertedLinks = new Set(todayCards.flatMap(c => c.sourceLinks && c.sourceLinks.length ? c.sourceLinks : [c.sourceLink]));
   filtered.forEach(item => {
     const isConv = convertedLinks.has(item.link);
     const el = document.createElement('div');
@@ -896,8 +905,21 @@ function openDetail(card) {
   document.getElementById('d-score-n').textContent = score.toFixed(1);
   document.getElementById('d-dir').textContent     = card.direction || '未分类';
   document.getElementById('d-title').textContent   = card.title;
-  document.getElementById('d-source-link').href    = card.sourceLink || '#';
-  document.getElementById('d-source-text').textContent = shortTitle(card.sourceTitle||card.sourceLink||'', 50);
+
+  // Populate multiple source links
+  const sourceContainer = document.getElementById('d-source-links');
+  sourceContainer.innerHTML = '';
+  const titles = card.sourceTitles && card.sourceTitles.length ? card.sourceTitles : [card.sourceTitle || ''];
+  const links = card.sourceLinks && card.sourceLinks.length ? card.sourceLinks : [card.sourceLink || '#'];
+  titles.forEach((t, idx) => {
+    const a = document.createElement('a');
+    a.href = links[idx] || '#';
+    a.target = '_blank';
+    a.style.cssText = 'display:inline-flex;align-items:center;gap:5px;color:var(--accent);font-size:12.5px;font-weight:500;text-decoration:none;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis';
+    a.innerHTML = `<svg viewBox="0 0 24 24" style="width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:0 0 auto"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg><span>${escapeHtml(shortTitle(t||links[idx]||'', 50))}</span>`;
+    sourceContainer.appendChild(a);
+  });
+
   document.getElementById('d-user').textContent    = card.user;
   document.getElementById('d-pain').textContent    = card.pain;
   document.getElementById('d-why').textContent     = card.why;

@@ -10,10 +10,14 @@ def save_cards(cards: list[dict]) -> list[int]:
     conn = get_db()
     ids = []
     for card in cards:
+        # Serialize source arrays to JSON strings
+        source_titles_json = json.dumps(card.get("source_titles", []), ensure_ascii=False) if card.get("source_titles") else None
+        source_urls_json = json.dumps(card.get("source_urls", []), ensure_ascii=False) if card.get("source_urls") else None
+
         cur = conn.execute(
             "INSERT INTO opportunity_cards "
-            "(title, user_persona, pain_point, ai_solution, mvp_plan, score, risks, next_step, source_title, source_url, direction, card_type) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "(title, user_persona, pain_point, ai_solution, mvp_plan, score, risks, next_step, source_title, source_url, source_titles, source_urls, direction, card_type) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (
                 card["title"],
                 card["user_persona"],
@@ -25,6 +29,8 @@ def save_cards(cards: list[dict]) -> list[int]:
                 card["next_step"],
                 card.get("source_title", ""),
                 card.get("source_url", ""),
+                source_titles_json,
+                source_urls_json,
                 card.get("direction", ""),
                 card.get("card_type", "related"),
             ),

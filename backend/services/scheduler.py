@@ -41,34 +41,48 @@ def run_generation_once() -> dict:
     related_groups = get_related_groups(clustered, n_groups=3, items_per_group=3)
     logger.info(f"Selected {len(related_groups)} related groups")
 
+    related_cards: list[dict] = []
     for i, group in enumerate(related_groups):
         logger.info(f"Step 5: Analyzing related group {i+1}/{len(related_groups)} ({len(group)} items)…")
         try:
             cards = analyze_items(group, card_type="related")
             if cards:
-                all_cards.extend(cards)
+                related_cards.extend(cards)
                 logger.info(f"  → Generated {len(cards)} related cards")
             else:
                 logger.info(f"  → No cards from related group {i+1}")
         except Exception as e:
             logger.error(f"  → Related group {i+1} failed: {e}")
 
+    # Cap related cards to 5 (business rule: 3-5 per type)
+    related_cards.sort(key=lambda c: c.get("score", {}).get("total", 0), reverse=True)
+    related_cards = related_cards[:5]
+    all_cards.extend(related_cards)
+    logger.info(f"Related cards after cap: {len(related_cards)}")
+
     # --- Step 6-7: Cross-domain analysis ---
     logger.info("Step 6: Selecting cross-domain groups…")
     cross_groups = get_crossdomain_groups(clustered, n_groups=3, items_per_group=3)
     logger.info(f"Selected {len(cross_groups)} cross-domain groups")
 
+    cross_cards: list[dict] = []
     for i, group in enumerate(cross_groups):
         logger.info(f"Step 7: Analyzing cross-domain group {i+1}/{len(cross_groups)} ({len(group)} items)…")
         try:
             cards = analyze_items_crossdomain(group, card_type="crossdomain")
             if cards:
-                all_cards.extend(cards)
+                cross_cards.extend(cards)
                 logger.info(f"  → Generated {len(cards)} cross-domain cards")
             else:
                 logger.info(f"  → No cards from cross-domain group {i+1}")
         except Exception as e:
             logger.error(f"  → Cross-domain group {i+1} failed: {e}")
+
+    # Cap cross-domain cards to 5 (business rule: 3-5 per type)
+    cross_cards.sort(key=lambda c: c.get("score", {}).get("total", 0), reverse=True)
+    cross_cards = cross_cards[:5]
+    all_cards.extend(cross_cards)
+    logger.info(f"Cross-domain cards after cap: {len(cross_cards)}")
 
     # --- Step 8: Save all cards ---
     if all_cards:
