@@ -188,13 +188,13 @@
     .detail-hero h2{margin:0;font-size:18px;font-weight:700;color:#fff;line-height:1.35}
 
     .detail-source{padding:12px 20px;border-bottom:1px solid var(--line);
-      display:flex;align-items:center;gap:8px;background:#fafbfc}
-    .detail-source span{font-size:12px;color:var(--muted)}
-    .detail-source a{display:inline-flex;align-items:center;gap:5px;
+      display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;background:#fafbfc}
+    .detail-source>span{font-size:12px;color:var(--muted);flex:0 0 auto}
+    .detail-source a,.d-source-link{display:inline-flex;align-items:center;gap:5px;
       color:var(--accent);font-size:12.5px;font-weight:500;text-decoration:none;
-      flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .detail-source a:hover{text-decoration:underline}
-    .detail-source a svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:0 0 auto}
+      min-width:0;word-break:break-all}
+    .detail-source a:hover,.d-source-link:hover{text-decoration:underline}
+    .detail-source a svg,.d-source-link svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:0 0 auto}
 
     .detail-fields{padding:16px 20px;border-bottom:1px solid var(--line);display:grid;gap:10px}
     .df{display:grid;grid-template-columns:82px 1fr;gap:6px;font-size:13px}
@@ -407,9 +407,9 @@
         <div id="today-loading" class="loading-wrap">
           <div class="spinner"></div>
           <div class="loading-steps">
-            <span id="ls1" class="active">正在订阅 AI HOT 精选 feed…</span>
-            <span id="ls2">DeepSeek 分析行业信号中…</span>
-            <span id="ls3">生成产品机会卡…</span>
+            <span id="ls1" class="active">正在加载今日机会卡…</span>
+            <span id="ls2">正在加载历史机会库…</span>
+            <span id="ls3">正在加载信息源…</span>
           </div>
         </div>
         <!-- Cards -->
@@ -498,12 +498,8 @@
     <h2 id="d-title"></h2>
   </div>
 
-  <div class="detail-source">
+  <div class="detail-source" id="d-sources">
     <span>来源</span>
-    <a id="d-source-link" href="#" target="_blank">
-      <svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-      <span id="d-source-text"></span>
-    </a>
   </div>
 
   <div class="detail-fields">
@@ -602,12 +598,23 @@ function sourceHost(url) {
 
 // ── Card data mapping (backend → frontend) ──
 function mapCard(c) {
+  // Parse source arrays (may be JSON string from old backend or already arrays)
+  let sourceTitles = c.source_titles || [];
+  let sourceUrls = c.source_urls || [];
+  if (typeof sourceTitles === 'string') { try { sourceTitles = JSON.parse(sourceTitles); } catch(e) { sourceTitles = []; } }
+  if (typeof sourceUrls === 'string')   { try { sourceUrls = JSON.parse(sourceUrls); }   catch(e) { sourceUrls = []; } }
+  // Fallback to singular fields
+  if (!sourceTitles.length && c.source_title) sourceTitles = [c.source_title];
+  if (!sourceUrls.length && c.source_url)     sourceUrls = [c.source_url];
+
   return {
     id: c.id,
     title: c.title,
     direction: c.direction,
-    sourceTitle: c.source_title || '',
-    sourceLink: c.source_url || '#',
+    sourceTitles: sourceTitles,
+    sourceUrls: sourceUrls,
+    sourceTitle: sourceTitles[0] || c.source_title || '',
+    sourceLink: sourceUrls[0] || c.source_url || '#',
     sourceDate: c.created_at ? fmtDate(c.created_at) : '',
     user: c.user_persona,
     pain: c.pain_point,
@@ -769,7 +776,7 @@ function renderTodayCards() {
   if (!todayCards.length) {
     grid.innerHTML = `<div class="lib-empty">
       <p style="font-size:14px;color:var(--ink-2);margin:0 0 8px">📭 今日机会卡尚未生成</p>
-      <p style="margin:0">每日 08:30 自动从 AI HOT 精选生成 4 张机会卡，请稍后查看</p>
+      <p style="margin:0">每日 08:30 自动从 AI HOT 精选生成多张机会卡，请稍后查看</p>
     </div>`;
     return;
   }
@@ -786,10 +793,10 @@ function renderTodayCards() {
         <h3>${escapeHtml(card.title)}</h3>
       </div>
       <div class="card-body">
-        <a class="card-source" href="${card.sourceLink}" target="_blank" onclick="event.stopPropagation()">
-          <svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-          ${escapeHtml(shortTitle(card.sourceTitle, 40))}
-        </a>
+        ${card.sourceTitles.length > 1
+          ? card.sourceTitles.map((t, i) => `<a class="card-source" href="${card.sourceUrls[i] || '#'}" target="_blank" onclick="event.stopPropagation()"><svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>${escapeHtml(shortTitle(t, 35))}</a>`).join('')
+          : `<a class="card-source" href="${card.sourceLink}" target="_blank" onclick="event.stopPropagation()"><svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>${escapeHtml(shortTitle(card.sourceTitle, 40))}</a>`
+        }
         <div class="card-pain">${escapeHtml(card.pain)}</div>
       </div>
       <div class="card-footer">
@@ -816,7 +823,7 @@ function renderSources() {
     list.innerHTML = '<div class="source-empty">暂无内容</div>';
     return;
   }
-  const convertedLinks = new Set(todayCards.map(c => c.sourceLink));
+  const convertedLinks = new Set(todayCards.flatMap(c => c.sourceUrls.length ? c.sourceUrls : [c.sourceLink]));
   filtered.forEach(item => {
     const isConv = convertedLinks.has(item.link);
     const el = document.createElement('div');
@@ -876,8 +883,12 @@ function openDetail(card) {
   document.getElementById('d-score-n').textContent = score.toFixed(1);
   document.getElementById('d-dir').textContent     = card.direction || '未分类';
   document.getElementById('d-title').textContent   = card.title;
-  document.getElementById('d-source-link').href    = card.sourceLink || '#';
-  document.getElementById('d-source-text').textContent = shortTitle(card.sourceTitle||card.sourceLink||'', 50);
+  // Render sources (multiple or single)
+  const sourcesEl = document.getElementById('d-sources');
+  const linkSvg = '<svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>';
+  sourcesEl.innerHTML = '<span>来源</span>' + (card.sourceTitles.length > 1
+    ? card.sourceTitles.map((t, i) => `<a class="d-source-link" href="${card.sourceUrls[i] || '#'}" target="_blank">${linkSvg}<span>${escapeHtml(shortTitle(t, 50))}</span></a>`).join('')
+    : `<a class="d-source-link" href="${card.sourceLink}" target="_blank">${linkSvg}<span>${escapeHtml(shortTitle(card.sourceTitle || card.sourceLink, 50))}</span></a>`);
   document.getElementById('d-user').textContent    = card.user;
   document.getElementById('d-pain').textContent    = card.pain;
   document.getElementById('d-why').textContent     = card.why;
