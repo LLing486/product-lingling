@@ -123,4 +123,10 @@ def _row_to_card(row) -> dict:
     d = dict(row)
     if isinstance(d.get("score"), str):
         d["score"] = json.loads(d["score"])
+    for key in ("source_titles", "source_urls"):
+        if isinstance(d.get(key), str):
+            try:
+                d[key] = json.loads(d[key])
+            except (json.JSONDecodeError, TypeError):
+                d[key] = []
     return d
