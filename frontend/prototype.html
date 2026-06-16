@@ -158,6 +158,12 @@
     .type-related{background:var(--accent-bg);color:var(--accent)}
     .type-crossdomain{background:linear-gradient(135deg,#f0e6ff,#ffe6f0);color:#9333ea}
 
+    /* ── Today full-detail cards ── */
+    .today-detail-list{display:grid;gap:20px}
+    .today-full-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow-sm)}
+    .today-hero{position:relative;border-radius:0 !important}
+    .today-hero .type-badge{position:absolute;top:18px;left:20px;margin-left:0}
+
     /* ── Detail Panel ── */
     .detail-overlay{position:fixed;inset:0;background:rgba(15,23,42,.35);
       z-index:30;opacity:0;pointer-events:none;transition:opacity .2s ease}
@@ -303,7 +309,7 @@
 
     /* ── Responsive ── */
     @media(max-width:1100px){
-      .card-grid{grid-template-columns:1fr}
+      .today-detail-list{gap:14px}
       .lib-grid{grid-template-columns:repeat(2,1fr)}
       .hamburger{display:flex}
       .sidebar{position:fixed;top:0;left:0;bottom:0;z-index:1000;
@@ -417,7 +423,7 @@
           <div class="section-hd">
             <div><h2 id="today-date-hd">今日机会</h2></div>
           </div>
-          <div class="card-grid" id="card-grid"></div>
+          <div class="today-detail-list" id="today-detail-list"></div>
         </div>
       </div>
     </section>
@@ -537,19 +543,6 @@ const DIMS = [
   { key:'tech_feasibility',name:'技术可行性', weight:1.5 },
   { key:'monetization',    name:'商业化潜力', weight:2.0 },
 ];
-const DIMS_TOTAL_WEIGHT = 10.0;
-
-function calcScore(s) {
-  // Backend formula: weighted_sum / (5 * total_weight) * 10
-  let weightedSum = 0;
-  for (const d of DIMS) {
-    const raw = s[d.key];
-    const v = (raw && typeof raw === 'object') ? (raw.value || 0) : (Number(raw) || 0);
-    weightedSum += v * d.weight;
-  }
-  return Math.round(weightedSum / (5 * DIMS_TOTAL_WEIGHT) * 10 * 10) / 10;
-}
-
 function scoreCls(v) {
   return v>=5?'s5':v>=4?'s4':v>=3?'s3':v>=2?'s2':'s1';
 }
@@ -623,7 +616,7 @@ function mapCard(c) {
     risk: c.risks,
     check: c.next_step,
     scores: typeof c.score === 'object' ? c.score : {},
-    score: (c.score && typeof c.score === 'object' && c.score.total) ? c.score.total : (typeof c.score === 'object' ? calcScore(c.score) : (c.score || 0)),
+    score: (c.score && c.score.total) ? c.score.total : 0,
     cardType: c.card_type || 'related',
     tags: [c.direction],
     savedAt: c.created_at || new Date().toISOString(),
@@ -769,42 +762,79 @@ async function init() {
   document.getElementById('today-cards').style.display   = '';
 }
 
-// ── Render today cards ──
+// ── Render today cards (full detail, inline) ──
 function renderTodayCards() {
-  const grid = document.getElementById('card-grid');
-  grid.innerHTML = '';
+  const container = document.getElementById('today-detail-list');
+  container.innerHTML = '';
   if (!todayCards.length) {
-    grid.innerHTML = `<div class="lib-empty">
+    container.innerHTML = `<div class="lib-empty">
       <p style="font-size:14px;color:var(--ink-2);margin:0 0 8px">📭 今日机会卡尚未生成</p>
-      <p style="margin:0">每日 08:30 自动从 AI HOT 精选生成多张机会卡，请稍后查看</p>
+      <p style="margin:0">每日 08:30 自动生成 1 张相关洞察 + 1 张跨界创新，请稍后查看</p>
     </div>`;
     return;
   }
+  const linkSvg = '<svg viewBox="0 0 24 24" width="11" height="11" style="stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:0 0 auto"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>';
+
   todayCards.forEach((card, i) => {
-    const el = document.createElement('div');
-    el.className = 'opp-card fade-up';
-    el.style.animationDelay = (i * 80) + 'ms';
-    el.innerHTML = `
-      <div class="card-top">
-        <div class="card-top-row">
-          <div class="card-score"><span class="n">${card.score.toFixed(1)}</span><span class="d">/10</span></div>
-          <span class="dir-pill">${escapeHtml(card.direction)}</span>${card.cardType === 'crossdomain' ? "<span class='type-badge type-crossdomain'>✨ 跨界创新</span>" : "<span class='type-badge type-related'>🔍 相关洞察</span>"}
-        </div>
-        <h3>${escapeHtml(card.title)}</h3>
-      </div>
-      <div class="card-body">
-        ${card.sourceTitles.length > 1
-          ? card.sourceTitles.map((t, i) => `<a class="card-source" href="${card.sourceUrls[i] || '#'}" target="_blank" onclick="event.stopPropagation()"><svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>${escapeHtml(shortTitle(t, 35))}</a>`).join('')
-          : `<a class="card-source" href="${card.sourceLink}" target="_blank" onclick="event.stopPropagation()"><svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>${escapeHtml(shortTitle(card.sourceTitle, 40))}</a>`
-        }
-        <div class="card-pain">${escapeHtml(card.pain)}</div>
-      </div>
-      <div class="card-footer">
-        <div class="card-footer-tags">${card.tags.map(t=>`<span class="tag">${escapeHtml(t)}</span>`).join('')}</div>
-        <span class="read-more">查看分析 <svg viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg></span>
+    const typeBadge = card.cardType === 'crossdomain'
+      ? '<span class="type-badge type-crossdomain">✨ 跨界创新</span>'
+      : '<span class="type-badge type-related">🔍 相关洞察</span>';
+
+    const sourcesHtml = card.sourceTitles.length > 1
+      ? card.sourceTitles.map((t, j) =>
+          `<a href="${card.sourceUrls[j] || '#'}" target="_blank">${linkSvg}<span>${escapeHtml(shortTitle(t, 50))}</span></a>`
+        ).join('')
+      : `<a href="${card.sourceLink}" target="_blank">${linkSvg}<span>${escapeHtml(shortTitle(card.sourceTitle || card.sourceLink, 50))}</span></a>`;
+
+    const dimsHtml = DIMS.map(d => {
+      const raw = card.scores[d.key];
+      const v = (raw && typeof raw === 'object') ? (raw.value || 0) : (Number(raw) || 0);
+      const reason = (raw && typeof raw === 'object') ? (raw.reason || '') : '';
+      const hint = d.hint ? ` <span style="color:var(--warn);font-size:10px">${d.hint}</span>` : '';
+      const pct = Math.round(d.weight / 10.0 * 100);
+      return `<div class="dim-row">
+        <div class="dm-meta"><span class="dm-name">${d.name}${hint}</span><span class="dm-wt">×${pct}%${reason ? ' — ' + reason : ''}</span></div>
+        <div class="bar-wrap"><div class="bar-fill ${scoreCls(v)}" style="width:${v/5*100}%"></div></div>
+        <span class="dm-score">${v}/5</span>
       </div>`;
-    el.addEventListener('click', () => openDetail(card));
-    grid.appendChild(el);
+    }).join('');
+
+    const el = document.createElement('div');
+    el.className = 'today-full-card fade-up';
+    el.style.animationDelay = (i * 100) + 'ms';
+    el.innerHTML = `
+      <div class="detail-hero today-hero">
+        ${typeBadge}
+        <div class="dh-top">
+          <div class="dh-score">
+            <div style="display:flex;align-items:baseline;gap:3px">
+              <span class="n">${card.score.toFixed(1)}</span><span class="d">/10</span>
+            </div>
+          </div>
+          <span class="dir-pill">${escapeHtml(card.direction)}</span>
+        </div>
+        <h2>${escapeHtml(card.title)}</h2>
+      </div>
+      <div class="detail-source">${sourcesHtml}</div>
+      <div class="detail-fields">
+        <div class="df"><span class="df-lbl">用户是谁</span><span class="df-val">${escapeHtml(card.user)}</span></div>
+        <div class="df"><span class="df-lbl">用户痛点</span><span class="df-val">${escapeHtml(card.pain)}</span></div>
+        <div class="df"><span class="df-lbl">为什么 AI</span><span class="df-val">${escapeHtml(card.why)}</span></div>
+        <div class="df"><span class="df-lbl">MVP 方案</span><span class="df-val">${escapeHtml(card.mvp)}</span></div>
+      </div>
+      <div class="detail-score-section">
+        <div class="sec-label">6 维度评分明细</div>
+        ${dimsHtml}
+        <div class="score-total-row">
+          <span>加权总分（满分 10 分）</span>
+          <strong>${card.score.toFixed(1)} / 10</strong>
+        </div>
+      </div>
+      <div class="detail-notes">
+        <div class="note risk"><strong>主要风险</strong><span>${escapeHtml(card.risk)}</span></div>
+        <div class="note check"><strong>下一步验证</strong><span>${escapeHtml(card.check)}</span></div>
+      </div>`;
+    container.appendChild(el);
   });
 }
 
@@ -879,7 +909,7 @@ function renderLibrary() {
 
 // ── Detail panel ──
 function openDetail(card) {
-  const score = card.score || calcScore(card.scores);
+  const score = card.score || 0;
   document.getElementById('d-score-n').textContent = score.toFixed(1);
   document.getElementById('d-dir').textContent     = card.direction || '未分类';
   document.getElementById('d-title').textContent   = card.title;
