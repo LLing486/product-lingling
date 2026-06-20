@@ -122,3 +122,6 @@ def list_sources():
         else:
             item["published_date"] = ""
     return {"items": items, "total": len(items)}
+
+from fastapi.staticfiles import StaticFiles
+app.mount("/", StaticFiles(directory="frontend", html=True), name="static")
