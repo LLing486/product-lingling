@@ -2,55 +2,44 @@
 
 AI 产品机会分析工具 — 把行业信号自动转化为可验证的产品机会。
 
-🔗 **线上体验：** 已部署（域名配置中）
-
 ## 它做什么
 
-每天自动抓取 AI HOT 精选 RSS（约 50 条行业信号），**全部增量存储**后，通过信号评分 + 智能聚类生成两张产品机会卡：
+每天自动抓取 AI HOT 精选 RSS（约 50 条行业信号），全量增量存储，通过信号评分 + 智能聚类生成两张产品机会卡：
 
 | 类型 | 标签 | 策略 |
 |------|------|------|
-| 🔍 相关洞察 | 同领域高信号条目 | 按信号质量评分选最优簇，取该簇最佳 1 条 |
-| ✨ 跨界创新 | 距离最远的两个领域各取 1 条 | 簇间距离矩阵最大化碰撞感 |
+| ◎ 相关洞察 | 同领域高信号条目 | 按信号质量评分选最优簇，取该簇最佳条目分析 |
+| ⚡ 跨界创新 | 距离最远的两个领域各取一条 | 簇间距离矩阵最大化碰撞感 |
 
 每日固定产出 **1 张相关洞察 + 1 张跨界创新**，自动累积到机会库。
 
-每张卡包含：
-- 用户痛点 + AI 解决方式 + MVP 方案
-- 6 维度可解释评分（满分 10 分）
-- 主要风险 + 下一步验证动作
-- 原文信息源链接（跨域卡支持多来源）
+每张卡包含：用户痛点、AI 解决方式、MVP 方案、6 维度可解释评分（满分 10 分）、主要风险、下一步验证动作、原文信息源链接。
 
-## 三个 Tab
+## 界面设计
 
-**今日机会** — 当天生成的 2 张卡，全详情直展（评分维度条、来源链接、四大字段、风险、下一步全部内联），一屏扫完无需点击。若当天无数据自动回退到最近有数据的日期。
+v2 界面采用空间纵深设计：前景是机会卡，后景是信息源星图，通过鼠标滚轮或按钮穿越两层。
 
-**机会库** — 所有历史卡片的累积库，支持：
-- 按方向筛选（9 大关键词聚类方向 + 动态趋势子簇）
-- 按日期筛选
-- 关键词搜索
-- 卡片底部显示生成日期
+**前景层（机会）**
+- 今日 2 张卡以对角线错落排列，中间有碰撞连线可视化两种灵感的交汇
+- 历史机会卡以极坐标轨道分布在周围，hover 浮起，点击打开全屏详情
+- 底部：类型 / 评分筛选栏 + 深度轨道 + 潜入按钮
 
-**信息源** — RSS 原始条目浏览，支持：
-- 按日期筛选（服务端 Asia/Shanghai 时区转换）
-- 按日期排序（最新在前 / 最旧在前切换）
-- 关键词搜索
-- 已生成机会卡的条目标记"已生成机会卡"标签
-
-## 为什么做
-
-AI 行业不缺信息，缺的是把信息转化成产品判断的能力。
-
-常见问题：看完新闻不知道意味着什么、看不出背后的产品机会、信息无法沉淀。这个工具的价值不是帮你看更多信息，而是帮你在 2 分钟内把行业信号转化为结构化的产品判断。
+**后景层（信息源）**
+- 信息源条目以漂浮节点形式展示，节点随机慢漂，邻近节点之间有连线
+- 节点颜色区分状态：已关联机会卡（琥珀）/ 跨界来源 / 普通信号
+- 点击节点展开单条信息卡片；"展开全部信号"一次性展开所有节点
+- 底部：信号状态 / 类型筛选栏（左）+ 浮出按钮（中）+ 展开切换（右）
 
 ## 技术栈
 
-- **前端：** 单文件 HTML（响应式，移动端适配，XSS 防护）
-- **后端：** FastAPI (Python)
-- **数据库：** SQLite
-- **大模型：** DeepSeek API
-- **定时任务：** APScheduler（每日 08:30 自动生成，Asia/Shanghai 时区）
-- **部署：** Nginx + uvicorn + systemd
+| 层级 | 技术 |
+|------|------|
+| 前端 | 单文件 HTML（v2 空间纵深界面 + v1 原型保留为基线） |
+| 后端 | FastAPI (Python) |
+| 数据库 | SQLite |
+| 大模型 | DeepSeek API |
+| 定时任务 | APScheduler（每日 08:30 CST） |
+| 部署 | Nginx + uvicorn + systemd |
 
 ## 快速开始
 
@@ -64,13 +53,14 @@ cp .env.example .env
 # 编辑 .env，填入 DeepSeek API Key
 
 # 3. 启动后端
-cd backend
-pip install -r requirements.txt
+pip install -r backend/requirements.txt
 uvicorn backend.main:app --reload
 
 # 4. 打开前端
 # 浏览器访问 http://localhost:8000
 ```
+
+无后端时直接打开 `frontend/v2.html` 会进入演示模式（Mock 数据）。
 
 ## 项目结构
 
@@ -78,22 +68,33 @@ uvicorn backend.main:app --reload
 product-lingling/
 ├── PRD.md                          # 产品需求文档
 ├── README.md                       # 本文件
-├── prototype.html                  # 前端原型
 ├── .env.example                    # 环境变量模板
 ├── .gitignore
 ├── backend/                        # FastAPI 后端
-│   ├── main.py                     # 路由定义
-│   ├── models.py                   # 数据库模型 + 迁移
+│   ├── main.py                     # 路由定义（5 个端点）
+│   ├── models.py                   # SQLite schema + 自动迁移
 │   ├── services/
 │   │   ├── rss_fetcher.py          # RSS 抓取 + 增量存储
-│   │   ├── clustering.py           # 信号评分 + 智能聚类
-│   │   ├── deepseek_analyzer.py    # DeepSeek 双分析器
+│   │   ├── clustering.py           # 信号评分 + 关键词聚类（9 类）
+│   │   ├── deepseek_analyzer.py    # DeepSeek 双分析器（相关 + 跨界）
 │   │   ├── opportunity_store.py    # 机会卡 CRUD
 │   │   └── scheduler.py            # APScheduler 定时任务
 │   └── requirements.txt
-└── frontend/                       # 前端
-    └── prototype.html
+└── frontend/
+    ├── v2.html                     # 主前端：空间纵深 3D 界面（当前版本）
+    └── prototype.html              # v1 原型：稳定基线，备用
 ```
+
+## API 端点
+
+| 端点 | 说明 |
+|------|------|
+| `GET /health` | 健康检查 |
+| `GET /api/cards` | 机会卡列表（支持 keyword / direction / date 筛选） |
+| `GET /api/cards/today` | 今日机会卡（无数据时回退到最近一天） |
+| `GET /api/cards/{id}` | 单卡详情 |
+| `POST /api/cards/generate` | 手动触发生成（仅 development 模式） |
+| `GET /api/sources` | 全部 RSS 条目 |
 
 ## 许可
 
