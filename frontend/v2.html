@@ -1006,10 +1006,18 @@ function renderOrbit() {
   const VW = window.innerWidth, VH = window.innerHeight;
   const CARD_W = 150;   // orbit-card width
   const CARD_GAP = 20;  // angular gap between cards
-  // B4: start orbit outside today-pair (680×480px → half-diagonal ~416px) + margin
-  const R_START = Math.max(460, Math.min(VW * 0.3, VH * 0.34));
   const R_STEP  = CARD_W + 28;  // ring spacing = card width + gap
   const R_MAX   = Math.min(VW * 0.48, VH * 0.46);
+
+  // B4: start orbit outside today-pair — use actual element dimensions
+  const pair = document.getElementById('today-pair');
+  const pr = pair.getBoundingClientRect();
+  const halfDiag = Math.sqrt(pr.width * pr.width + pr.height * pr.height) / 2;
+  let R_START = halfDiag + 30;
+  // Fallback: ensure at least one ring fits on smaller screens
+  if (R_START + CARD_W > R_MAX) {
+    R_START = Math.max(200, R_MAX - CARD_W);
+  }
 
   let placed = 0, ring = 0;
 
@@ -1082,7 +1090,6 @@ function initNodes() {
     for (let c = 0; c < cols; c++) {
       const cx = MARGIN + (c + 0.5) * cellW;
       const cy = MARGIN + (r + 0.5) * cellH;
-      if (Math.abs(cx - W/2) < 340 && Math.abs(cy - H/2) < 280) continue;
       cells.push({ cx, cy });
     }
   }
