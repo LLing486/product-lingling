@@ -70,25 +70,27 @@
 
     .hud-bc {
       grid-area: bl / tl / br / br;
-      display: flex; flex-direction: row; align-items: flex-end;
-      justify-content: space-between; padding: 0 32px 28px; pointer-events: none;
+      position: relative; display: flex; flex-direction: column;
+      align-items: center; justify-content: flex-end;
+      padding-bottom: 28px; pointer-events: none;
     }
-    .hud-bc > * { pointer-events: auto; }
     .hud-left-panel {
-      display: flex; flex-direction: column; gap: 8px;
-      opacity: 0; pointer-events: none; transition: opacity .5s ease;
+      position: absolute; left: 32px; bottom: 28px;
+      display: flex; flex-direction: column; gap: 8px; pointer-events: auto;
     }
     .hud-center-panel {
       display: flex; flex-direction: column; align-items: center; gap: 10px;
+      pointer-events: auto;
     }
     .hud-right-panel {
-      opacity: 0; pointer-events: none; transition: opacity .5s ease;
-      display: flex; align-items: flex-end;
+      position: absolute; right: 32px; bottom: 28px;
+      display: flex; align-items: flex-end; pointer-events: auto;
     }
-    .hud-bc.bg-active .hud-left-panel,
-    .hud-bc.bg-active .hud-right-panel { opacity: 1; pointer-events: auto; }
-    .hud-bc.bg-active .hud-center-panel #filter-fg,
-    .hud-bc.bg-active .hud-center-panel .depth-track-wrap { display: none; }
+    .fg-only { display: flex; }
+    .bg-only { display: none; }
+    .hud-bc.bg-active .fg-only { display: none; }
+    .hud-bc.bg-active .bg-only { display: flex; }
+    .hud-bc.bg-active .depth-track-wrap { display: none; }
     .depth-track-wrap { display: flex; flex-direction: column; align-items: center; gap: 7px; }
     .depth-labels { display: flex; gap: 80px; font-size: 11px; font-weight: 500; }
     .depth-lbl { transition: color .4s ease, font-weight .4s ease; }
@@ -234,6 +236,32 @@
     }
     .expand-btn:hover { background: rgba(200,160,40,.1); border-color: var(--amber); color: var(--amber); }
     .expand-btn svg { width: 14px; height: 14px; flex: 0 0 auto; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    /* B2: hide hover-card in expanded mode */
+    .layer-bg.expanded .node-hover-card { display: none; }
+
+    /* F2: Keyword search input */
+    .search-wrap { position: relative; display: flex; align-items: center; }
+    .search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; width: 13px; height: 13px; }
+    .search-input {
+      background: rgba(10,8,6,.72); border: 1px solid rgba(200,170,80,.18);
+      border-radius: 999px; color: var(--ink-2); font-size: 11px;
+      padding: 5px 12px 5px 28px; outline: none; width: 180px;
+      backdrop-filter: blur(8px); transition: border-color .15s ease;
+    }
+    .search-input:focus { border-color: rgba(200,170,80,.45); }
+    .search-input::placeholder { color: var(--muted); }
+
+    /* F3: Date filter */
+    .period-shelf { display: flex; flex-wrap: wrap; gap: 4px; }
+    .date-range-wrap { display: none; gap: 6px; align-items: center; flex-wrap: wrap; }
+    .date-range-wrap.open { display: flex; }
+    .date-input {
+      background: rgba(10,8,6,.72); border: 1px solid rgba(200,170,80,.18);
+      border-radius: 6px; color: var(--ink-2); font-size: 11px; padding: 4px 8px;
+      outline: none; width: 112px; backdrop-filter: blur(8px); color-scheme: dark;
+    }
+    .date-input:focus { border-color: rgba(200,170,80,.45); }
+    .date-sep { font-size: 11px; color: var(--muted); }
 
     /* Tooltip */
     .tooltip {
@@ -323,6 +351,31 @@
     .today-empty { width: 280px; padding: 60px 0; color: var(--muted); }
     .today-empty p { margin: 0 0 6px; font-size: 15px; color: var(--ink-2); }
 
+    /* BG node keyword labels */
+    .node-label {
+      position: absolute; left: calc(100% + 5px); top: 50%;
+      transform: translateY(-50%);
+      font-size: 10px; color: var(--ink-2); white-space: nowrap;
+      opacity: 0.45; pointer-events: none; transition: opacity .2s ease;
+    }
+    .src-node:hover .node-label { opacity: 1; }
+
+    /* BG hover preview card — pure CSS :hover, auto-hides on mouse-out */
+    .node-hover-card {
+      position: absolute; left: 14px; top: -4px; width: 240px; z-index: 10;
+      background: rgba(18,14,8,.93); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--warm-border); border-radius: 10px;
+      padding: 10px 12px; pointer-events: none;
+      opacity: 0; transform: scale(0.85) translateY(4px); transform-origin: 0 0;
+      transition: opacity .18s ease, transform .18s ease;
+    }
+    .src-node:hover .node-hover-card { opacity: 1; transform: scale(1) translateY(0); pointer-events: auto; }
+    .nhc-title { font-size: 11.5px; font-weight: 600; color: var(--ink); line-height: 1.4; margin-bottom: 6px; }
+    .nhc-date  { font-size: 10.5px; color: var(--muted); margin-bottom: 4px; }
+    .nhc-link  { font-size: 11px; color: var(--accent-dim); text-decoration: none; display: block; margin-bottom: 2px; }
+    .nhc-link:hover { color: var(--amber); text-decoration: underline; }
+    .nhc-assoc { font-size: 10.5px; color: var(--muted); margin-top: 5px; padding-top: 5px; border-top: 1px solid var(--warm-border); }
+
     @media(max-width: 720px) {
       .today-pair { flex-direction: column; align-items: flex-start; gap: 48px; top: 12%; left: 50%; transform: translateX(-50%); }
       .orbit-cards { display: none; }
@@ -359,29 +412,71 @@
   </div>
 
   <div class="hud-bc">
-    <!-- Left: BG filters (BG mode only) -->
+    <!-- Left: FG filters (FG mode) / BG filters (BG mode) -->
     <div class="hud-left-panel">
-      <div class="filter-shelf" id="filter-bg">
-        <button class="fpill active" data-filter="bg-status" data-value="all">全部信号</button>
-        <button class="fpill" data-filter="bg-status" data-value="linked">已关联卡片</button>
-        <button class="fpill" data-filter="bg-status" data-value="unlinked">未关联</button>
-        <div class="fpill-sep"></div>
-        <button class="fpill active" data-filter="bg-type" data-value="all">全部类型</button>
-        <button class="fpill" data-filter="bg-type" data-value="cross">跨界来源</button>
+
+      <!-- FG mode controls -->
+      <div class="fg-only" style="flex-direction:column;gap:6px">
+        <div class="search-wrap">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input class="search-input" id="fg-search" type="text" placeholder="搜索机会关键词…" autocomplete="off">
+        </div>
+        <div class="filter-shelf" id="filter-fg-type">
+          <button class="fpill active" data-filter="fg-type" data-value="all">全部</button>
+          <button class="fpill" data-filter="fg-type" data-value="related">◎ 相关</button>
+          <button class="fpill" data-filter="fg-type" data-value="crossdomain">⚡ 跨界</button>
+        </div>
+        <div class="period-shelf">
+          <button class="fpill active" data-filter="fg-period" data-value="all">全部</button>
+          <button class="fpill" data-filter="fg-period" data-value="7d">近7天</button>
+          <button class="fpill" data-filter="fg-period" data-value="30d">近30天</button>
+          <button class="fpill" data-filter="fg-period" data-value="90d">近3月</button>
+          <button class="fpill" data-filter="fg-period" data-value="custom">自定义</button>
+        </div>
+        <div class="date-range-wrap" id="fg-date-range">
+          <input class="date-input" id="fg-date-from" type="date">
+          <span class="date-sep">—</span>
+          <input class="date-input" id="fg-date-to" type="date">
+        </div>
+      </div>
+
+      <!-- BG mode controls -->
+      <div class="bg-only" style="flex-direction:column;gap:6px">
+        <div class="search-wrap">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input class="search-input" id="bg-search" type="text" placeholder="搜索信号关键词…" autocomplete="off">
+        </div>
+        <div class="filter-shelf" id="filter-bg">
+          <button class="fpill active" data-filter="bg-status" data-value="all">全部信号</button>
+          <button class="fpill" data-filter="bg-status" data-value="linked">已关联</button>
+          <button class="fpill" data-filter="bg-status" data-value="unlinked">未关联</button>
+          <div class="fpill-sep"></div>
+          <button class="fpill active" data-filter="bg-type" data-value="all">全部类型</button>
+          <button class="fpill" data-filter="bg-type" data-value="cross">跨界来源</button>
+        </div>
+        <div class="filter-shelf">
+          <button class="fpill active" data-filter="bg-limit" data-value="50">50条</button>
+          <button class="fpill" data-filter="bg-limit" data-value="100">100条</button>
+          <button class="fpill" data-filter="bg-limit" data-value="200">200条</button>
+          <button class="fpill" data-filter="bg-limit" data-value="0">全部</button>
+        </div>
+        <div class="period-shelf">
+          <button class="fpill active" data-filter="bg-period" data-value="all">全部</button>
+          <button class="fpill" data-filter="bg-period" data-value="7d">近7天</button>
+          <button class="fpill" data-filter="bg-period" data-value="30d">近30天</button>
+          <button class="fpill" data-filter="bg-period" data-value="90d">近3月</button>
+          <button class="fpill" data-filter="bg-period" data-value="custom">自定义</button>
+        </div>
+        <div class="date-range-wrap" id="bg-date-range">
+          <input class="date-input" id="bg-date-from" type="date">
+          <span class="date-sep">—</span>
+          <input class="date-input" id="bg-date-to" type="date">
+        </div>
       </div>
     </div>
 
-    <!-- Center: FG filters + depth track + count + nav button (always visible) -->
+    <!-- Center: depth track + count + nav button -->
     <div class="hud-center-panel">
-      <div class="filter-shelf" id="filter-fg">
-        <button class="fpill active" data-filter="fg-type" data-value="all">全部</button>
-        <button class="fpill" data-filter="fg-type" data-value="related">◎ 相关</button>
-        <button class="fpill" data-filter="fg-type" data-value="crossdomain">⚡ 跨界</button>
-        <div class="fpill-sep"></div>
-        <button class="fpill active" data-filter="fg-score" data-value="0">全部分数</button>
-        <button class="fpill" data-filter="fg-score" data-value="8">8分+</button>
-        <button class="fpill" data-filter="fg-score" data-value="7">7分+</button>
-      </div>
       <div class="depth-track-wrap">
         <div class="depth-labels">
           <span class="depth-lbl active" id="dlbl-fg">机会</span>
@@ -398,12 +493,19 @@
       </button>
     </div>
 
-    <!-- Right: expand toggle (BG mode only) -->
+    <!-- Right: FG score filter (FG mode) / expand button (BG mode) -->
     <div class="hud-right-panel">
-      <button class="expand-btn" id="expand-btn" type="button">
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
-        展开全部信号
-      </button>
+      <div class="fg-only filter-shelf" id="filter-fg-score">
+        <button class="fpill active" data-filter="fg-score" data-value="0">全部分数</button>
+        <button class="fpill" data-filter="fg-score" data-value="8">8分+</button>
+        <button class="fpill" data-filter="fg-score" data-value="7">7分+</button>
+      </div>
+      <div class="bg-only">
+        <button class="expand-btn" id="expand-btn" type="button">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
+          展开全部信号
+        </button>
+      </div>
     </div>
   </div>
 </div>
@@ -465,6 +567,29 @@
     <div class="modal-notes">
       <div class="note risk"><strong>主要风险</strong><span id="m-risk"></span></div>
       <div class="note check"><strong>下一步验证</strong><span id="m-check"></span></div>
+    </div>
+  </div>
+</div>
+
+<!-- Source Modal -->
+<div class="modal-veil" id="src-modal-veil">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-topbar">
+      <span>信号源详情</span>
+      <button class="modal-x" id="src-modal-x" type="button">
+        <svg viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-hero" style="padding:20px 24px 18px">
+      <div class="mh-dir" id="sm-host"></div>
+      <h2 id="sm-title" style="margin:8px 0 0;font-size:16px;line-height:1.4"></h2>
+    </div>
+    <div class="modal-sources" id="sm-sources"><span>链接</span></div>
+    <div class="modal-fields">
+      <div class="mf"><span class="mf-l">发布时间</span><span class="mf-v" id="sm-date"></span></div>
+      <div class="mf" id="sm-assoc-row">
+        <span class="mf-l">已关联机会</span><span class="mf-v" id="sm-assoc"></span>
+      </div>
     </div>
   </div>
 </div>
@@ -575,7 +700,13 @@ const MOCK_DATA = {
 // State
 // ─────────────────────────────────────
 let todayCards = [], library = [], allSources = [];
-let filters = { fgType: 'all', fgScore: 0, bgStatus: 'all', bgCross: 'all' };
+let filters = {
+  fgType: 'all', fgScore: 0,
+  bgStatus: 'all', bgCross: 'all', bgLimit: 50,
+  fgKeyword: '', bgKeyword: '',
+  fgPeriod: 'all', fgDateFrom: '', fgDateTo: '',
+  bgPeriod: 'all', bgDateFrom: '', bgDateTo: '',
+};
 let isBackground = false, isAnimating = false;
 let bgExpanded = false;
 let wheelAccum = 0;
@@ -623,6 +754,11 @@ function mapCard(c) {
     scores: typeof c.score === 'object' ? c.score : {},
     score: c.score && c.score.total ? c.score.total : 0,
     cardType: c.card_type || 'related',
+    pubDate: (() => {
+      const raw = c.published_at || c.pub_date || c.pubDate || '';
+      if (!raw) return '';
+      try { return new Date(raw).toISOString().slice(0, 10); } catch { return ''; }
+    })(),
   };
 }
 
@@ -677,10 +813,27 @@ async function loadData() {
 // ─────────────────────────────────────
 // Filters
 // ─────────────────────────────────────
+const PERIOD_DAYS = { '7d': 7, '30d': 30, '90d': 90 };
+function applyPeriodFilter(pubDate, period, dateFrom, dateTo) {
+  if (!pubDate) return true;
+  if (period !== 'all' && period !== 'custom') {
+    const cutoff = new Date(Date.now() - PERIOD_DAYS[period] * 86400000).toISOString().slice(0, 10);
+    if (pubDate < cutoff) return false;
+  }
+  if (period === 'custom') {
+    if (dateFrom && pubDate < dateFrom) return false;
+    if (dateTo   && pubDate > dateTo)   return false;
+  }
+  return true;
+}
+
 function applyFgFilters(cards) {
+  const kw = filters.fgKeyword.toLowerCase();
   return cards.filter(c => {
     if (filters.fgType !== 'all' && c.cardType !== filters.fgType) return false;
     if (filters.fgScore > 0 && c.score < filters.fgScore) return false;
+    if (kw && !c.title.toLowerCase().includes(kw) && !(c.direction||'').toLowerCase().includes(kw)) return false;
+    if (!applyPeriodFilter(c.pubDate, filters.fgPeriod, filters.fgDateFrom, filters.fgDateTo)) return false;
     return true;
   });
 }
@@ -688,32 +841,84 @@ function applyFgFilters(cards) {
 function applyBgFilters(sources) {
   const convUrls  = new Set([...todayCards, ...library].flatMap(c => c.sourceUrls.length ? c.sourceUrls : [c.sourceLink || '']));
   const crossUrls = new Set(todayCards.filter(c => c.cardType === 'crossdomain').flatMap(c => c.sourceUrls.length ? c.sourceUrls : [c.sourceLink || '']));
+  const kw = filters.bgKeyword.toLowerCase();
   return sources.filter(s => {
     const isLinked = convUrls.has(s.link);
     const isCross  = crossUrls.has(s.link);
     if (filters.bgStatus === 'linked'   && !isLinked) return false;
     if (filters.bgStatus === 'unlinked' &&  isLinked) return false;
     if (filters.bgCross  === 'cross'    && !isCross)  return false;
+    if (kw && !s.title.toLowerCase().includes(kw)) return false;
+    if (!applyPeriodFilter(s.pubDate, filters.bgPeriod, filters.bgDateFrom, filters.bgDateTo)) return false;
     return true;
   });
 }
 
+let _fgSearchTimer = null, _bgSearchTimer = null;
+
 function initFilters() {
+  // Filter pills (existing + new period / limit pills)
   document.querySelectorAll('.fpill').forEach(btn => {
     btn.addEventListener('click', () => {
       const ft = btn.dataset.filter, val = btn.dataset.value;
       document.querySelectorAll(`.fpill[data-filter="${ft}"]`).forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       switch (ft) {
-        case 'fg-type':  filters.fgType  = val; break;
-        case 'fg-score': filters.fgScore = Number(val); break;
-        case 'bg-status':filters.bgStatus= val; break;
-        case 'bg-type':  filters.bgCross = val; break;
+        case 'fg-type':   filters.fgType   = val; break;
+        case 'fg-score':  filters.fgScore  = Number(val); break;
+        case 'bg-status': filters.bgStatus = val; break;
+        case 'bg-type':   filters.bgCross  = val; break;
+        case 'bg-limit':  filters.bgLimit  = Number(val); break;
+        case 'fg-period':
+          filters.fgPeriod = val;
+          document.getElementById('fg-date-range').classList.toggle('open', val === 'custom');
+          break;
+        case 'bg-period':
+          filters.bgPeriod = val;
+          document.getElementById('bg-date-range').classList.toggle('open', val === 'custom');
+          break;
       }
       if (ft.startsWith('fg-')) { renderTodayCards(); renderOrbit(); }
       else { if (rafId) cancelAnimationFrame(rafId); initNodes(); }
     });
   });
+
+  // FG keyword search (debounced)
+  const fgSearch = document.getElementById('fg-search');
+  if (fgSearch) {
+    fgSearch.addEventListener('input', () => {
+      clearTimeout(_fgSearchTimer);
+      _fgSearchTimer = setTimeout(() => {
+        filters.fgKeyword = fgSearch.value.trim();
+        renderTodayCards(); renderOrbit();
+      }, 300);
+    });
+  }
+
+  // BG keyword search (debounced)
+  const bgSearch = document.getElementById('bg-search');
+  if (bgSearch) {
+    bgSearch.addEventListener('input', () => {
+      clearTimeout(_bgSearchTimer);
+      _bgSearchTimer = setTimeout(() => {
+        filters.bgKeyword = bgSearch.value.trim();
+        if (rafId) cancelAnimationFrame(rafId);
+        initNodes();
+      }, 300);
+    });
+  }
+
+  // FG date range inputs
+  const fgFrom = document.getElementById('fg-date-from');
+  const fgTo   = document.getElementById('fg-date-to');
+  if (fgFrom) fgFrom.addEventListener('change', () => { filters.fgDateFrom = fgFrom.value; renderTodayCards(); renderOrbit(); });
+  if (fgTo)   fgTo.addEventListener('change',   () => { filters.fgDateTo   = fgTo.value;   renderTodayCards(); renderOrbit(); });
+
+  // BG date range inputs
+  const bgFrom = document.getElementById('bg-date-from');
+  const bgTo   = document.getElementById('bg-date-to');
+  if (bgFrom) bgFrom.addEventListener('change', () => { filters.bgDateFrom = bgFrom.value; if (rafId) cancelAnimationFrame(rafId); initNodes(); });
+  if (bgTo)   bgTo.addEventListener('change',   () => { filters.bgDateTo   = bgTo.value;   if (rafId) cancelAnimationFrame(rafId); initNodes(); });
 }
 
 // ─────────────────────────────────────
@@ -793,32 +998,63 @@ function renderOrbit() {
   container.innerHTML = '';
   if (!library.length) return;
 
-  const cards = applyFgFilters(library).slice(0, 20);
-  const total = cards.length;
-  const r = Math.min(window.innerWidth * 0.38, window.innerHeight * 0.4, 380);
+  // Sort by pubDate descending: newest cards in inner ring
+  const cards = applyFgFilters(library)
+    .slice()
+    .sort((a, b) => new Date(b.pubDate || 0) - new Date(a.pubDate || 0));
 
-  cards.forEach((card, i) => {
-    const isCross = card.cardType === 'crossdomain';
-    const angle = (i / total) * Math.PI * 2 - Math.PI / 2;
-    const x = Math.cos(angle) * r;
-    const y = Math.sin(angle) * r;
+  const VW = window.innerWidth, VH = window.innerHeight;
+  const CARD_W = 150;   // orbit-card width
+  const CARD_GAP = 20;  // angular gap between cards
+  // B4: start orbit outside today-pair (680×480px → half-diagonal ~416px) + margin
+  const R_START = Math.max(460, Math.min(VW * 0.3, VH * 0.34));
+  const R_STEP  = CARD_W + 28;  // ring spacing = card width + gap
+  const R_MAX   = Math.min(VW * 0.48, VH * 0.46);
 
-    const el = document.createElement('div');
-    el.className = 'orbit-card';
-    el.style.left = `calc(50% + ${x}px - 99px)`;
-    el.style.top  = `calc(50% + ${y}px - 55px)`;
-    el.innerHTML = `
-      <div class="oc-score-num">${card.score.toFixed(1)}</div>
-      <div class="oc-dir-txt">${esc(short(card.direction, 14))}</div>
-      <div class="oc-title-txt">${esc(short(card.title, 40))}</div>`;
-    el.addEventListener('click', () => openModal(card));
-    container.appendChild(el);
-  });
+  let placed = 0, ring = 0;
+
+  while (placed < cards.length) {
+    const r = R_START + ring * R_STEP;
+    if (r > R_MAX) break;
+
+    const circumference = 2 * Math.PI * r;
+    const perRing = Math.max(1, Math.floor(circumference / (CARD_W + CARD_GAP)));
+    const ringCards = cards.slice(placed, placed + perRing);
+    const scale   = Math.max(0.42, 1 - ring * 0.14);
+    const opacity = Math.max(0.10, 1 - ring * 0.20);
+
+    ringCards.forEach((card, i) => {
+      const angle = (i / ringCards.length) * Math.PI * 2 - Math.PI / 2;
+      const x = Math.cos(angle) * r;
+      const y = Math.sin(angle) * r;
+      const el = document.createElement('div');
+      el.className = 'orbit-card';
+      el.style.cssText = `left:calc(50% + ${x}px - 99px);top:calc(50% + ${y}px - 55px);transform:scale(${scale.toFixed(2)});opacity:${opacity.toFixed(2)};`;
+      el.innerHTML = `
+        <div class="oc-score-num">${card.score.toFixed(1)}</div>
+        <div class="oc-dir-txt">${esc(short(card.direction, 14))}</div>
+        <div class="oc-title-txt">${esc(short(card.title, 40))}</div>`;
+      el.addEventListener('click', () => openModal(card));
+      container.appendChild(el);
+    });
+
+    placed += ringCards.length;
+    ring++;
+  }
 }
 
 // ─────────────────────────────────────
 // BG: Nodes
 // ─────────────────────────────────────
+function extractKeyword(title) {
+  const DICT = ['Agent','大模型','AI编程','AI办公','AI营销','AI创意','AI医疗',
+    '机器人','硬件','代码','推理','会议','排班','写作','健身',
+    'GitHub','OpenAI','Copilot','Notion','Product Hunt','企业',
+    '开发者','安全','工具','自动化','多模态','搜索','推荐','视频'];
+  for (const kw of DICT) if (title.includes(kw)) return kw.length > 6 ? kw.slice(0,6)+'…' : kw;
+  return title.replace(/[^一-龥a-zA-Z0-9]/g,'').slice(0,4);
+}
+
 function initNodes() {
   const container = document.getElementById('nodes-container');
   container.innerHTML = '';
@@ -828,48 +1064,76 @@ function initNodes() {
   const crossUrls = new Set(todayCards.filter(c => c.cardType === 'crossdomain').flatMap(c => c.sourceUrls.length ? c.sourceUrls : [c.sourceLink || '']));
 
   const W = window.innerWidth, H = window.innerHeight;
+  // F1: sort by date desc, apply limit
+  const limit = filters.bgLimit > 0 ? filters.bgLimit : Infinity;
+  const sourcesToShow = applyBgFilters(allSources)
+    .slice()
+    .sort((a, b) => (b.pubDate || '').localeCompare(a.pubDate || ''))
+    .slice(0, limit);
 
-  applyBgFilters(allSources).forEach((s, i) => {
+  // Grid-jitter: smaller cells so 50 nodes spread evenly across any resolution
+  const MARGIN = 60;
+  const cols = Math.max(5, Math.floor((W - MARGIN * 2) / 240));
+  const rows = Math.max(3, Math.floor((H - MARGIN * 2) / 200));
+  const cellW = (W - MARGIN * 2) / cols;
+  const cellH = (H - MARGIN * 2) / rows;
+  const cells = [];
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const cx = MARGIN + (c + 0.5) * cellW;
+      const cy = MARGIN + (r + 0.5) * cellH;
+      if (Math.abs(cx - W/2) < 340 && Math.abs(cy - H/2) < 280) continue;
+      cells.push({ cx, cy });
+    }
+  }
+  cells.sort(() => Math.random() - 0.5);
+
+  sourcesToShow.forEach((s, i) => {
     const isConv  = convUrls.has(s.link);
     const isCross = crossUrls.has(s.link);
     const color   = isConv ? (isCross ? '#ee6b3b' : '#c49a30') : 'rgba(240,220,190,0.3)';
     const size    = isConv ? 7 : 4;
 
-    // Random position, avoid screen center (where FG cards are)
-    let bx, by, tries = 0;
-    do {
-      bx = 60 + Math.random() * (W - 120);
-      by = 60 + Math.random() * (H - 120);
-      tries++;
-    } while (tries < 20 && Math.abs(bx - W/2) < 320 && Math.abs(by - H/2) < 260);
+    const cell = cells[i % cells.length];
+    let bx = cell.cx + (Math.random() - 0.5) * cellW * 0.8;
+    let by = cell.cy + (Math.random() - 0.5) * cellH * 0.8;
+    bx = Math.max(MARGIN, Math.min(W - MARGIN, bx));
+    by = Math.max(MARGIN, Math.min(H - MARGIN, by));
+
+    const keyword = extractKeyword(s.title);
+    const assocCard = [...todayCards, ...library].find(c =>
+      (c.sourceUrls||[]).includes(s.link) || c.sourceLink === s.link
+    );
 
     const wrapper = document.createElement('div');
     wrapper.className = 'src-node';
     wrapper.style.left = bx + 'px';
     wrapper.style.top  = by + 'px';
-
-    const dot = document.createElement('div');
-    dot.className = 'node-dot';
-    dot.style.cssText = `width:${size*2}px;height:${size*2}px;background:${color};`;
-
-    const card = document.createElement('div');
-    card.className = 'node-card';
-    card.style.setProperty('--delay', (i * 55) + 'ms');
-    card.innerHTML = `
-      <div class="nc-hero">
-        <div class="nc-title">${esc(short(s.title, 60))}</div>
+    const delay = (i % 12) * 45;
+    wrapper.innerHTML = `
+      <div class="node-dot" style="width:${size*2}px;height:${size*2}px;background:${color}"></div>
+      <span class="node-label">${esc(keyword)}</span>
+      <div class="node-card" style="--delay:${delay}ms">
+        <div class="nc-hero">
+          <div class="nc-title">${esc(short(s.title, 42))}</div>
+        </div>
+        <div class="nc-body">
+          <div class="nc-meta">${esc(s.pubDate || '')}</div>
+          ${assocCard ? `<span class="nc-badge">${esc(short(assocCard.title,24))}</span>` : ''}
+        </div>
       </div>
-      <div class="nc-body">
-        <div class="nc-meta">${s.pubDate || ''} · ${srcHost(s.link)}</div>
-        ${isConv ? '<span class="nc-badge">已生成机会卡</span>' : ''}
+      <div class="node-hover-card">
+        <div class="nhc-title">${esc(s.title)}</div>
+        <div class="nhc-date">${esc(s.pubDate || '')}</div>
+        <a class="nhc-link" href="${esc(s.link)}" target="_blank" rel="noopener">查看原文 ↗</a>
+        ${assocCard ? `<div class="nhc-assoc">已关联：${esc(short(assocCard.title,36))}</div>` : ''}
       </div>`;
 
-    wrapper.appendChild(dot);
-    wrapper.appendChild(card);
     container.appendChild(wrapper);
 
     const nodeObj = {
-      el: wrapper, dotEl: dot,
+      el: wrapper,
+      dotEl: wrapper.querySelector('.node-dot'),
       bx, by, cx: bx, cy: by,
       phase: Math.random() * Math.PI * 2,
       speed: 0.25 + Math.random() * 0.5,
@@ -878,34 +1142,16 @@ function initNodes() {
     };
     nodes.push(nodeObj);
 
-    // Hover: pause drift + tooltip
-    wrapper.addEventListener('mouseenter', (e) => {
-      nodeObj.hovered = true;
-      const t = document.getElementById('tooltip');
-      t.textContent = short(s.title, 80);
-      t.classList.add('on');
-      positionTooltip(e);
-    });
-    wrapper.addEventListener('mousemove', positionTooltip);
-    wrapper.addEventListener('mouseleave', () => {
-      nodeObj.hovered = false;
-      document.getElementById('tooltip').classList.remove('on');
-    });
+    // B3: pause drift on hover
+    wrapper.addEventListener('mouseenter', () => { nodeObj.hovered = true; });
+    wrapper.addEventListener('mouseleave', () => { nodeObj.hovered = false; });
 
-    // Click: expand individual node card
     wrapper.addEventListener('click', (e) => {
       e.stopPropagation();
-      const isOpen = card.classList.contains('node-open');
-      document.querySelectorAll('.node-card.node-open').forEach(c => c.classList.remove('node-open'));
-      if (!isOpen) card.classList.add('node-open');
+      if (e.target.closest('.nhc-link')) return;
+      if (assocCard) openModal(assocCard);
+      else openSourceModal(s);
     });
-  });
-
-  // Click on background closes any open node card
-  document.getElementById('layer-bg').addEventListener('click', (e) => {
-    if (!e.target.closest('.src-node')) {
-      document.querySelectorAll('.node-card.node-open').forEach(c => c.classList.remove('node-open'));
-    }
   });
 
   initLines();
@@ -1046,9 +1292,13 @@ function updateHUD() {
 
   const count = document.getElementById('depth-count');
   if (count) {
-    count.textContent = isBackground
-      ? `${applyBgFilters(allSources).length} 条信号`
-      : `今日 ${applyFgFilters(todayCards).length} 张 · 历史 ${applyFgFilters(library).length} 张`;
+    if (isBackground) {
+      const bgAll = applyBgFilters(allSources);
+      const shown = filters.bgLimit > 0 ? Math.min(filters.bgLimit, bgAll.length) : bgAll.length;
+      count.textContent = shown < bgAll.length ? `${shown} / ${bgAll.length} 条信号` : `${shown} 条信号`;
+    } else {
+      count.textContent = `今日 ${applyFgFilters(todayCards).length} 张 · 历史 ${applyFgFilters(library).length} 张`;
+    }
   }
 
   if (isBackground) {
@@ -1146,11 +1396,38 @@ function openModal(card) {
 
 function closeModal() { document.getElementById('modal-veil').classList.remove('open'); }
 
+function openSourceModal(s) {
+  document.getElementById('sm-host').textContent = srcHost(s.link);
+  document.getElementById('sm-title').textContent = s.title;
+  document.getElementById('sm-date').textContent = s.pubDate || '未知';
+  const srcEl = document.getElementById('sm-sources');
+  srcEl.innerHTML = `<span>链接</span><a href="${esc(s.link)}" target="_blank" class="src-link">${LINK_SVG}<span>${esc(short(s.link, 56))}</span></a>`;
+  const assocCard = [...todayCards, ...library].find(c =>
+    (c.sourceUrls||[]).includes(s.link) || c.sourceLink === s.link
+  );
+  const assocRow = document.getElementById('sm-assoc-row');
+  if (assocCard) {
+    document.getElementById('sm-assoc').textContent = assocCard.title;
+    assocRow.style.display = '';
+  } else {
+    assocRow.style.display = 'none';
+  }
+  document.getElementById('src-modal-veil').classList.add('open');
+}
+
+function closeSrcModal() { document.getElementById('src-modal-veil').classList.remove('open'); }
+
 document.getElementById('modal-x').addEventListener('click', closeModal);
 document.getElementById('modal-veil').addEventListener('click', (e) => {
   if (e.target === document.getElementById('modal-veil')) closeModal();
 });
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
+document.getElementById('src-modal-x').addEventListener('click', closeSrcModal);
+document.getElementById('src-modal-veil').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('src-modal-veil')) closeSrcModal();
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') { closeModal(); closeSrcModal(); }
+});
 
 // ─────────────────────────────────────
 // Init
