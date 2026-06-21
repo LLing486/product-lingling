@@ -1014,19 +1014,20 @@ function renderOrbit() {
   const pr = pair.getBoundingClientRect();
   const halfW = pr.width / 2;
   const halfH = pr.height / 2;
+  const CARD_HH = 50;   // orbit-card visual half-height
 
-  // Distance from center to today-pair edge at angle θ
+  // Minimum radius so the card's nearest edge clears the today-pair
   function rectEdge(θ) {
     const c = Math.abs(Math.cos(θ)) || 0.001;
     const s = Math.abs(Math.sin(θ)) || 0.001;
-    return Math.min(halfW / c, halfH / s);
+    return Math.min((halfW + CARD_W/2) / c, (halfH + CARD_HH) / s);
   }
 
   let placed = 0, ring = 0;
 
   while (placed < cards.length) {
     // Average orbit radius for this ring (used to estimate cards per ring)
-    const avgR = ((halfW + halfH) / 2) + MARGIN + ring * R_STEP;
+    const avgR = ((halfW + CARD_W/2 + halfH + CARD_HH) / 2) + MARGIN + ring * R_STEP;
     if (avgR > R_MAX) break;
     const perRing = Math.max(6, Math.floor(2 * Math.PI * avgR / (CARD_W + CARD_GAP)));
     const ringCards = cards.slice(placed, placed + perRing);
@@ -1042,7 +1043,7 @@ function renderOrbit() {
       const y = Math.sin(angle) * r;
       const el = document.createElement('div');
       el.className = 'orbit-card';
-      el.style.cssText = `left:calc(50% + ${x}px - 99px);top:calc(50% + ${y}px - 55px);transform:scale(${scale.toFixed(2)});opacity:${opacity.toFixed(2)};`;
+      el.style.cssText = `left:calc(50% + ${x}px - ${CARD_W/2}px);top:calc(50% + ${y}px - ${CARD_HH}px);transform:scale(${scale.toFixed(2)});opacity:${opacity.toFixed(2)};`;
       el.innerHTML = `
         <div class="oc-score-num">${card.score.toFixed(1)}</div>
         <div class="oc-dir-txt">${esc(short(card.direction, 14))}</div>
