@@ -145,7 +145,7 @@
     /* FG: Today pair */
     .today-pair {
       position: absolute; top: 50%; left: 50%;
-      transform: translate(-50%, -52%);
+      transform: translate(-50%, -52%) scale(var(--pair-scale, 1));
       width: 680px; height: 480px;
       z-index: 5;
     }
@@ -998,41 +998,46 @@ function renderOrbit() {
   container.innerHTML = '';
   if (!library.length) return;
 
-  // Sort by pubDate descending: newest cards in inner ring
   const cards = applyFgFilters(library)
     .slice()
     .sort((a, b) => new Date(b.pubDate || 0) - new Date(a.pubDate || 0));
 
   const VW = window.innerWidth, VH = window.innerHeight;
-  const CARD_W = 150;   // orbit-card width
-  const CARD_GAP = 20;  // angular gap between cards
-  const R_STEP  = CARD_W + 28;  // ring spacing = card width + gap
+  const CARD_W = 150;
+  const CARD_GAP = 20;
+  const R_STEP  = CARD_W + 28;
   const R_MAX   = Math.min(VW * 0.48, VH * 0.46);
+  const MARGIN  = 36;  // clearance from today-pair edge
 
-  // B4: start orbit outside today-pair — use actual element dimensions
+  // Get actual today-pair bounding box (after CSS scale)
   const pair = document.getElementById('today-pair');
   const pr = pair.getBoundingClientRect();
-  const halfDiag = Math.sqrt(pr.width * pr.width + pr.height * pr.height) / 2;
-  let R_START = halfDiag + 30;
-  // Fallback: ensure at least one ring fits on smaller screens
-  if (R_START + CARD_W > R_MAX) {
-    R_START = Math.max(200, R_MAX - CARD_W);
+  const halfW = pr.width / 2;
+  const halfH = pr.height / 2;
+
+  // Distance from center to today-pair edge at angle θ
+  function rectEdge(θ) {
+    const c = Math.abs(Math.cos(θ)) || 0.001;
+    const s = Math.abs(Math.sin(θ)) || 0.001;
+    return Math.min(halfW / c, halfH / s);
   }
 
   let placed = 0, ring = 0;
 
   while (placed < cards.length) {
-    const r = R_START + ring * R_STEP;
-    if (r > R_MAX) break;
-
-    const circumference = 2 * Math.PI * r;
-    const perRing = Math.max(1, Math.floor(circumference / (CARD_W + CARD_GAP)));
+    // Average orbit radius for this ring (used to estimate cards per ring)
+    const avgR = ((halfW + halfH) / 2) + MARGIN + ring * R_STEP;
+    if (avgR > R_MAX) break;
+    const perRing = Math.max(6, Math.floor(2 * Math.PI * avgR / (CARD_W + CARD_GAP)));
     const ringCards = cards.slice(placed, placed + perRing);
     const scale   = Math.max(0.42, 1 - ring * 0.14);
     const opacity = Math.max(0.10, 1 - ring * 0.20);
 
     ringCards.forEach((card, i) => {
       const angle = (i / ringCards.length) * Math.PI * 2 - Math.PI / 2;
+      const r = rectEdge(angle) + MARGIN + ring * R_STEP;
+      if (r > R_MAX) return;
+
       const x = Math.cos(angle) * r;
       const y = Math.sin(angle) * r;
       const el = document.createElement('div');
@@ -1441,6 +1446,14 @@ document.addEventListener('keydown', (e) => {
 // ─────────────────────────────────────
 async function init() {
   await loadData();
+
+  // Responsive today-pair: scale down so orbit always has room
+  const _vw = window.innerWidth, _vh = window.innerHeight;
+  const _rMax = Math.min(_vw * 0.48, _vh * 0.46);
+  const _halfDiag = Math.sqrt(340*340 + 240*240); // ≈416, design-time half-diagonal
+  const _maxOrbit = Math.max(0.35, (_rMax - 190) / _halfDiag);
+  const _pairScale = Math.min(1, (_vw * 0.82) / 680, (_vh * 0.52) / 480, _maxOrbit);
+  document.getElementById('today-pair').style.setProperty('--pair-scale', _pairScale);
 
   initFilters();
   renderTodayCards();
