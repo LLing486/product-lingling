@@ -4,6 +4,8 @@ import json
 import os
 from openai import OpenAI
 
+from backend.services.kickoff import build_kickoff_prompt
+
 SYSTEM_PROMPT = """你是一位资深 AI 产品经理和产品机会分析师。
 
 你的任务：从一批 AI 行业 RSS 资讯中，筛选出最有产品机会价值的 1 条，生成一张结构化的产品机会卡。
@@ -49,7 +51,13 @@ SYSTEM_PROMPT = """你是一位资深 AI 产品经理和产品机会分析师。
       "next_step": "具体可执行的下一步验证动作",
       "source_titles": ["原始资讯标题1", "原始资讯标题2"],
       "source_urls": ["原始资讯链接1", "原始资讯链接2"],
-      "direction": "方向分类，如 Agent、AI 办公、AI 教育、AI 营销、AI 编程、AI 设计、AI 数据、AI 安全 等"
+      "direction": "方向分类，如 Agent、AI 办公、AI 教育、AI 营销、AI 编程、AI 设计、AI 数据、AI 安全 等",
+      "kickoff": {
+        "first_milestone": "第一个可验证的里程碑：一句话描述最小可演示/可获取用户反馈的形态，如'做一个只支持X场景的落地页，看Y类用户的注册转化'",
+        "falsify_signals": ["最可能证伪这个机会的信号1，如'某大厂产品已内置此功能'", "证伪信号2"],
+        "research_queries": ["验证时应搜索的竞品/现状调研关键词1", "关键词2", "关键词3"],
+        "resources_needed": ["启动 MVP 前需要准备的资源1，如'OpenAI API Key'、'某类种子数据'、'目标用户触达渠道'", "资源2"]
+      }
     }
   ]
 }
@@ -106,7 +114,13 @@ CROSSDOMAIN_SYSTEM_PROMPT = """你是一位跨领域创新猎手，专门在看�
       "next_step": "具体可执行的下一步验证动作",
       "source_titles": ["资讯标题1", "资讯标题2"],
       "source_urls": ["资讯链接1", "资讯链接2"],
-      "direction": "方向分类"
+      "direction": "方向分类",
+      "kickoff": {
+        "first_milestone": "第一个可验证的里程碑：一句话描述最小可演示/可获取用户反馈的形态",
+        "falsify_signals": ["最可能证伪这个跨界机会的信号1，如'两个领域的用户其实不重叠'", "证伪信号2"],
+        "research_queries": ["验证时应搜索的竞品/现状调研关键词1", "关键词2", "关键词3"],
+        "resources_needed": ["启动 MVP 前需要准备的资源1，如'OpenAI API Key'、'某类种子数据'、'目标用户触达渠道'", "资源2"]
+      }
     }
   ]
 }
@@ -214,6 +228,7 @@ def analyze_items(items: list[dict], card_type: str = "related") -> list[dict]:
 
     for card in cards:
         card["card_type"] = card_type
+        card["kickoff_prompt"] = build_kickoff_prompt(card)
 
     return cards
 
@@ -230,5 +245,6 @@ def analyze_items_crossdomain(items: list[dict], card_type: str = "crossdomain")
 
     for card in cards:
         card["card_type"] = card_type
+        card["kickoff_prompt"] = build_kickoff_prompt(card)
 
     return cards

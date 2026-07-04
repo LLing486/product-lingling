@@ -1,6 +1,6 @@
 import sqlite3
 import os
-from datetime import date
+from datetime import date  # noqa: F401
 
 DB_PATH = os.path.join(os.path.dirname(__file__), "lingling.db")
 
@@ -32,6 +32,8 @@ def init_db():
             source_urls     TEXT,
             direction       TEXT,
             card_type       TEXT NOT NULL DEFAULT 'related',
+            kickoff         TEXT,
+            kickoff_prompt  TEXT,
             created_at      TEXT NOT NULL DEFAULT (date('now', 'localtime'))
         );
 
@@ -69,6 +71,14 @@ def init_db():
         conn.commit()
     if "source_urls" not in columns:
         conn.execute("ALTER TABLE opportunity_cards ADD COLUMN source_urls TEXT")
+        conn.commit()
+
+    # Migration: add kickoff columns if missing
+    if "kickoff" not in columns:
+        conn.execute("ALTER TABLE opportunity_cards ADD COLUMN kickoff TEXT")
+        conn.commit()
+    if "kickoff_prompt" not in columns:
+        conn.execute("ALTER TABLE opportunity_cards ADD COLUMN kickoff_prompt TEXT")
         conn.commit()
 
     conn.close()

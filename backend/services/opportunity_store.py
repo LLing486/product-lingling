@@ -3,6 +3,7 @@
 import json
 from datetime import date
 from backend.models import get_db
+from backend.services.kickoff import build_kickoff_prompt
 
 
 def save_cards(cards: list[dict]) -> list[int]:
@@ -13,11 +14,13 @@ def save_cards(cards: list[dict]) -> list[int]:
         # Serialize source arrays to JSON strings
         source_titles_json = json.dumps(card.get("source_titles", []), ensure_ascii=False) if card.get("source_titles") else None
         source_urls_json = json.dumps(card.get("source_urls", []), ensure_ascii=False) if card.get("source_urls") else None
+        kickoff_json = json.dumps(card["kickoff"], ensure_ascii=False) if card.get("kickoff") else None
+        kickoff_prompt = card.get("kickoff_prompt") or build_kickoff_prompt(card)
 
         cur = conn.execute(
             "INSERT INTO opportunity_cards "
-            "(title, user_persona, pain_point, ai_solution, mvp_plan, score, risks, next_step, source_title, source_url, source_titles, source_urls, direction, card_type) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "(title, user_persona, pain_point, ai_solution, mvp_plan, score, risks, next_step, source_title, source_url, source_titles, source_urls, direction, card_type, kickoff, kickoff_prompt) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (
                 card["title"],
                 card["user_persona"],
@@ -33,6 +36,8 @@ def save_cards(cards: list[dict]) -> list[int]:
                 source_urls_json,
                 card.get("direction", ""),
                 card.get("card_type", "related"),
+                kickoff_json,
+                kickoff_prompt,
             ),
         )
         ids.append(cur.lastrowid)
@@ -123,10 +128,13 @@ def _row_to_card(row) -> dict:
     d = dict(row)
     if isinstance(d.get("score"), str):
         d["score"] = json.loads(d["score"])
-    for key in ("source_titles", "source_urls"):
+    for key in ("source_titles", "source_urls", "kickoff"):
         if isinstance(d.get(key), str):
             try:
                 d[key] = json.loads(d[key])
             except (json.JSONDecodeError, TypeError):
-                d[key] = []
+                d[key] = {} if key == "kickoff" else []
+    # Backward compat: old cards without a stored prompt get one composed on the fly
+    if not d.get("kickoff_prompt"):
+        d["kickoff_prompt"] = build_kickoff_prompt(d)
     return d

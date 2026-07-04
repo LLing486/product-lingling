@@ -343,6 +343,62 @@
     .score-total-row strong { font-size: 20px; font-weight: 900; color: var(--amber); }
 
     .modal-notes { padding: 12px 24px 22px; display: grid; gap: 8px; }
+
+    /* Feature pills + match selector + weekly top */
+    .fpill-feature { border-color: rgba(200,160,40,.4); color: var(--amber); }
+    .fpill-feature:hover { background: rgba(200,160,40,.12); }
+    .match-bubbles { padding: 18px 24px 8px; display: grid; gap: 10px; border-bottom: 1px solid rgba(200,160,40,.07); }
+    .bubble-group { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .bg-lbl { font-size: 11px; font-weight: 600; color: var(--subtle); width: 30px; flex: 0 0 auto; }
+    .bubble {
+      padding: 6px 14px; border-radius: 999px; border: 1px solid var(--warm-border);
+      background: transparent; color: var(--muted); font-size: 12px; cursor: pointer;
+      transition: all .15s;
+    }
+    .bubble:hover { border-color: rgba(200,160,40,.4); }
+    .bubble.active { background: rgba(200,160,40,.12); border-color: rgba(200,160,40,.5); color: var(--amber); font-weight: 600; }
+    .pick-list { padding: 12px 16px 20px; display: grid; gap: 8px; }
+    .pick-row {
+      display: grid; grid-template-columns: 30px 1fr auto; gap: 12px; align-items: center;
+      padding: 12px 14px; border: 1px solid var(--warm-border); border-radius: 12px;
+      cursor: pointer; transition: border-color .15s, background .15s; text-align: left; background: transparent;
+    }
+    .pick-row:hover { border-color: rgba(200,160,40,.45); background: rgba(200,160,40,.05); }
+    .pick-rank { font-size: 16px; font-weight: 700; color: var(--amber); font-variant-numeric: tabular-nums; }
+    .pick-main { min-width: 0; }
+    .pick-title { font-size: 13.5px; font-weight: 600; color: var(--ink); line-height: 1.35; }
+    .pick-why { font-size: 11.5px; color: var(--muted); margin-top: 3px; line-height: 1.5; }
+    .pick-score { font-size: 15px; font-weight: 700; color: var(--amber); font-variant-numeric: tabular-nums; text-align: right; }
+    .pick-score small { display: block; font-size: 10px; font-weight: 500; color: var(--subtle); }
+    .pick-empty { padding: 20px; text-align: center; color: var(--subtle); font-size: 12.5px; }
+    .weekly-sub { padding: 12px 24px 0; font-size: 11.5px; color: var(--subtle); }
+
+    /* Pre-flight checkup */
+    .checkup-sec { padding: 14px 24px 4px; border-top: 1px solid rgba(200,160,40,.07); }
+    .checkup-grid { display: grid; gap: 8px; margin-top: 10px; }
+    .cu-item { display: grid; grid-template-columns: 92px 1fr; gap: 10px; align-items: baseline; }
+    .cu-l { font-size: 11px; font-weight: 600; color: var(--amber); letter-spacing: .02em; }
+    .cu-v { font-size: 12.5px; line-height: 1.6; color: var(--muted); }
+
+    /* Kickoff prompt */
+    .kickoff-sec { padding: 14px 24px 24px; border-top: 1px solid rgba(200,160,40,.07); }
+    .kickoff-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+    .kickoff-sub { font-size: 11px; color: var(--muted); margin-top: 3px; }
+    .kickoff-copy {
+      flex: 0 0 auto; padding: 7px 14px; border-radius: 8px; border: 1px solid rgba(200,160,40,.35);
+      background: rgba(200,160,40,.1); color: var(--amber); font-size: 12px; font-weight: 600;
+      cursor: pointer; transition: background .15s, transform .1s;
+    }
+    .kickoff-copy:hover { background: rgba(200,160,40,.2); }
+    .kickoff-copy:active { transform: scale(.97); }
+    .kickoff-copy.copied { background: rgba(90,170,90,.15); border-color: rgba(90,170,90,.4); color: #4a9a4a; }
+    .kickoff-pre {
+      margin: 0; padding: 12px 14px; max-height: 180px; overflow-y: auto;
+      background: rgba(0,0,0,.04); border: 1px solid var(--warm-border); border-radius: 10px;
+      font-size: 11px; line-height: 1.6; color: var(--muted);
+      white-space: pre-wrap; word-break: break-word;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
     .note { padding: 10px 13px; border-radius: 10px; font-size: 12.5px; line-height: 1.55; }
     .note.risk { background: rgba(120,20,10,.22); border: 1px solid rgba(239,68,68,.18); color: #fca5a5; }
     .note.check { background: rgba(5,46,22,.22); border: 1px solid rgba(52,211,153,.18); color: #6ee7b7; }
@@ -425,6 +481,10 @@
           <button class="fpill active" data-filter="fg-type" data-value="all">全部</button>
           <button class="fpill" data-filter="fg-type" data-value="related">◎ 相关</button>
           <button class="fpill" data-filter="fg-type" data-value="crossdomain">⚡ 跨界</button>
+        </div>
+        <div class="filter-shelf">
+          <button class="fpill fpill-feature" id="btn-match" type="button">✦ 适合我的机会</button>
+          <button class="fpill fpill-feature" id="btn-weekly" type="button">▲ 本周 TOP</button>
         </div>
         <div class="period-shelf">
           <button class="fpill active" data-filter="fg-period" data-value="all">全部</button>
@@ -568,6 +628,24 @@
       <div class="note risk"><strong>主要风险</strong><span id="m-risk"></span></div>
       <div class="note check"><strong>下一步验证</strong><span id="m-check"></span></div>
     </div>
+    <div class="checkup-sec">
+      <div class="sec-lbl">动手前体检</div>
+      <div class="checkup-grid">
+        <div class="cu-item"><span class="cu-l">先准备什么</span><span class="cu-v" id="m-cu-res"></span></div>
+        <div class="cu-item"><span class="cu-l">第一个里程碑</span><span class="cu-v" id="m-cu-milestone"></span></div>
+        <div class="cu-item"><span class="cu-l">证伪信号</span><span class="cu-v" id="m-cu-falsify"></span></div>
+      </div>
+    </div>
+    <div class="kickoff-sec">
+      <div class="kickoff-head">
+        <div>
+          <div class="sec-lbl">开工提示词</div>
+          <div class="kickoff-sub">复制给 Claude / DeepSeek，按验证 SOP 先调研、再证伪、后动手</div>
+        </div>
+        <button class="kickoff-copy" id="m-kickoff-copy" type="button">复制提示词</button>
+      </div>
+      <pre class="kickoff-pre" id="m-kickoff-pre"></pre>
+    </div>
   </div>
 </div>
 
@@ -591,6 +669,52 @@
         <span class="mf-l">已关联机会</span><span class="mf-v" id="sm-assoc"></span>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- Match Selector Modal -->
+<div class="modal-veil" id="match-veil">
+  <div class="modal" style="max-width:600px">
+    <div class="modal-topbar">
+      <span>适合我的机会</span>
+      <button class="modal-x" id="match-x" type="button">
+        <svg viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+    <div class="match-bubbles">
+      <div class="bubble-group">
+        <span class="bg-lbl">我是</span>
+        <button class="bubble active" data-group="identity" data-value="pm" type="button">产品经理</button>
+        <button class="bubble" data-group="identity" data-value="indie" type="button">独立开发者</button>
+        <button class="bubble" data-group="identity" data-value="founder" type="button">创业者</button>
+      </div>
+      <div class="bubble-group">
+        <span class="bg-lbl">投入</span>
+        <button class="bubble active" data-group="time" data-value="spare" type="button">业余时间</button>
+        <button class="bubble" data-group="time" data-value="full" type="button">全职投入</button>
+      </div>
+      <div class="bubble-group">
+        <span class="bg-lbl">目标</span>
+        <button class="bubble active" data-group="goal" data-value="learn" type="button">练手学习</button>
+        <button class="bubble" data-group="goal" data-value="revenue" type="button">做出收入</button>
+        <button class="bubble" data-group="goal" data-value="insight" type="button">沉淀判断</button>
+      </div>
+    </div>
+    <div class="pick-list" id="match-results"></div>
+  </div>
+</div>
+
+<!-- Weekly TOP Modal -->
+<div class="modal-veil" id="weekly-veil">
+  <div class="modal" style="max-width:600px">
+    <div class="modal-topbar">
+      <span>本周机会 TOP</span>
+      <button class="modal-x" id="weekly-x" type="button">
+        <svg viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+    <div class="weekly-sub" id="weekly-sub"></div>
+    <div class="pick-list" id="weekly-list"></div>
   </div>
 </div>
 
@@ -751,6 +875,13 @@ function mapCard(c) {
     sourceLink: su[0] || c.source_url || '#',
     user: c.user_persona, pain: c.pain_point, why: c.ai_solution,
     mvp: c.mvp_plan, risk: c.risks, check: c.next_step,
+    kickoffPrompt: c.kickoff_prompt || '',
+    kickoff: (() => {
+      let k = c.kickoff || {};
+      if (typeof k === 'string') { try { k = JSON.parse(k); } catch { k = {}; } }
+      return (k && typeof k === 'object') ? k : {};
+    })(),
+    createdAt: c.created_at || '',
     scores: typeof c.score === 'object' ? c.score : {},
     score: c.score && c.score.total ? c.score.total : 0,
     cardType: c.card_type || 'related',
@@ -1374,6 +1505,25 @@ function openModal(card) {
   document.getElementById('m-check').textContent = card.check;
   document.getElementById('m-total').textContent = card.score.toFixed(1) + ' / 10';
 
+  // Pre-flight checkup (slots from DeepSeek, fallbacks from card fields)
+  const k = card.kickoff || {};
+  const asList = v => Array.isArray(v) ? v.filter(Boolean) : (v ? [v] : []);
+  const res = asList(k.resources_needed);
+  const fal = asList(k.falsify_signals);
+  document.getElementById('m-cu-res').textContent =
+    res.length ? res.join('；') : '按 MVP 方案所列技术栈准备开发环境与必要的 API Key';
+  document.getElementById('m-cu-milestone').textContent =
+    k.first_milestone || card.check || `围绕「${card.title}」做一个单场景可演示 demo`;
+  document.getElementById('m-cu-falsify').textContent =
+    fal.length ? fal.join('；') : (card.risk || '大厂已覆盖、无付费意愿');
+
+  // Kickoff prompt (fallback-composed client-side for old cards / demo mode)
+  currentKickoffPrompt = card.kickoffPrompt || buildKickoffFallback(card);
+  document.getElementById('m-kickoff-pre').textContent = currentKickoffPrompt;
+  const copyBtn = document.getElementById('m-kickoff-copy');
+  copyBtn.classList.remove('copied');
+  copyBtn.textContent = '复制提示词';
+
   const dimsEl = document.getElementById('m-dims');
   dimsEl.innerHTML = DIMS.map(d => {
     const raw = card.scores[d.key];
@@ -1427,6 +1577,187 @@ document.getElementById('src-modal-veil').addEventListener('click', (e) => {
 });
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') { closeModal(); closeSrcModal(); }
+});
+
+// ─────────────────────────────────────
+// Kickoff prompt (copy + fallback composer)
+// ─────────────────────────────────────
+let currentKickoffPrompt = '';
+
+function buildKickoffFallback(card) {
+  const srcs = (card.sourceTitles || []).map((t, i) => {
+    const u = (card.sourceUrls || [])[i] || '';
+    return `- ${t}${u && u !== '#' ? `（${u}）` : ''}`;
+  }).join('\n') || '- （无）';
+  const milestone = card.check || `围绕「${card.title}」做一个单场景可演示 demo`;
+  return `你是我的产品验证助手。请帮我验证下面这个 AI 产品机会是否值得投入开发。先验证，不要急着写代码。
+
+## 机会卡
+- 机会方向：${card.title}
+- 目标用户：${card.user}
+- 用户痛点：${card.pain}
+- AI 解法：${card.why}
+- MVP 方案：${card.mvp}
+- 已知风险：${card.risk}
+- 信息源：
+${srcs}
+
+## 验证 SOP
+
+### 第一步 · 桌面调研（先做这个）
+1. 搜索关键词：「${card.title}」，找出现有竞品和相关开源项目。
+2. 对每个竞品记录：产品定位、目标用户、定价、最近 3 个月动态。
+3. 判断这个机会属于哪种情况：市场空白 / 可差异化切入 / 已是红海。
+
+### 第二步 · 痛点证伪（主动找反面证据）
+4. 重点检查证伪信号：${card.risk || '大厂已覆盖、无付费意愿'}。任何一条成立都要明确指出。
+5. 找 2-3 处真实用户讨论（Reddit / V2EX / 即刻 / 小红书等），确认痛点是否真实存在、用户是否表达过付费意愿。
+
+### 第三步 · 最小验证物（只有前两步通过才做）
+6. 第一个可验证的里程碑：${milestone}
+7. 优先做能拿到真实用户反馈的最小形态（落地页 / 可交互原型 / 单场景 demo），不要一上来做完整产品。
+
+## 输出要求
+最后给出明确结论：**值得做 / 需要转向 / 建议放弃**，附上关键证据和理由。如果是「需要转向」，说明转向后的新切入点。`;
+}
+
+document.getElementById('m-kickoff-copy').addEventListener('click', async () => {
+  const btn = document.getElementById('m-kickoff-copy');
+  let ok = false;
+  try {
+    await navigator.clipboard.writeText(currentKickoffPrompt);
+    ok = true;
+  } catch {
+    // Fallback for non-secure contexts
+    const ta = document.createElement('textarea');
+    ta.value = currentKickoffPrompt;
+    ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    try { ok = document.execCommand('copy'); } catch { ok = false; }
+    ta.remove();
+  }
+  btn.textContent = ok ? '已复制 ✓' : '复制失败';
+  if (ok) btn.classList.add('copied');
+  setTimeout(() => { btn.textContent = '复制提示词'; btn.classList.remove('copied'); }, 2000);
+});
+
+// ─────────────────────────────────────
+// Match selector（适合我的机会）
+// ─────────────────────────────────────
+const MATCH_PROFILES = {
+  identity: {
+    pm:      { dims: { pain_real: .6, market_size: .4 },        why: '痛点洞察与市场判断价值高，适合产品经理深挖' },
+    indie:   { dims: { tech_feasibility: .6, ai_fit: .4 },      why: '技术可行性强，独立开发者能快速落地' },
+    founder: { dims: { monetization: .6, market_size: .4 },     why: '商业化路径与市场空间突出，值得创业投入' },
+  },
+  time: {
+    spare: { dims: { tech_feasibility: 1 },                     why: '实现门槛低，业余时间也能推进' },
+    full:  { dims: { market_size: .5, monetization: .5 },       why: '市场空间足够大，值得全职押注' },
+  },
+  goal: {
+    learn:   { dims: { ai_fit: .5, tech_feasibility: .5 },      why: 'AI 技术含量高，练手价值大' },
+    revenue: { dims: { monetization: 1 },                       why: '付费意愿与变现路径清晰' },
+    insight: { dims: { pain_real: .5, competition: .5 },        why: '痛点真实、竞争格局值得研究沉淀' },
+  },
+};
+const matchSel = { identity: 'pm', time: 'spare', goal: 'learn' };
+
+function dimVal(card, dim) {
+  const raw = (card.scores || {})[dim];
+  return raw && typeof raw === 'object' ? (raw.value || 0) : (Number(raw) || 0);
+}
+
+function allCards() {
+  const m = new Map();
+  [...todayCards, ...library].forEach(c => m.set(c.id ?? c.title, c));
+  return [...m.values()];
+}
+
+function matchCard(card) {
+  let bonus = 0, bestWhy = '', bestContrib = -1;
+  for (const [group, val] of Object.entries(matchSel)) {
+    const profile = MATCH_PROFILES[group][val];
+    if (!profile) continue;
+    let contrib = 0;
+    for (const [dim, w] of Object.entries(profile.dims)) contrib += dimVal(card, dim) * w;
+    bonus += contrib / 5 * 10; // each group contributes 0-10
+    if (contrib > bestContrib) { bestContrib = contrib; bestWhy = profile.why; }
+  }
+  const why = bestWhy + (card.cardType === 'crossdomain' ? '；跨界组合，竞争壁垒更高' : '');
+  return { card, match: Math.round(card.score * 10 + bonus), why };
+}
+
+function renderPickRows(el, rows) {
+  if (!rows.length) { el.innerHTML = '<div class="pick-empty">暂无符合条件的机会卡</div>'; return; }
+  el.innerHTML = rows.map((r, i) => `
+    <button class="pick-row" data-pick-id="${esc(String(r.card.id ?? ''))}" type="button">
+      <span class="pick-rank">#${i + 1}</span>
+      <span class="pick-main">
+        <span class="pick-title">${r.card.cardType === 'crossdomain' ? '⚡' : '◎'} ${esc(r.card.title)}</span>
+        <span class="pick-why">${esc(r.why)}</span>
+      </span>
+      <span class="pick-score">${r.score}<small>${r.scoreLabel}</small></span>
+    </button>`).join('');
+  el.querySelectorAll('.pick-row').forEach((btn, i) => {
+    btn.addEventListener('click', () => {
+      closeMatchModal(); closeWeeklyModal();
+      openModal(rows[i].card);
+    });
+  });
+}
+
+function renderMatch() {
+  const rows = allCards().map(matchCard)
+    .sort((a, b) => b.match - a.match).slice(0, 3)
+    .map(r => ({ card: r.card, why: r.why, score: r.match, scoreLabel: '匹配分' }));
+  renderPickRows(document.getElementById('match-results'), rows);
+}
+
+function openMatchModal() { renderMatch(); document.getElementById('match-veil').classList.add('open'); }
+function closeMatchModal() { document.getElementById('match-veil').classList.remove('open'); }
+
+document.getElementById('btn-match').addEventListener('click', openMatchModal);
+document.getElementById('match-x').addEventListener('click', closeMatchModal);
+document.getElementById('match-veil').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('match-veil')) closeMatchModal();
+});
+document.querySelectorAll('.bubble').forEach(b => {
+  b.addEventListener('click', () => {
+    const group = b.dataset.group;
+    document.querySelectorAll(`.bubble[data-group="${group}"]`).forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    matchSel[group] = b.dataset.value;
+    renderMatch();
+  });
+});
+
+// ─────────────────────────────────────
+// Weekly TOP（本周机会 TOP）
+// ─────────────────────────────────────
+function renderWeekly() {
+  const now = new Date();
+  const weekAgo = new Date(now.getTime() - 7 * 864e5).toISOString().slice(0, 10);
+  const cards = allCards();
+  let pool = cards.filter(c => c.createdAt && c.createdAt >= weekAgo);
+  let sub = `近 7 天（${weekAgo} 起）共 ${pool.length} 张机会卡，按评分取 TOP 5`;
+  if (!pool.length) { pool = cards; sub = '近 7 天暂无新卡，展示全部机会卡 TOP 5'; }
+  const rows = pool.slice().sort((a, b) => b.score - a.score).slice(0, 5)
+    .map(c => ({ card: c, why: `${c.createdAt || '—'} · ${c.direction || ''}`, score: c.score.toFixed(1), scoreLabel: '/10' }));
+  document.getElementById('weekly-sub').textContent = sub;
+  renderPickRows(document.getElementById('weekly-list'), rows);
+}
+
+function openWeeklyModal() { renderWeekly(); document.getElementById('weekly-veil').classList.add('open'); }
+function closeWeeklyModal() { document.getElementById('weekly-veil').classList.remove('open'); }
+
+document.getElementById('btn-weekly').addEventListener('click', openWeeklyModal);
+document.getElementById('weekly-x').addEventListener('click', closeWeeklyModal);
+document.getElementById('weekly-veil').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('weekly-veil')) closeWeeklyModal();
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') { closeMatchModal(); closeWeeklyModal(); }
 });
 
 // ─────────────────────────────────────
