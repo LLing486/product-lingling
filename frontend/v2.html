@@ -145,7 +145,7 @@
     /* FG: Today pair */
     .today-pair {
       position: absolute; top: 50%; left: 50%;
-      transform: translate(-50%, -52%);
+      transform: translate(-50%, -52%) scale(var(--pair-scale, 1));
       width: 680px; height: 480px;
       z-index: 5;
     }
@@ -1129,38 +1129,52 @@ function renderOrbit() {
   container.innerHTML = '';
   if (!library.length) return;
 
-  // Sort by pubDate descending: newest cards in inner ring
   const cards = applyFgFilters(library)
     .slice()
     .sort((a, b) => new Date(b.pubDate || 0) - new Date(a.pubDate || 0));
 
   const VW = window.innerWidth, VH = window.innerHeight;
-  const CARD_W = 150;   // orbit-card width
-  const CARD_GAP = 20;  // angular gap between cards
-  // B4: start orbit outside today-pair (680×480px → half-diagonal ~416px) + margin
-  const R_START = Math.max(460, Math.min(VW * 0.3, VH * 0.34));
-  const R_STEP  = CARD_W + 28;  // ring spacing = card width + gap
+  const CARD_W = 150;
+  const CARD_GAP = 20;
+  const R_STEP  = CARD_W + 28;
   const R_MAX   = Math.min(VW * 0.48, VH * 0.46);
+  const MARGIN  = 36;  // clearance from today-pair edge
+
+  // Get actual today-pair bounding box (after CSS scale)
+  const pair = document.getElementById('today-pair');
+  const pr = pair.getBoundingClientRect();
+  const halfW = pr.width / 2;
+  const halfH = pr.height / 2;
+  const CARD_HH = 50;   // orbit-card visual half-height
+
+  // Minimum radius so the card's nearest edge clears the today-pair
+  function rectEdge(θ) {
+    const c = Math.abs(Math.cos(θ)) || 0.001;
+    const s = Math.abs(Math.sin(θ)) || 0.001;
+    return Math.min((halfW + CARD_W/2) / c, (halfH + CARD_HH) / s);
+  }
 
   let placed = 0, ring = 0;
 
   while (placed < cards.length) {
-    const r = R_START + ring * R_STEP;
-    if (r > R_MAX) break;
-
-    const circumference = 2 * Math.PI * r;
-    const perRing = Math.max(1, Math.floor(circumference / (CARD_W + CARD_GAP)));
+    // Average orbit radius for this ring (used to estimate cards per ring)
+    const avgR = ((halfW + CARD_W/2 + halfH + CARD_HH) / 2) + MARGIN + ring * R_STEP;
+    if (avgR > R_MAX) break;
+    const perRing = Math.max(6, Math.floor(2 * Math.PI * avgR / (CARD_W + CARD_GAP)));
     const ringCards = cards.slice(placed, placed + perRing);
     const scale   = Math.max(0.42, 1 - ring * 0.14);
     const opacity = Math.max(0.10, 1 - ring * 0.20);
 
     ringCards.forEach((card, i) => {
       const angle = (i / ringCards.length) * Math.PI * 2 - Math.PI / 2;
+      const r = rectEdge(angle) + MARGIN + ring * R_STEP;
+      if (r > R_MAX) return;
+
       const x = Math.cos(angle) * r;
       const y = Math.sin(angle) * r;
       const el = document.createElement('div');
       el.className = 'orbit-card';
-      el.style.cssText = `left:calc(50% + ${x}px - 99px);top:calc(50% + ${y}px - 55px);transform:scale(${scale.toFixed(2)});opacity:${opacity.toFixed(2)};`;
+      el.style.cssText = `left:calc(50% + ${x}px - ${CARD_W/2}px);top:calc(50% + ${y}px - ${CARD_HH}px);transform:scale(${scale.toFixed(2)});opacity:${opacity.toFixed(2)};`;
       el.innerHTML = `
         <div class="oc-score-num">${card.score.toFixed(1)}</div>
         <div class="oc-dir-txt">${esc(short(card.direction, 14))}</div>
@@ -1213,7 +1227,6 @@ function initNodes() {
     for (let c = 0; c < cols; c++) {
       const cx = MARGIN + (c + 0.5) * cellW;
       const cy = MARGIN + (r + 0.5) * cellH;
-      if (Math.abs(cx - W/2) < 340 && Math.abs(cy - H/2) < 280) continue;
       cells.push({ cx, cy });
     }
   }
@@ -1766,6 +1779,14 @@ document.addEventListener('keydown', (e) => {
 // ─────────────────────────────────────
 async function init() {
   await loadData();
+
+  // Responsive today-pair: scale down so orbit always has room
+  const _vw = window.innerWidth, _vh = window.innerHeight;
+  const _rMax = Math.min(_vw * 0.48, _vh * 0.46);
+  const _halfDiag = Math.sqrt(340*340 + 240*240); // ≈416, design-time half-diagonal
+  const _maxOrbit = Math.max(0.35, (_rMax - 190) / _halfDiag);
+  const _pairScale = Math.min(1, (_vw * 0.82) / 680, (_vh * 0.52) / 480, _maxOrbit);
+  document.getElementById('today-pair').style.setProperty('--pair-scale', _pairScale);
 
   initFilters();
   renderTodayCards();
