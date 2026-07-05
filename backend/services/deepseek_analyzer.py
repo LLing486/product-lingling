@@ -140,7 +140,12 @@ def _build_user_prompt(items: list[dict]) -> str:
 
 
 def _recalculate_scores(cards: list[dict]) -> list[dict]:
-    """Ensure score.total is calculated correctly and sort by total desc."""
+    """Ensure score.total is calculated correctly and sort by total desc.
+
+    Note on `competition`: the prompt instructs DeepSeek to score it INVERTED
+    (fiercer competition -> lower value), so the stored value already means
+    "higher = less competition = better" and the positive weight below is correct.
+    """
     weights = {
         "pain_real": 2.0,
         "ai_fit": 2.0,

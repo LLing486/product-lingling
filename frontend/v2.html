@@ -1645,6 +1645,7 @@ document.getElementById('m-kickoff-copy').addEventListener('click', async () => 
 // ─────────────────────────────────────
 // Match selector（适合我的机会）
 // ─────────────────────────────────────
+/* 注意：competition 维度为反向编码（分高=竞争小），正向加权即偏好蓝海，勿再取反 */
 const MATCH_PROFILES = {
   identity: {
     pm:      { dims: { pain_real: .6, market_size: .4 },        why: '痛点洞察与市场判断价值高，适合产品经理深挖' },

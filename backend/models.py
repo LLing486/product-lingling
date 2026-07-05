@@ -1,6 +1,5 @@
 import sqlite3
 import os
-from datetime import date  # noqa: F401
 
 DB_PATH = os.path.join(os.path.dirname(__file__), "lingling.db")
 
