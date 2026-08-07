@@ -98,29 +98,65 @@ def get_card_by_id(card_id: int) -> dict | None:
     return None
 
 
-def get_all_cards(keyword: str = "", direction: str = "", date_filter: str = "") -> list[dict]:
-    """Get all cards with optional keyword search, direction filter, and date filter."""
+def get_all_cards(keyword: str = "", direction: str = "", date_filter: str = "",
+                  page: int = 1, page_size: int = 20) -> tuple[list[dict], int]:
+    """Get cards with optional filters and pagination. Returns (cards, total)."""
     conn = get_db()
-    query = "SELECT * FROM opportunity_cards WHERE 1=1"
+    where = "WHERE 1=1"
     params: list = []
 
     if keyword:
         like = f"%{keyword}%"
-        query += " AND (title LIKE ? OR pain_point LIKE ? OR ai_solution LIKE ? OR user_persona LIKE ?)"
+        where += " AND (title LIKE ? OR pain_point LIKE ? OR ai_solution LIKE ? OR user_persona LIKE ?)"
         params.extend([like, like, like, like])
 
     if direction:
-        query += " AND direction = ?"
+        where += " AND direction = ?"
         params.append(direction)
 
     if date_filter:
-        query += " AND created_at = ?"
+        where += " AND created_at = ?"
         params.append(date_filter)
 
-    query += " ORDER BY created_at DESC, id DESC"
-    rows = conn.execute(query, params).fetchall()
+    # Count total matching rows
+    count_query = f"SELECT COUNT(*) FROM opportunity_cards {where}"
+    total_row = conn.execute(count_query, params).fetchone()
+    total = total_row[0] if total_row else 0
+
+    # Fetch page
+    offset = (page - 1) * page_size
+    query = f"SELECT * FROM opportunity_cards {where} ORDER BY created_at DESC, id DESC LIMIT ? OFFSET ?"
+    rows = conn.execute(query, params + [page_size, offset]).fetchall()
     conn.close()
-    return [_row_to_card(r) for r in rows]
+    return [_card_light(r) for r in rows], total
+
+
+def _card_light(row) -> dict:
+    """Serialize a database row to a light card dict for list endpoints.
+
+    Only returns fields needed by the library list view:
+    id, title, direction, card_type, score, created_at, source_title.
+    """
+    d = dict(row)
+    score = d.get("score")
+    if isinstance(score, str):
+        try:
+            score = json.loads(score)
+        except (json.JSONDecodeError, TypeError):
+            score = 0
+    if isinstance(score, dict):
+        score = score.get("total", 0)
+    elif not isinstance(score, (int, float)):
+        score = 0
+    return {
+        "id": d["id"],
+        "title": d["title"],
+        "direction": d.get("direction", ""),
+        "card_type": d.get("card_type", "related"),
+        "score": score,
+        "created_at": d.get("created_at", ""),
+        "source_title": d.get("source_title", ""),
+    }
 
 
 def _row_to_card(row) -> dict:

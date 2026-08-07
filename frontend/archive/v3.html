@@ -432,6 +432,7 @@ const DIMS = [
 ];
 let todayCards = [], library = [], sources = [], isMock = false;
 let currentCard = null, currentKick = '';
+let libPage = 1, libTotal = 0, libLoading = false;
 const todayISO = new Date().toISOString().slice(0, 10);
 
 /* ============ utils ============ */
@@ -448,6 +449,7 @@ function dimVal(card, dim) { const raw = (card.scores || {})[dim]; return raw &&
 function asList(v) { return Array.isArray(v) ? v.filter(Boolean) : (v ? [v] : []); }
 
 function mapCard(c) {
+  const scoreVal = typeof c.score === 'object' ? (c.score && c.score.total ? c.score.total : 0) : (Number(c.score) || 0);
   let st = c.source_titles || [], su = c.source_urls || [];
   if (typeof st === 'string') { try { st = JSON.parse(st); } catch { st = []; } }
   if (typeof su === 'string') { try { su = JSON.parse(su); } catch { su = []; } }
@@ -462,7 +464,7 @@ function mapCard(c) {
     mvp: c.mvp_plan, risk: c.risks, check: c.next_step,
     kickoffPrompt: c.kickoff_prompt || '', kickoff: (k && typeof k === 'object') ? k : {},
     scores: typeof c.score === 'object' ? c.score : {},
-    score: c.score && c.score.total ? c.score.total : 0,
+    score: scoreVal,
     cardType: c.card_type || 'related',
     createdAt: c.created_at || '',
   };
@@ -494,13 +496,15 @@ async function loadData() {
   try {
     const [tr, lr, sr] = await Promise.all([
       fetch('/api/cards/today', { signal: AbortSignal.timeout(8000) }),
-      fetch('/api/cards', { signal: AbortSignal.timeout(8000) }),
-      fetch('/api/sources', { signal: AbortSignal.timeout(8000) }),
+      fetch('/api/cards?page=1&page_size=20', { signal: AbortSignal.timeout(8000) }),
+      fetch('/api/sources?limit=50', { signal: AbortSignal.timeout(8000) }),
     ]);
     if (!tr.ok || !lr.ok || !sr.ok) throw new Error('api');
     const [td, ld, sd] = await Promise.all([tr.json(), lr.json(), sr.json()]);
     todayCards = (td.cards || []).map(mapCard);
     library = (ld.cards || []).map(mapCard);
+    libTotal = ld.total || 0;
+    libPage = 1;
     sources = (sd.items || []).map(it => ({
       title: it.title || '', url: it.url || '#',
       date: it.published_date || (it.published_at || '').slice(0, 10) || '',
@@ -510,6 +514,7 @@ async function loadData() {
     isMock = true;
     todayCards = MOCK.today.map(mapCard);
     library = [...MOCK.today, ...MOCK.library].map(mapCard);
+    libTotal = library.length;
     sources = MOCK.sources.map(it => ({ title: it.title, url: it.url, date: it.published_at }));
   }
   $('status-pill').textContent = isMock ? '⚡ 演示模式' : `${sources.length} 条信号`;
@@ -723,7 +728,7 @@ function renderLibrary() {
   if (libFilter.score) rows = rows.filter(c => c.score >= libFilter.score);
   if (libFilter.q) {
     const q = libFilter.q.toLowerCase();
-    rows = rows.filter(c => (c.title + c.pain + c.why + c.user).toLowerCase().includes(q));
+    rows = rows.filter(c => (c.title + (c.pain||'') + (c.why||'') + (c.user||'')).toLowerCase().includes(q));
   }
   rows.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || '') || b.score - a.score);
   if (!rows.length) { grid.innerHTML = '<div class="empty">没有符合条件的机会卡</div>'; return; }
@@ -735,12 +740,17 @@ function renderLibrary() {
     <button class="lib-card" data-id="${esc(String(c.id))}" type="button">
       <div class="lib-top">
         <span class="ctype ${cross ? 'cross' : 'rel'}">${cross ? '⚡ 跨界' : '◎ 相关'}</span>
-        <span class="lib-score" style="color:${cross ? 'var(--terra)' : 'var(--amber)'}">${c.score.toFixed(1)}</span>
+        <span class="lib-score" style="color:${cross ? 'var(--terra)' : 'var(--amber)'}">${(c.score||0).toFixed(1)}</span>
       </div>
       <div class="lib-title">${esc(c.title)}</div>
       <div class="lib-meta">${esc(c.direction)}</div>
     </button>`;
   });
+  if (isMock || libPage * 20 >= libTotal) {
+    html += '<div class="empty" id="lib-end">已加载全部机会卡</div>';
+  } else {
+    html += '<div class="empty" id="lib-end" style="opacity:.6">滚动加载更多…</div>';
+  }
   grid.innerHTML = html;
   grid.querySelectorAll('.lib-card').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -749,16 +759,81 @@ function renderLibrary() {
     });
   });
 }
+
+async function loadMoreLibrary() {
+  if (libLoading) return;
+  if (isMock || libPage * 20 >= libTotal) {
+    const end = document.getElementById('lib-end');
+    if (end) end.textContent = '已加载全部机会卡';
+    return;
+  }
+  libLoading = true;
+  libPage++;
+  try {
+    const params = new URLSearchParams({ page: String(libPage), page_size: '20' });
+    if (libFilter.q) params.set('keyword', libFilter.q);
+    const res = await fetch(`/api/cards?${params}`);
+    if (!res.ok) throw new Error('api');
+    const data = await res.json();
+    const newCards = (data.cards || []).map(mapCard);
+    library = library.concat(newCards);
+    libTotal = data.total || 0;
+    // Re-render to include new cards with current client-side filters
+    renderLibrary();
+  } catch(e) {
+    libPage--; // rollback on failure
+  }
+  libLoading = false;
+}
+
+function resetLibrary() {
+  library = [];
+  libPage = 0; // loadMoreLibrary will increment to 1
+  libTotal = 0;
+  $('lib-grid').innerHTML = '<div class="empty">加载中…</div>';
+  loadMoreLibrary();
+}
+
+/* Scroll-based lazy loading */
+let _scrollTimer = 0;
+window.addEventListener('scroll', () => {
+  if (_scrollTimer) return;
+  _scrollTimer = setTimeout(() => {
+    _scrollTimer = 0;
+    const grid = $('lib-grid');
+    if (!grid) return;
+    const rect = grid.getBoundingClientRect();
+    if (rect.bottom <= window.innerHeight + 500) {
+      loadMoreLibrary();
+    }
+  }, 200);
+}, { passive: true });
+
 document.querySelectorAll('.lib-tools .pill[data-f]').forEach(b => {
   b.addEventListener('click', () => {
     document.querySelectorAll(`.lib-tools .pill[data-f="${b.dataset.f}"]`).forEach(x => x.classList.remove('active'));
     b.classList.add('active');
     if (b.dataset.f === 'type') libFilter.type = b.dataset.v;
     else libFilter.score = Number(b.dataset.v);
-    renderLibrary();
+    // Reset pagination and reload
+    library = [];
+    libPage = 0;
+    libTotal = 0;
+    loadMoreLibrary();
   });
 });
-$('lib-search').addEventListener('input', e => { libFilter.q = e.target.value.trim(); renderLibrary(); });
+$('lib-search').addEventListener('input', _debounce(() => {
+  libFilter.q = $('lib-search').value.trim();
+  resetLibrary();
+}, 350));
+
+function _debounce(fn, ms) {
+  let t;
+  return function() {
+    clearTimeout(t);
+    t = setTimeout(fn, ms);
+  };
+}
 
 /* ============ signals band ============ */
 function renderSignals() {
@@ -828,25 +903,35 @@ ${fal}
 最后给出明确结论：**值得做 / 需要转向 / 建议放弃**，附上关键证据和理由。如果是「需要转向」，说明转向后的新切入点。`;
 }
 
-function openDetail(card) {
-  currentCard = card;
-  const cross = card.cardType === 'crossdomain';
+async function openDetail(card) {
+  // Light cards from the list endpoint lack full detail — fetch the complete record
+  let full = card;
+  if (card && card.user === undefined) {
+    try {
+      const res = await fetch(`/api/cards/${card.id}`);
+      if (!res.ok) return;
+      full = mapCard(await res.json());
+    } catch(e) { return; }
+  }
+  if (!full) return;
+  currentCard = full;
+  const cross = full.cardType === 'crossdomain';
   $('d-type').textContent = cross ? '⚡ 跨界创新' : '◎ 相关洞察';
   $('d-type').style.color = cross ? 'var(--terra)' : 'var(--amber)';
-  $('d-score').innerHTML = `${card.score.toFixed(1)}<small> /10</small>`;
+  $('d-score').innerHTML = `${full.score.toFixed(1)}<small> /10</small>`;
   $('d-score').style.color = cross ? 'var(--terra)' : 'var(--amber)';
-  $('d-title').textContent = card.title;
-  $('d-srcs').innerHTML = (card.sourceTitles || []).map((t, i) => {
-    const u = (card.sourceUrls || [])[i] || '#';
+  $('d-title').textContent = full.title;
+  $('d-srcs').innerHTML = (full.sourceTitles || []).map((t, i) => {
+    const u = (full.sourceUrls || [])[i] || '#';
     return u && u !== '#'
       ? `<a class="d-src" href="${esc(u)}" target="_blank" rel="noopener">${esc(t)}</a>`
       : `<span class="d-src">${esc(t)}</span>`;
   }).join('');
-  $('d-user').textContent = card.user; $('d-pain').textContent = card.pain;
-  $('d-why').textContent = card.why; $('d-mvp').textContent = card.mvp;
-  $('d-risk').textContent = card.risk; $('d-check').textContent = card.check;
+  $('d-user').textContent = full.user; $('d-pain').textContent = full.pain;
+  $('d-why').textContent = full.why; $('d-mvp').textContent = full.mvp;
+  $('d-risk').textContent = full.risk; $('d-check').textContent = full.check;
   $('d-dims').innerHTML = DIMS.map(d => {
-    const raw = (card.scores || {})[d.key];
+    const raw = (full.scores || {})[d.key];
     const v = raw && typeof raw === 'object' ? (raw.value || 0) : (Number(raw) || 0);
     const reason = raw && typeof raw === 'object' ? (raw.reason || '') : '';
     return `<div class="dim">
@@ -854,11 +939,11 @@ function openDetail(card) {
       <span class="dim-bar"><span class="dim-fill" style="width:0" data-w="${v / 5 * 100}%"></span></span>
       <span class="dim-v">${v}/5</span></div>`;
   }).join('');
-  const k = card.kickoff || {};
+  const k = full.kickoff || {};
   $('d-cu-res').textContent = asList(k.resources_needed).join('；') || '按 MVP 方案所列技术栈准备开发环境与必要的 API Key';
-  $('d-cu-mile').textContent = k.first_milestone || card.check || `围绕「${card.title}」做一个单场景可演示 demo`;
-  $('d-cu-fal').textContent = asList(k.falsify_signals).join('；') || (card.risk || '大厂已覆盖、无付费意愿');
-  currentKick = card.kickoffPrompt || buildKickoffFallback(card);
+  $('d-cu-mile').textContent = k.first_milestone || full.check || `围绕「${card.title}」做一个单场景可演示 demo`;
+  $('d-cu-fal').textContent = asList(k.falsify_signals).join('；') || (full.risk || '大厂已覆盖、无付费意愿');
+  currentKick = full.kickoffPrompt || buildKickoffFallback(full);
   $('kick-pre').textContent = currentKick;
   const cb = $('kick-copy'); cb.classList.remove('ok'); cb.textContent = '复制提示词';
   $('detail-veil').classList.add('open');

@@ -2,11 +2,1132 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="refresh" content="0; url=/v3.html">
-<title>灵灵 · 跳转中</title>
-<script>location.replace('/v3.html');</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>灵灵 · 每日机会开卡</title>
+<style>
+:root {
+  --paper: #FAF8F3;
+  --paper-2: #F3EFE6;
+  --ink: #2C2A26;
+  --ink-2: #6B6558;
+  --ink-3: #9C958A;
+  --amber: #B8860B;
+  --amber-soft: #E8D9B0;
+  --amber-bg: #F5EEDC;
+  --terra: #C4572E;
+  --terra-soft: #EDCDBF;
+  --terra-bg: #F7E9E2;
+  --hairline: rgba(44,42,38,.14);
+  --card-r: 16px;
+  --ctl-r: 10px;
+  --serif: Georgia, 'Times New Roman', 'Songti SC', 'SimSun', serif;
+  --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.65;
+  min-height: 100vh;
+}
+button { font-family: inherit; cursor: pointer; }
+a { color: var(--amber); text-decoration: none; }
+a:hover { text-decoration: underline; }
+.wrap { max-width: 1080px; margin: 0 auto; padding: 0 18px 80px; }
+
+/* ── Masthead ── */
+.masthead { padding: 26px 0 14px; border-bottom: 2px solid var(--ink); }
+.mast-top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.brand { font-family: var(--serif); font-size: 30px; font-weight: 700; letter-spacing: .04em; }
+.brand small { font-size: 13px; font-weight: 400; color: var(--ink-2); letter-spacing: .12em; margin-left: 8px; }
+.mast-meta { display: flex; gap: 14px; align-items: baseline; font-size: 12.5px; color: var(--ink-2); flex-wrap: wrap; }
+.issue-no { font-family: var(--serif); font-weight: 700; color: var(--ink); }
+.streak { color: var(--terra); }
+.milestone { color: var(--amber); }
+#seed-band { display: block; width: 100%; height: 26px; margin-top: 12px; }
+.mast-note { font-size: 12px; color: var(--ink-3); margin-top: 6px; display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.status-pill { font-size: 11.5px; color: var(--ink-3); }
+.status-pill.mock { color: var(--terra); }
+
+/* ── Section headers ── */
+.sec-head {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+  margin: 34px 0 16px; padding-bottom: 8px; border-bottom: 1px solid var(--hairline);
+  flex-wrap: wrap;
+}
+.sec-title { font-family: var(--serif); font-size: 19px; font-weight: 700; letter-spacing: .06em; }
+.sec-title .en { font-size: 10.5px; font-family: var(--sans); font-weight: 600; color: var(--ink-3); letter-spacing: .18em; margin-left: 10px; }
+.sec-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* ── Buttons / pills ── */
+.pill {
+  padding: 7px 14px; border-radius: 999px; border: 1px solid var(--hairline);
+  background: transparent; color: var(--ink-2); font-size: 12.5px;
+  transition: all .15s; min-height: 32px;
+}
+.pill:hover { border-color: var(--amber); color: var(--amber); }
+.pill.active { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+.pill.accent { border-color: var(--amber); color: var(--amber); font-weight: 600; }
+.pill.accent:hover { background: var(--amber-bg); }
+
+/* ── Today cards ── */
+.today-grid { display: grid; grid-template-columns: 1fr; gap: 18px; position: relative; }
+.collide-note {
+  text-align: center; font-size: 12.5px; color: var(--ink-2); padding: 4px 0;
+  opacity: 0; transition: opacity .6s;
+}
+.collide-note.show { opacity: 1; }
+.collide-note .badge {
+  display: inline-block; background: var(--terra-bg); color: var(--terra);
+  border: 1px solid var(--terra-soft); border-radius: 999px; padding: 2px 10px;
+  font-size: 11.5px; margin-left: 8px;
+}
+.card3d { perspective: 1400px; min-height: 300px; outline: none; }
+.card3d:focus-visible .cardface { box-shadow: 0 0 0 2px var(--amber); }
+.cardinner {
+  position: relative; width: 100%; height: 100%; min-height: 300px;
+  transform-style: preserve-3d; transition: transform .6s cubic-bezier(.4,.1,.2,1);
+}
+.card3d.flipped .cardinner { transform: rotateY(180deg); }
+.cardface {
+  border-radius: var(--card-r); border: 1px solid var(--hairline);
+  backface-visibility: hidden; -webkit-backface-visibility: hidden;
+  background: #fff;
+}
+.face-back {
+  position: absolute; inset: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 10px; cursor: pointer;
+  background: var(--paper-2); overflow: hidden;
+}
+.face-back canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.back-label { position: relative; font-family: var(--serif); font-size: 17px; font-weight: 700; letter-spacing: .1em; }
+.back-hint { position: relative; font-size: 12px; color: var(--ink-2); }
+.back-issue { position: relative; font-size: 11px; color: var(--ink-3); letter-spacing: .2em; }
+.face-front {
+  position: relative; transform: rotateY(180deg);
+  padding: 20px 22px 18px; min-height: 300px;
+  display: flex; flex-direction: column; cursor: pointer;
+}
+.card3d.rare .face-front { animation: rareflash 1.2s ease-out 1; }
+@keyframes rareflash {
+  0% { box-shadow: 0 0 0 0 rgba(184,134,11,0); }
+  30% { box-shadow: 0 0 0 4px rgba(184,134,11,.45), 0 0 24px rgba(184,134,11,.3); }
+  100% { box-shadow: 0 0 0 0 rgba(184,134,11,0); }
+}
+.ctype { font-size: 12px; font-weight: 600; letter-spacing: .08em; }
+.ctype.rel { color: var(--amber); }
+.ctype.cross { color: var(--terra); }
+.cscore {
+  font-family: var(--serif); font-weight: 700; line-height: 1;
+  font-size: 64px; margin: 8px 0 2px; font-variant-numeric: tabular-nums;
+}
+.cscore small { font-size: 15px; color: var(--ink-3); font-weight: 400; }
+.ctitle { font-family: var(--serif); font-size: 19px; font-weight: 700; line-height: 1.4; margin: 6px 0 8px; }
+.cpain { font-size: 13px; color: var(--ink-2); line-height: 1.6; flex: 1; }
+.cfoot { display: flex; justify-content: space-between; align-items: center; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--hairline); }
+.cdir { font-size: 11.5px; color: var(--ink-3); letter-spacing: .06em; }
+.cmore { font-size: 12.5px; color: var(--amber); font-weight: 600; }
+.clash-stage { position: relative; height: 30px; margin: 2px 0 4px; overflow: hidden; display: none; }
+.card3d.cross .clash-stage { display: block; }
+.clash-w { position: absolute; top: 0; font-size: 13px; font-weight: 600; color: var(--terra); white-space: nowrap; }
+.clash-w.l { left: 0; } .clash-w.r { right: 0; }
+.card3d.play .clash-w.l { animation: flyL .5s cubic-bezier(.3,.8,.4,1) both; }
+.card3d.play .clash-w.r { animation: flyR .5s cubic-bezier(.3,.8,.4,1) both; }
+@keyframes flyL { from { transform: translateX(-120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+@keyframes flyR { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+.clash-x { position: absolute; left: 50%; top: 50%; font-size: 14px; color: var(--terra); transform: translate(-50%,-50%); opacity: 0; }
+.card3d.play .clash-x { animation: xpop .4s .45s ease-out both; }
+@keyframes xpop { from { opacity: 0; transform: translate(-50%,-50%) scale(.3); } to { opacity: 1; transform: translate(-50%,-50%) scale(1); } }
+.spark { position: absolute; left: 50%; top: 50%; width: 4px; height: 4px; border-radius: 50%; background: var(--terra); opacity: 0; pointer-events: none; }
+.card3d.play .spark { animation: sparkfly .6s .5s ease-out both; }
+@keyframes sparkfly {
+  from { opacity: 1; transform: translate(-50%,-50%); }
+  to { opacity: 0; transform: translate(calc(-50% + var(--sx)), calc(-50% + var(--sy))); }
+}
+
+/* ── Library ── */
+.lib-tools { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; align-items: center; }
+.search {
+  flex: 1 1 160px; min-width: 140px; padding: 8px 12px; font-size: 13px;
+  border: 1px solid var(--hairline); border-radius: var(--ctl-r);
+  background: #fff; color: var(--ink); font-family: inherit; min-height: 36px;
+}
+.search:focus { outline: none; border-color: var(--amber); }
+.lib-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+.date-head { font-size: 11.5px; color: var(--ink-3); letter-spacing: .14em; margin: 10px 0 -2px; grid-column: 1 / -1; }
+.lib-card {
+  background: #fff; border: 1px solid var(--hairline); border-radius: var(--card-r);
+  padding: 14px 16px; cursor: pointer; text-align: left; transition: border-color .15s, transform .15s;
+  display: flex; flex-direction: column; gap: 6px; width: 100%;
+}
+.lib-card:hover { border-color: var(--amber); transform: translateY(-2px); }
+.lib-top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.lib-score { font-family: var(--serif); font-weight: 700; font-size: 22px; font-variant-numeric: tabular-nums; }
+.lib-title { font-size: 14px; font-weight: 600; line-height: 1.45; }
+.lib-meta { font-size: 11.5px; color: var(--ink-3); }
+.empty { padding: 30px 10px; text-align: center; color: var(--ink-3); font-size: 13px; grid-column: 1 / -1; }
+
+/* ── Signals band ── */
+.sig-band {
+  display: flex; gap: 10px; overflow-x: auto; padding: 4px 2px 12px;
+  scroll-snap-type: x proximity; -webkit-overflow-scrolling: touch;
+}
+.sig-item {
+  flex: 0 0 200px; scroll-snap-align: start; background: #fff;
+  border: 1px solid var(--hairline); border-radius: 12px; padding: 11px 13px;
+  cursor: pointer; text-align: left; transition: border-color .15s;
+}
+.sig-item:hover { border-color: var(--amber); }
+.sig-item.linked { border-color: var(--amber-soft); background: var(--amber-bg); }
+.sig-title { font-size: 12.5px; line-height: 1.5; font-weight: 500; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.sig-meta { font-size: 11px; color: var(--ink-3); margin-top: 6px; display: flex; justify-content: space-between; gap: 6px; }
+.sig-tag { color: var(--amber); font-weight: 600; }
+
+/* ── Sheet / modal ── */
+.veil {
+  position: fixed; inset: 0; background: rgba(44,42,38,.4); z-index: 50;
+  opacity: 0; pointer-events: none; transition: opacity .25s;
+}
+.veil.open { opacity: 1; pointer-events: auto; }
+.sheet {
+  position: absolute; left: 0; right: 0; bottom: 0; max-height: 88vh;
+  background: var(--paper); border-radius: 20px 20px 0 0; overflow-y: auto;
+  transform: translateY(100%); transition: transform .3s cubic-bezier(.3,.8,.3,1);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.veil.open .sheet { transform: translateY(0); }
+.sheet-bar { position: sticky; top: 0; background: var(--paper); display: flex; justify-content: space-between; align-items: center; padding: 12px 18px 8px; border-bottom: 1px solid var(--hairline); z-index: 2; }
+.sheet-bar span { font-size: 11.5px; letter-spacing: .16em; color: var(--ink-3); font-weight: 600; }
+.x-btn { width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--hairline); background: transparent; color: var(--ink-2); font-size: 15px; line-height: 1; }
+.x-btn:hover { border-color: var(--terra); color: var(--terra); }
+.sheet-body { padding: 16px 20px 32px; }
+.d-type { font-size: 12px; font-weight: 600; letter-spacing: .08em; }
+.d-score { font-family: var(--serif); font-size: 56px; font-weight: 700; line-height: 1.05; font-variant-numeric: tabular-nums; }
+.d-score small { font-size: 14px; color: var(--ink-3); font-weight: 400; }
+.d-title { font-family: var(--serif); font-size: 21px; font-weight: 700; line-height: 1.4; margin: 6px 0 10px; }
+.d-srcs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+.d-src { font-size: 12px; color: var(--amber); border: 1px solid var(--amber-soft); border-radius: 999px; padding: 3px 10px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.d-field { display: grid; grid-template-columns: 84px 1fr; gap: 10px; padding: 9px 0; border-top: 1px solid var(--hairline); font-size: 13.5px; }
+.d-field b { font-size: 12px; color: var(--amber); font-weight: 600; }
+.d-field span { color: var(--ink-2); line-height: 1.65; }
+.dims { margin: 6px 0 4px; }
+.dim { display: grid; grid-template-columns: 74px 1fr 38px; gap: 10px; align-items: center; padding: 5px 0; }
+.dim-n { font-size: 12px; color: var(--ink-2); }
+.dim-bar { height: 6px; border-radius: 3px; background: var(--paper-2); overflow: hidden; }
+.dim-fill { height: 100%; border-radius: 3px; background: var(--amber); transition: width .7s ease-out; }
+.dim-v { font-size: 12px; color: var(--ink-3); text-align: right; font-variant-numeric: tabular-nums; }
+.d-sec-lbl { font-size: 11.5px; letter-spacing: .16em; color: var(--ink-3); font-weight: 600; margin: 18px 0 8px; }
+.kick-pre {
+  background: #fff; border: 1px solid var(--hairline); border-radius: 12px;
+  padding: 12px 14px; font-size: 12px; line-height: 1.7; color: var(--ink-2);
+  white-space: pre-wrap; word-break: break-word; max-height: 200px; overflow-y: auto;
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+}
+.kick-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 8px; }
+.copy-btn {
+  padding: 7px 16px; border-radius: 999px; border: 1px solid var(--amber);
+  background: var(--amber-bg); color: var(--amber); font-size: 12.5px; font-weight: 600; min-height: 32px;
+}
+.copy-btn.ok { border-color: #4a7a3a; background: #EDF3E4; color: #4a7a3a; }
+.share-btn { margin-top: 18px; width: 100%; padding: 11px; border-radius: var(--ctl-r); border: 1px solid var(--ink); background: var(--ink); color: var(--paper); font-size: 13.5px; font-weight: 600; }
+.share-btn:hover { background: #46433c; }
+
+/* ── Picker (match / weekly) ── */
+.panel { max-width: 620px; margin: 8vh auto 0; }
+@media (max-width: 767px) { .panel { margin: 0; } }
+.bubbles { display: grid; gap: 10px; padding: 4px 0 14px; border-bottom: 1px solid var(--hairline); margin-bottom: 12px; }
+.bub-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.bub-lbl { font-size: 12px; color: var(--ink-3); width: 32px; flex: 0 0 auto; }
+.pick-row {
+  display: grid; grid-template-columns: 32px 1fr auto; gap: 12px; align-items: center;
+  width: 100%; text-align: left; padding: 13px 14px; margin-bottom: 8px;
+  background: #fff; border: 1px solid var(--hairline); border-radius: 12px; transition: border-color .15s;
+}
+.pick-row:hover { border-color: var(--amber); }
+.pick-rank { font-family: var(--serif); font-size: 17px; font-weight: 700; color: var(--amber); }
+.pick-title { font-size: 13.5px; font-weight: 600; line-height: 1.4; }
+.pick-why { font-size: 11.5px; color: var(--ink-2); margin-top: 3px; line-height: 1.5; }
+.pick-score { font-family: var(--serif); font-size: 17px; font-weight: 700; color: var(--amber); text-align: right; }
+.pick-score small { display: block; font-family: var(--sans); font-size: 10px; font-weight: 400; color: var(--ink-3); }
+.weekly-sub { font-size: 12px; color: var(--ink-3); margin-bottom: 10px; }
+
+/* ── Desktop ── */
+@media (min-width: 768px) {
+  body { font-size: 16px; }
+  .wrap { padding: 0 32px 100px; }
+  .brand { font-size: 38px; }
+  #seed-band { height: 34px; }
+  .today-grid { grid-template-columns: 1fr 60px 1fr; align-items: stretch; }
+  .collide-mid { display: flex; align-items: center; justify-content: center; }
+  .collide-note { grid-column: 1 / -1; }
+  .cscore { font-size: 84px; }
+  .card3d, .cardinner, .face-front { min-height: 340px; }
+  .lib-grid { grid-template-columns: repeat(3, 1fr); }
+  .sheet { position: relative; max-width: 680px; margin: 6vh auto; border-radius: 20px; max-height: 84vh; transform: translateY(12px); opacity: 0; transition: transform .25s, opacity .25s; }
+  .veil.open .sheet { transform: translateY(0); opacity: 1; }
+}
+@media (max-width: 767px) {
+  .collide-mid { display: none; }
+}
+#collide-svg { width: 44px; height: 100%; overflow: visible; }
+#collide-line { stroke: var(--amber); stroke-width: 1.5; stroke-dasharray: 4 4; opacity: 0; transition: opacity .8s; }
+#collide-dot { fill: var(--terra); opacity: 0; transition: opacity .8s; }
+.both-flipped #collide-line, .both-flipped #collide-dot { opacity: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+  .cardinner, .veil, .sheet, .dim-fill, .lib-card { transition: none !important; }
+  .card3d.play .clash-w.l, .card3d.play .clash-w.r, .card3d.play .clash-x,
+  .card3d.play .spark, .card3d.rare .face-front { animation: none !important; opacity: 1; transform: none; }
+}
+</style>
 </head>
 <body>
-<p>正在打开灵灵… <a href="/v3.html">点此进入</a>（<a href="/v2.html">v2 版本</a>）</p>
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="mast-top">
+      <div class="brand">灵灵<small>PRODUCT LINGLING · 每日机会日刊</small></div>
+      <div class="mast-meta">
+        <span class="issue-no" id="issue-no">第 — 期</span>
+        <span id="mast-date">—</span>
+        <span class="streak" id="streak" hidden>♨ 连续第 1 天</span>
+        <span class="milestone" id="milestone" hidden></span>
+      </div>
+    </div>
+    <canvas id="seed-band" aria-hidden="true"></canvas>
+    <div class="mast-note">
+      <span>今日行业信号的专属纹样 · 每期不同</span>
+      <span class="status-pill" id="status-pill">加载中…</span>
+    </div>
+  </header>
+
+  <section aria-labelledby="sec-today">
+    <div class="sec-head">
+      <h2 class="sec-title" id="sec-today">今日开卡<span class="en">TODAY'S DRAW</span></h2>
+      <div class="sec-actions">
+        <button class="pill" id="btn-flip-all" type="button">全部翻开</button>
+      </div>
+    </div>
+    <div class="today-grid" id="today-grid"></div>
+    <div class="collide-note" id="collide-note"></div>
+  </section>
+
+  <section aria-labelledby="sec-lib">
+    <div class="sec-head">
+      <h2 class="sec-title" id="sec-lib">机会库<span class="en">ARCHIVE</span></h2>
+      <div class="sec-actions">
+        <button class="pill accent" id="btn-match" type="button">✦ 适合我</button>
+        <button class="pill accent" id="btn-weekly" type="button">▲ 本周 TOP</button>
+      </div>
+    </div>
+    <div class="lib-tools">
+      <input class="search" id="lib-search" type="search" placeholder="搜索机会关键词…" autocomplete="off">
+      <button class="pill active" data-f="type" data-v="all" type="button">全部</button>
+      <button class="pill" data-f="type" data-v="related" type="button">◎ 相关</button>
+      <button class="pill" data-f="type" data-v="crossdomain" type="button">⚡ 跨界</button>
+      <button class="pill active" data-f="score" data-v="0" type="button">全部分数</button>
+      <button class="pill" data-f="score" data-v="8" type="button">8分+</button>
+      <button class="pill" data-f="score" data-v="7" type="button">7分+</button>
+    </div>
+    <div class="lib-grid" id="lib-grid"></div>
+  </section>
+
+  <section aria-labelledby="sec-sig">
+    <div class="sec-head">
+      <h2 class="sec-title" id="sec-sig">信号源<span class="en">SIGNALS</span></h2>
+      <div class="sec-actions"><span class="status-pill" id="sig-count"></span></div>
+    </div>
+    <div class="sig-band" id="sig-band"></div>
+  </section>
+
+</div>
+
+<!-- Detail sheet -->
+<div class="veil" id="detail-veil">
+  <div class="sheet" role="dialog" aria-modal="true" aria-label="机会卡详情">
+    <div class="sheet-bar"><span>机会卡详情</span><button class="x-btn" id="detail-x" type="button" aria-label="关闭">✕</button></div>
+    <div class="sheet-body">
+      <div class="d-type" id="d-type"></div>
+      <div class="d-score" id="d-score"></div>
+      <h3 class="d-title" id="d-title"></h3>
+      <div class="d-srcs" id="d-srcs"></div>
+      <div class="d-field"><b>用户是谁</b><span id="d-user"></span></div>
+      <div class="d-field"><b>用户痛点</b><span id="d-pain"></span></div>
+      <div class="d-field"><b>为什么 AI</b><span id="d-why"></span></div>
+      <div class="d-field"><b>MVP 方案</b><span id="d-mvp"></span></div>
+      <div class="d-sec-lbl">六维评分</div>
+      <div class="dims" id="d-dims"></div>
+      <div class="d-field"><b>主要风险</b><span id="d-risk"></span></div>
+      <div class="d-field"><b>下一步验证</b><span id="d-check"></span></div>
+      <div class="d-sec-lbl">动手前体检</div>
+      <div class="d-field"><b>先准备什么</b><span id="d-cu-res"></span></div>
+      <div class="d-field"><b>第一里程碑</b><span id="d-cu-mile"></span></div>
+      <div class="d-field"><b>证伪信号</b><span id="d-cu-fal"></span></div>
+      <div class="d-sec-lbl">开工提示词</div>
+      <div class="kick-head">
+        <span style="font-size:11.5px;color:var(--ink-3)">复制给 Claude / DeepSeek，先验证再动手</span>
+        <button class="copy-btn" id="kick-copy" type="button">复制提示词</button>
+      </div>
+      <pre class="kick-pre" id="kick-pre"></pre>
+      <button class="share-btn" id="share-btn" type="button">生成机会签分享图</button>
+    </div>
+  </div>
+</div>
+
+<!-- Match sheet -->
+<div class="veil" id="match-veil">
+  <div class="sheet panel" role="dialog" aria-modal="true" aria-label="适合我的机会">
+    <div class="sheet-bar"><span>适合我的机会</span><button class="x-btn" id="match-x" type="button" aria-label="关闭">✕</button></div>
+    <div class="sheet-body">
+      <div class="bubbles">
+        <div class="bub-row"><span class="bub-lbl">我是</span>
+          <button class="pill active" data-g="identity" data-v="pm" type="button">产品经理</button>
+          <button class="pill" data-g="identity" data-v="indie" type="button">独立开发者</button>
+          <button class="pill" data-g="identity" data-v="founder" type="button">创业者</button>
+        </div>
+        <div class="bub-row"><span class="bub-lbl">投入</span>
+          <button class="pill active" data-g="time" data-v="spare" type="button">业余时间</button>
+          <button class="pill" data-g="time" data-v="full" type="button">全职投入</button>
+        </div>
+        <div class="bub-row"><span class="bub-lbl">目标</span>
+          <button class="pill active" data-g="goal" data-v="learn" type="button">练手学习</button>
+          <button class="pill" data-g="goal" data-v="revenue" type="button">做出收入</button>
+          <button class="pill" data-g="goal" data-v="insight" type="button">沉淀判断</button>
+        </div>
+      </div>
+      <div id="match-results"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Weekly sheet -->
+<div class="veil" id="weekly-veil">
+  <div class="sheet panel" role="dialog" aria-modal="true" aria-label="本周机会 TOP">
+    <div class="sheet-bar"><span>本周机会 TOP</span><button class="x-btn" id="weekly-x" type="button" aria-label="关闭">✕</button></div>
+    <div class="sheet-body">
+      <div class="weekly-sub" id="weekly-sub"></div>
+      <div id="weekly-list"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+/* ============ constants & state ============ */
+const RM = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const CATS = ['Agent','大模型','AI编程','AI办公','AI营销','AI创意','AI医疗','机器人','硬件'];
+const CAT_KWS = {
+  'Agent': ['agent','智能体','助手'], '大模型': ['模型','llm','gpt','deepseek','claude','gemini','开源'],
+  'AI编程': ['编程','代码','coding','copilot','ide'], 'AI办公': ['办公','文档','会议','效率','表格'],
+  'AI营销': ['营销','广告','增长','电商'], 'AI创意': ['创意','图像','视频','音乐','设计','生成'],
+  'AI医疗': ['医疗','健康','诊断','药'], '机器人': ['机器人','robot','具身'], '硬件': ['硬件','芯片','设备','终端','眼镜'],
+};
+const DIMS = [
+  { key:'pain_real', name:'痛点真实性' }, { key:'ai_fit', name:'AI 适配度' },
+  { key:'market_size', name:'市场规模' }, { key:'competition', name:'竞争强度' },
+  { key:'tech_feasibility', name:'技术可行性' }, { key:'monetization', name:'商业化潜力' },
+];
+let todayCards = [], library = [], sources = [], isMock = false;
+let currentCard = null, currentKick = '';
+let libPage = 1, libTotal = 0, libLoading = false;
+const todayISO = new Date().toISOString().slice(0, 10);
+
+/* ============ utils ============ */
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function hashStr(s) { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+function mulberry32(seed) { return function() { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function catOf(title) {
+  const t = (title || '').toLowerCase();
+  for (const c of CATS) { if (CAT_KWS[c].some(k => t.includes(k))) return c; }
+  return '其他';
+}
+function dimVal(card, dim) { const raw = (card.scores || {})[dim]; return raw && typeof raw === 'object' ? (raw.value || 0) : (Number(raw) || 0); }
+function asList(v) { return Array.isArray(v) ? v.filter(Boolean) : (v ? [v] : []); }
+
+function mapCard(c) {
+  const scoreVal = typeof c.score === 'object' ? (c.score && c.score.total ? c.score.total : 0) : (Number(c.score) || 0);
+  let st = c.source_titles || [], su = c.source_urls || [];
+  if (typeof st === 'string') { try { st = JSON.parse(st); } catch { st = []; } }
+  if (typeof su === 'string') { try { su = JSON.parse(su); } catch { su = []; } }
+  if (!st.length && c.source_title) st = [c.source_title];
+  if (!su.length && c.source_url) su = [c.source_url];
+  let k = c.kickoff || {};
+  if (typeof k === 'string') { try { k = JSON.parse(k); } catch { k = {}; } }
+  return {
+    id: c.id, title: c.title, direction: c.direction || '',
+    sourceTitles: st, sourceUrls: su,
+    user: c.user_persona, pain: c.pain_point, why: c.ai_solution,
+    mvp: c.mvp_plan, risk: c.risks, check: c.next_step,
+    kickoffPrompt: c.kickoff_prompt || '', kickoff: (k && typeof k === 'object') ? k : {},
+    scores: typeof c.score === 'object' ? c.score : {},
+    score: scoreVal,
+    cardType: c.card_type || 'related',
+    createdAt: c.created_at || '',
+  };
+}
+
+/* ============ mock data ============ */
+const MOCK = {
+  today: [
+    { id: 1, title: '面向跨境卖家的 AI 合规审查助手', user_persona: '中小跨境电商卖家', pain_point: '各国监管条款频繁变化，卖家靠人工盯公告，漏一条就可能下架或罚款。', ai_solution: 'LLM 持续解析各国监管文本，映射到卖家的 SKU 与站点，主动推送影响与整改建议。', mvp_plan: '选定欧盟+美国两地法规源，商品链接粘贴即出合规报告；FastAPI + RAG，3 周。', score: { pain_real:{value:5,reason:'罚款是真金白银'}, ai_fit:{value:5,reason:'法规文本理解是 LLM 强项'}, market_size:{value:4,reason:'跨境卖家基数大'}, competition:{value:4,reason:'垂直合规工具少'}, tech_feasibility:{value:4,reason:'RAG 成熟'}, monetization:{value:4,reason:'订阅意愿强'}, total: 8.6 }, risks: '法规解读错误的责任风险；需要持续维护法规源。', next_step: '访谈 10 个亚马逊欧洲站卖家，确认最痛的品类。', source_titles: ['欧盟 AI 法案执行细则落地'], source_urls: ['#'], direction: 'AI办公', card_type: 'related', created_at: todayISO, kickoff: { first_milestone: '做一个粘贴商品链接出合规风险清单的网页 demo', falsify_signals: ['亚马逊官方已内置同等合规提示', '卖家宁可外包给服务商也不用工具'], research_queries: ['cross-border compliance AI', '跨境电商 合规工具'], resources_needed: ['DeepSeek API Key', '欧盟/美国法规源清单', '10 个卖家访谈渠道'] } },
+    { id: 2, title: '手术室语音复盘 × 具身机器人训练数据工厂', user_persona: '外科教学医院 + 手术机器人公司', pain_point: '手术过程的操作经验只存在于主刀医生脑中，机器人公司缺乏高质量操作序列数据。', ai_solution: '语音+视频多模态记录手术复盘，结构化为操作序列，同一份数据既做教学又喂给具身模型。', mvp_plan: '单科室试点：录音转写+步骤结构化，输出教学复盘文档；4 周。', score: { pain_real:{value:4,reason:'教学与数据双痛点'}, ai_fit:{value:5,reason:'多模态结构化非 AI 不可'}, market_size:{value:3,reason:'早期市场'}, competition:{value:5,reason:'几乎无人做交叉点'}, tech_feasibility:{value:3,reason:'医疗合规门槛高'}, monetization:{value:4,reason:'机器人公司愿为数据付费'}, total: 7.9 }, risks: '医疗数据合规与伦理审批周期长。', next_step: '找一家教学医院的外科主任聊数据脱敏方案。', source_titles: ['手术机器人获批新适应症', '具身智能训练数据稀缺'], source_urls: ['#','#'], direction: 'AI医疗', card_type: 'crossdomain', created_at: todayISO, kickoff: { first_milestone: '用公开手术教学视频做一个步骤结构化 demo', falsify_signals: ['医院数据出不了院', '机器人公司自建数据管线'], research_queries: ['surgical video dataset', '具身智能 数据'], resources_needed: ['多模态转写 API', '一位外科顾问'] } },
+  ],
+  library: [
+    { id: 3, title: '会议纪要自动转 OKR 追踪器', user_persona: '中小团队负责人', pain_point: '会上定的事没人跟进。', ai_solution: '纪要抽取行动项自动挂到 OKR。', mvp_plan: '飞书插件，2 周。', score: { pain_real:{value:4}, ai_fit:{value:4}, market_size:{value:4}, competition:{value:2}, tech_feasibility:{value:5}, monetization:{value:3}, total: 7.4 }, risks: '飞书原生功能覆盖。', next_step: '访谈 5 个团队。', source_titles: ['协同办公 AI 化提速'], source_urls: ['#'], direction: 'AI办公', card_type: 'related', created_at: offsetDate(-1) },
+    { id: 4, title: '宠物异常行为视觉预警 × 保险定价', user_persona: '养宠家庭与宠物险公司', pain_point: '宠物疾病发现太晚，保险公司缺定价数据。', ai_solution: '摄像头行为识别早筛，数据反哺保险定价。', mvp_plan: '上传视频出报告，4 周。', score: { pain_real:{value:4}, ai_fit:{value:4}, market_size:{value:3}, competition:{value:4}, tech_feasibility:{value:3}, monetization:{value:4}, total: 7.2 }, risks: '硬件成本。', next_step: '落地页验证付费意愿。', source_titles: ['宠物经济逆势增长', '视觉模型开源新进展'], source_urls: ['#','#'], direction: 'AI创意', card_type: 'crossdomain', created_at: offsetDate(-1) },
+    { id: 5, title: '本地化小语种客服模型微调服务', user_persona: '出海 SaaS 公司', pain_point: '小语种客服质量差且贵。', ai_solution: '按行业微调小模型私有部署。', mvp_plan: '选一个语种打样，3 周。', score: { pain_real:{value:4}, ai_fit:{value:5}, market_size:{value:3}, competition:{value:3}, tech_feasibility:{value:4}, monetization:{value:4}, total: 7.7 }, risks: '大厂多语种能力覆盖。', next_step: '找 3 家出海公司试点。', source_titles: ['开源模型多语种评测'], source_urls: ['#'], direction: '大模型', card_type: 'related', created_at: offsetDate(-3) },
+    { id: 6, title: '工地安全巡检 × AR 眼镜语音工单', user_persona: '建筑工地安全员', pain_point: '巡检记录靠手写，隐患闭环慢。', ai_solution: '眼镜端语音记录自动生成工单派发。', mvp_plan: '手机端先行验证流程，3 周。', score: { pain_real:{value:5}, ai_fit:{value:3}, market_size:{value:3}, competition:{value:4}, tech_feasibility:{value:3}, monetization:{value:3}, total: 6.9 }, risks: '硬件采购周期。', next_step: '跟一天工地巡检流程。', source_titles: ['AR 眼镜出货回暖', '建筑业数字化政策'], source_urls: ['#','#'], direction: '硬件', card_type: 'crossdomain', created_at: offsetDate(-5) },
+  ],
+  sources: [
+    '欧盟 AI 法案执行细则落地','手术机器人获批新适应症','具身智能训练数据稀缺','开源模型多语种评测','协同办公 AI 化提速',
+    'Agent 框架新范式引热议','AI 编程工具渗透率过半','视觉模型开源新进展','宠物经济逆势增长','AR 眼镜出货回暖',
+    '大模型推理成本再降','AI 营销 ROI 报告发布','医疗影像模型通过审批','机器人灵巧手突破','端侧芯片新品发布',
+    'AI 视频生成时长翻倍','企业知识库市场升温','教育大模型进课堂','建筑业数字化政策','智能硬件众筹热潮',
+  ].map((t, i) => ({ title: t, url: '#', published_at: offsetDate(-(i % 3)) })),
+};
+function offsetDate(d) { return new Date(Date.now() + d * 864e5).toISOString().slice(0, 10); }
+
+/* ============ data loading ============ */
+async function loadData() {
+  try {
+    const [tr, lr, sr] = await Promise.all([
+      fetch('/api/cards/today', { signal: AbortSignal.timeout(8000) }),
+      fetch('/api/cards?page=1&page_size=20', { signal: AbortSignal.timeout(8000) }),
+      fetch('/api/sources?limit=50', { signal: AbortSignal.timeout(8000) }),
+    ]);
+    if (!tr.ok || !lr.ok || !sr.ok) throw new Error('api');
+    const [td, ld, sd] = await Promise.all([tr.json(), lr.json(), sr.json()]);
+    todayCards = (td.cards || []).map(mapCard);
+    library = (ld.cards || []).map(mapCard);
+    libTotal = ld.total || 0;
+    libPage = 1;
+    sources = (sd.items || []).map(it => ({
+      title: it.title || '', url: it.url || '#',
+      date: it.published_date || (it.published_at || '').slice(0, 10) || '',
+    }));
+    if (!todayCards.length) throw new Error('empty');
+  } catch {
+    isMock = true;
+    todayCards = MOCK.today.map(mapCard);
+    library = [...MOCK.today, ...MOCK.library].map(mapCard);
+    libTotal = library.length;
+    sources = MOCK.sources.map(it => ({ title: it.title, url: it.url, date: it.published_at }));
+  }
+  $('status-pill').textContent = isMock ? '⚡ 演示模式' : `${sources.length} 条信号`;
+  if (isMock) $('status-pill').classList.add('mock');
+}
+
+/* ============ seed visuals ============ */
+function seedVector() {
+  const counts = {};
+  const todaySrc = sources.filter(s => !s.date || s.date === todayISO);
+  (todaySrc.length ? todaySrc : sources).forEach(s => { const c = catOf(s.title); counts[c] = (counts[c] || 0) + 1; });
+  return CATS.map(c => counts[c] || 0);
+}
+function seedRng(extra) { return mulberry32(hashStr(todayISO + '|' + seedVector().join(',') + '|' + (extra || ''))); }
+
+function drawBand(canvas, extra) {
+  const dpr = window.devicePixelRatio || 1;
+  const w = canvas.clientWidth || 600, h = canvas.clientHeight || 26;
+  canvas.width = w * dpr; canvas.height = h * dpr;
+  const ctx = canvas.getContext('2d'); ctx.scale(dpr, dpr);
+  const rng = seedRng(extra), vec = seedVector();
+  const total = vec.reduce((a, b) => a + b, 0) || 1;
+  const colors = ['#B8860B', '#D9A441', '#C4572E', '#E0B368'];
+  let x = 2;
+  vec.forEach((n, i) => {
+    if (!n) return;
+    const segW = Math.max(6, n / total * (w - 20));
+    const y = h / 2 + (rng() - .5) * h * .5;
+    const r = 1.5 + (n / total) * 6;
+    ctx.beginPath(); ctx.arc(Math.min(x + segW / 2, w - 6), y, Math.min(r, h / 2 - 2), 0, Math.PI * 2);
+    ctx.fillStyle = colors[i % colors.length]; ctx.globalAlpha = .85; ctx.fill();
+    if (rng() > .4 && x > 10) {
+      ctx.globalAlpha = .3; ctx.strokeStyle = '#B8860B'; ctx.lineWidth = .7;
+      ctx.beginPath(); ctx.moveTo(x - segW / 2, h / 2); ctx.lineTo(x + segW / 2, y); ctx.stroke();
+    }
+    x += segW + 8;
+  });
+  ctx.globalAlpha = .25; ctx.strokeStyle = '#B8860B'; ctx.lineWidth = .5;
+  ctx.beginPath(); ctx.moveTo(0, h - 1); ctx.lineTo(w, h - 1); ctx.stroke();
+  ctx.globalAlpha = 1;
+}
+function drawCardBack(canvas, extra) {
+  const dpr = window.devicePixelRatio || 1;
+  const w = canvas.clientWidth || 300, h = canvas.clientHeight || 300;
+  canvas.width = w * dpr; canvas.height = h * dpr;
+  const ctx = canvas.getContext('2d'); ctx.scale(dpr, dpr);
+  const rng = seedRng('back' + extra);
+  const isCross = extra.includes('cross');
+  const col = isCross ? '#C4572E' : '#B8860B';
+  for (let i = 0; i < 42; i++) {
+    const x = rng() * w, y = rng() * h, r = .8 + rng() * 2.6;
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fillStyle = col; ctx.globalAlpha = .1 + rng() * .22; ctx.fill();
+  }
+  ctx.globalAlpha = .12; ctx.strokeStyle = col; ctx.lineWidth = .6;
+  for (let i = 0; i < 7; i++) {
+    ctx.beginPath(); ctx.moveTo(rng() * w, rng() * h); ctx.lineTo(rng() * w, rng() * h); ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+}
+
+/* ============ masthead ============ */
+function issueNo() { return Math.max(1, Math.floor((Date.now() - new Date('2026-01-01').getTime()) / 864e5) + 1); }
+function renderMasthead() {
+  $('issue-no').textContent = `第 ${issueNo()} 期`;
+  const d = new Date();
+  $('mast-date').textContent = `${d.getFullYear()} 年 ${d.getMonth() + 1} 月 ${d.getDate()} 日`;
+  drawBand($('seed-band'), 'mast');
+  const streak = updateStreak();
+  if (streak >= 2) { $('streak').hidden = false; $('streak').textContent = `♨ 连续第 ${streak} 天`; }
+  const n = library.length;
+  const ms = [200, 100, 50].find(m => n >= m);
+  if (ms) { $('milestone').hidden = false; $('milestone').textContent = `✦ 机会库 ${ms}+`; }
+}
+function updateStreak() {
+  let s = { last: '', count: 0 };
+  try { s = JSON.parse(localStorage.getItem('ll3_streak')) || s; } catch {}
+  if (s.last !== todayISO) {
+    const yesterday = offsetDate(-1);
+    s.count = (s.last === yesterday) ? s.count + 1 : 1;
+    s.last = todayISO;
+    try { localStorage.setItem('ll3_streak', JSON.stringify(s)); } catch {}
+  }
+  return s.count;
+}
+
+/* ============ today cards / flip ritual ============ */
+function flippedSet() {
+  try { const o = JSON.parse(localStorage.getItem('ll3_flip')) || {}; return o.date === todayISO ? new Set(o.ids) : new Set(); } catch { return new Set(); }
+}
+function saveFlipped(set) {
+  try { localStorage.setItem('ll3_flip', JSON.stringify({ date: todayISO, ids: [...set] })); } catch {}
+}
+function crossWords(card) {
+  const dirs = (card.direction || '').split(/[×xX+\/·、]/).map(s => s.trim()).filter(Boolean);
+  if (dirs.length >= 2) return dirs.slice(0, 2);
+  const cats = [...new Set(card.sourceTitles.map(catOf))].filter(c => c !== '其他');
+  if (cats.length >= 2) return cats.slice(0, 2);
+  return [card.direction || '领域 A', cats[0] || '领域 B'];
+}
+function renderToday() {
+  const grid = $('today-grid');
+  const flipped = flippedSet();
+  const cards = todayCards.slice(0, 2);
+  let html = '';
+  cards.forEach((c, i) => {
+    const isCross = c.cardType === 'crossdomain';
+    const [wl, wr] = isCross ? crossWords(c) : ['', ''];
+    const wasFlipped = flipped.has(String(c.id)) || RM;
+    const sparks = isCross ? Array.from({ length: 8 }, (_, k) => {
+      const a = k / 8 * Math.PI * 2;
+      return `<span class="spark" style="--sx:${Math.round(Math.cos(a) * 46)}px;--sy:${Math.round(Math.sin(a) * 22)}px"></span>`;
+    }).join('') : '';
+    html += `
+    <div class="card3d${isCross ? ' cross' : ''}${wasFlipped ? ' flipped' : ''}${c.score >= 8.5 ? ' rare-cand' : ''}"
+         data-idx="${i}" tabindex="0" role="button"
+         aria-label="${wasFlipped ? esc(c.title) : '点按翻开今日' + (isCross ? '跨界' : '相关') + '机会卡'}">
+      <div class="cardinner">
+        <div class="cardface face-back">
+          <canvas data-back="${isCross ? 'cross' : 'rel'}${i}"></canvas>
+          <div class="back-issue">NO.${issueNo()}</div>
+          <div class="back-label">${isCross ? '⚡ 跨界创新' : '◎ 相关洞察'}</div>
+          <div class="back-hint">点按翻牌</div>
+        </div>
+        <div class="cardface face-front">
+          <div class="ctype ${isCross ? 'cross' : 'rel'}">${isCross ? '⚡ 跨界创新' : '◎ 相关洞察'}</div>
+          <div class="clash-stage"><span class="clash-w l">${esc(wl)}</span><span class="clash-x">✦</span><span class="clash-w r">${esc(wr)}</span>${sparks}</div>
+          <div class="cscore" data-score="${c.score}">0.0<small> /10</small></div>
+          <div class="ctitle">${esc(c.title)}</div>
+          <div class="cpain">${esc(c.pain)}</div>
+          <div class="cfoot"><span class="cdir">${esc(c.direction)}</span><span class="cmore">查看详情 →</span></div>
+        </div>
+      </div>
+    </div>`;
+    if (i === 0 && cards.length > 1) {
+      html += `<div class="collide-mid"><svg id="collide-svg" viewBox="0 0 44 100" preserveAspectRatio="none" aria-hidden="true">
+        <line id="collide-line" x1="0" y1="50" x2="44" y2="50"/><circle id="collide-dot" cx="22" cy="50" r="4"/></svg></div>`;
+    }
+  });
+  grid.innerHTML = html || '<div class="empty">今日暂无机会卡</div>';
+  grid.querySelectorAll('canvas[data-back]').forEach(cv => drawCardBack(cv, cv.dataset.back));
+  grid.querySelectorAll('.card3d').forEach(el => {
+    const idx = Number(el.dataset.idx);
+    el.addEventListener('click', () => onCardTap(el, cards[idx]));
+    el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onCardTap(el, cards[idx]); } });
+    if (el.classList.contains('flipped')) settleCard(el, cards[idx], true);
+  });
+  updateCollideState(true);
+}
+function onCardTap(el, card) {
+  if (!el.classList.contains('flipped')) {
+    el.classList.add('flipped');
+    const f = flippedSet(); f.add(String(card.id)); saveFlipped(f);
+    settleCard(el, card, false);
+  } else {
+    openDetail(card);
+  }
+}
+function settleCard(el, card, instant) {
+  const scoreEl = el.querySelector('.cscore');
+  if (instant || RM) {
+    scoreEl.innerHTML = `${card.score.toFixed(1)}<small> /10</small>`;
+    el.classList.add('play');
+  } else {
+    setTimeout(() => {
+      el.classList.add('play');
+      if (card.score >= 8.5) el.classList.add('rare');
+      countUp(scoreEl, card.score);
+    }, 350);
+  }
+  updateCollideState(instant);
+}
+function countUp(el, target) {
+  const t0 = performance.now(), dur = 800;
+  function tick(t) {
+    const p = Math.min(1, (t - t0) / dur), eased = 1 - Math.pow(1 - p, 3);
+    el.innerHTML = `${(target * eased).toFixed(1)}<small> /10</small>`;
+    if (p < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+function updateCollideState(instant) {
+  const els = [...document.querySelectorAll('#today-grid .card3d')];
+  if (els.length < 2) return;
+  const both = els.every(el => el.classList.contains('flipped'));
+  $('today-grid').classList.toggle('both-flipped', both);
+  const note = $('collide-note');
+  if (both && !note.classList.contains('show')) {
+    const cross = todayCards.find(c => c.cardType === 'crossdomain');
+    let txt = '今日两张灵感已就位';
+    let badge = '';
+    if (cross) {
+      txt = `今日碰撞：${crossWords(cross).join(' × ')}`;
+      const monthCross = library.filter(c => c.cardType === 'crossdomain' && c.createdAt >= offsetDate(-30));
+      if (monthCross.length && cross.score >= Math.max(...monthCross.map(c => c.score))) badge = '<span class="badge">本月最强碰撞</span>';
+    }
+    note.innerHTML = esc(txt) + badge;
+    setTimeout(() => note.classList.add('show'), instant ? 0 : 700);
+  }
+}
+$('btn-flip-all').addEventListener('click', () => {
+  document.querySelectorAll('#today-grid .card3d:not(.flipped)').forEach(el => el.click());
+});
+
+/* ============ library ============ */
+const libFilter = { type: 'all', score: 0, q: '' };
+function renderLibrary() {
+  const grid = $('lib-grid');
+  let rows = library.slice();
+  if (libFilter.type !== 'all') rows = rows.filter(c => c.cardType === libFilter.type);
+  if (libFilter.score) rows = rows.filter(c => c.score >= libFilter.score);
+  if (libFilter.q) {
+    const q = libFilter.q.toLowerCase();
+    rows = rows.filter(c => (c.title + (c.pain||'') + (c.why||'') + (c.user||'')).toLowerCase().includes(q));
+  }
+  rows.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || '') || b.score - a.score);
+  if (!rows.length) { grid.innerHTML = '<div class="empty">没有符合条件的机会卡</div>'; return; }
+  let html = '', lastDate = null;
+  rows.forEach(c => {
+    if (c.createdAt !== lastDate) { lastDate = c.createdAt; html += `<div class="date-head">${esc(c.createdAt || '未知日期')}${c.createdAt === todayISO ? ' · 今日' : ''}</div>`; }
+    const cross = c.cardType === 'crossdomain';
+    html += `
+    <button class="lib-card" data-id="${esc(String(c.id))}" type="button">
+      <div class="lib-top">
+        <span class="ctype ${cross ? 'cross' : 'rel'}">${cross ? '⚡ 跨界' : '◎ 相关'}</span>
+        <span class="lib-score" style="color:${cross ? 'var(--terra)' : 'var(--amber)'}">${(c.score||0).toFixed(1)}</span>
+      </div>
+      <div class="lib-title">${esc(c.title)}</div>
+      <div class="lib-meta">${esc(c.direction)}</div>
+    </button>`;
+  });
+  if (isMock || libPage * 20 >= libTotal) {
+    html += '<div class="empty" id="lib-end">已加载全部机会卡</div>';
+  } else {
+    html += '<div class="empty" id="lib-end" style="opacity:.6">滚动加载更多…</div>';
+  }
+  grid.innerHTML = html;
+  grid.querySelectorAll('.lib-card').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const c = library.find(x => String(x.id) === btn.dataset.id);
+      if (c) openDetail(c);
+    });
+  });
+}
+
+async function loadMoreLibrary() {
+  if (libLoading) return;
+  if (isMock || libPage * 20 >= libTotal) {
+    const end = document.getElementById('lib-end');
+    if (end) end.textContent = '已加载全部机会卡';
+    return;
+  }
+  libLoading = true;
+  libPage++;
+  try {
+    const params = new URLSearchParams({ page: String(libPage), page_size: '20' });
+    if (libFilter.q) params.set('keyword', libFilter.q);
+    const res = await fetch(`/api/cards?${params}`);
+    if (!res.ok) throw new Error('api');
+    const data = await res.json();
+    const newCards = (data.cards || []).map(mapCard);
+    library = library.concat(newCards);
+    libTotal = data.total || 0;
+    // Re-render to include new cards with current client-side filters
+    renderLibrary();
+  } catch(e) {
+    libPage--; // rollback on failure
+  }
+  libLoading = false;
+}
+
+function resetLibrary() {
+  library = [];
+  libPage = 0; // loadMoreLibrary will increment to 1
+  libTotal = 0;
+  $('lib-grid').innerHTML = '<div class="empty">加载中…</div>';
+  loadMoreLibrary();
+}
+
+/* Scroll-based lazy loading */
+let _scrollTimer = 0;
+window.addEventListener('scroll', () => {
+  if (_scrollTimer) return;
+  _scrollTimer = setTimeout(() => {
+    _scrollTimer = 0;
+    const grid = $('lib-grid');
+    if (!grid) return;
+    const rect = grid.getBoundingClientRect();
+    if (rect.bottom <= window.innerHeight + 500) {
+      loadMoreLibrary();
+    }
+  }, 200);
+}, { passive: true });
+
+document.querySelectorAll('.lib-tools .pill[data-f]').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll(`.lib-tools .pill[data-f="${b.dataset.f}"]`).forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    if (b.dataset.f === 'type') libFilter.type = b.dataset.v;
+    else libFilter.score = Number(b.dataset.v);
+    // Reset pagination and reload
+    library = [];
+    libPage = 0;
+    libTotal = 0;
+    loadMoreLibrary();
+  });
+});
+$('lib-search').addEventListener('input', _debounce(() => {
+  libFilter.q = $('lib-search').value.trim();
+  resetLibrary();
+}, 350));
+
+function _debounce(fn, ms) {
+  let t;
+  return function() {
+    clearTimeout(t);
+    t = setTimeout(fn, ms);
+  };
+}
+
+/* ============ signals band ============ */
+function renderSignals() {
+  const band = $('sig-band');
+  const linkedUrls = new Set();
+  library.forEach(c => (c.sourceUrls || []).forEach(u => u && u !== '#' && linkedUrls.add(u)));
+  const rows = sources.slice(0, 120);
+  $('sig-count').textContent = `${sources.length} 条`;
+  band.innerHTML = rows.map(s => {
+    const linked = linkedUrls.has(s.url);
+    return `<button class="sig-item${linked ? ' linked' : ''}" data-url="${esc(s.url)}" type="button">
+      <div class="sig-title">${esc(s.title)}</div>
+      <div class="sig-meta"><span>${esc(s.date || '')} · ${esc(catOf(s.title))}</span>${linked ? '<span class="sig-tag">已成卡</span>' : ''}</div>
+    </button>`;
+  }).join('');
+  band.querySelectorAll('.sig-item').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const url = btn.dataset.url;
+      const assoc = library.find(c => (c.sourceUrls || []).includes(url));
+      if (assoc) openDetail(assoc);
+      else if (url && url !== '#') window.open(url, '_blank', 'noopener');
+    });
+  });
+}
+
+/* ============ detail sheet ============ */
+function buildKickoffFallback(card) {
+  const srcs = (card.sourceTitles || []).map((t, i) => {
+    const u = (card.sourceUrls || [])[i] || '';
+    return `- ${t}${u && u !== '#' ? `（${u}）` : ''}`;
+  }).join('\n') || '- （无）';
+  const k = card.kickoff || {};
+  const milestone = k.first_milestone || card.check || `围绕「${card.title}」做一个单场景可演示 demo`;
+  const res = asList(k.resources_needed).join('；') || '按 MVP 方案所列技术栈准备开发环境与必要的 API Key';
+  const fal = asList(k.falsify_signals).map(f => `   - ${f}`).join('\n') || `   - ${card.risk || '大厂已覆盖、无付费意愿'}`;
+  const q = asList(k.research_queries).map(x => `「${x}」`).join('、') || `「${card.title}」`;
+  return `你是我的产品验证助手。请帮我验证下面这个 AI 产品机会是否值得投入开发。先验证，不要急着写代码。
+
+## 机会卡
+- 机会方向：${card.title}
+- 目标用户：${card.user}
+- 用户痛点：${card.pain}
+- AI 解法：${card.why}
+- MVP 方案：${card.mvp}
+- 已知风险：${card.risk}
+- 信息源：
+${srcs}
+
+## 验证 SOP
+
+### 第一步 · 桌面调研（先做这个）
+1. 搜索关键词：${q}，找出现有竞品和相关开源项目。
+2. 对每个竞品记录：产品定位、目标用户、定价、最近 3 个月动态。
+3. 判断这个机会属于哪种情况：市场空白 / 可差异化切入 / 已是红海。
+
+### 第二步 · 痛点证伪（主动找反面证据）
+4. 重点检查以下证伪信号，任何一条成立都要明确指出：
+${fal}
+5. 找 2-3 处真实用户讨论（Reddit / V2EX / 即刻 / 小红书等），确认痛点是否真实存在、用户是否表达过付费意愿。
+
+### 第三步 · 最小验证物（只有前两步通过才做）
+6. 开工前先准备：${res}。
+7. 第一个可验证的里程碑：${milestone}
+8. 优先做能拿到真实用户反馈的最小形态（落地页 / 可交互原型 / 单场景 demo），不要一上来做完整产品。
+
+## 输出要求
+最后给出明确结论：**值得做 / 需要转向 / 建议放弃**，附上关键证据和理由。如果是「需要转向」，说明转向后的新切入点。`;
+}
+
+async function openDetail(card) {
+  // Light cards from the list endpoint lack full detail — fetch the complete record
+  let full = card;
+  if (card && card.user === undefined) {
+    try {
+      const res = await fetch(`/api/cards/${card.id}`);
+      if (!res.ok) return;
+      full = mapCard(await res.json());
+    } catch(e) { return; }
+  }
+  if (!full) return;
+  currentCard = full;
+  const cross = full.cardType === 'crossdomain';
+  $('d-type').textContent = cross ? '⚡ 跨界创新' : '◎ 相关洞察';
+  $('d-type').style.color = cross ? 'var(--terra)' : 'var(--amber)';
+  $('d-score').innerHTML = `${full.score.toFixed(1)}<small> /10</small>`;
+  $('d-score').style.color = cross ? 'var(--terra)' : 'var(--amber)';
+  $('d-title').textContent = full.title;
+  $('d-srcs').innerHTML = (full.sourceTitles || []).map((t, i) => {
+    const u = (full.sourceUrls || [])[i] || '#';
+    return u && u !== '#'
+      ? `<a class="d-src" href="${esc(u)}" target="_blank" rel="noopener">${esc(t)}</a>`
+      : `<span class="d-src">${esc(t)}</span>`;
+  }).join('');
+  $('d-user').textContent = full.user; $('d-pain').textContent = full.pain;
+  $('d-why').textContent = full.why; $('d-mvp').textContent = full.mvp;
+  $('d-risk').textContent = full.risk; $('d-check').textContent = full.check;
+  $('d-dims').innerHTML = DIMS.map(d => {
+    const raw = (full.scores || {})[d.key];
+    const v = raw && typeof raw === 'object' ? (raw.value || 0) : (Number(raw) || 0);
+    const reason = raw && typeof raw === 'object' ? (raw.reason || '') : '';
+    return `<div class="dim">
+      <span class="dim-n" title="${esc(reason)}">${d.name}</span>
+      <span class="dim-bar"><span class="dim-fill" style="width:0" data-w="${v / 5 * 100}%"></span></span>
+      <span class="dim-v">${v}/5</span></div>`;
+  }).join('');
+  const k = full.kickoff || {};
+  $('d-cu-res').textContent = asList(k.resources_needed).join('；') || '按 MVP 方案所列技术栈准备开发环境与必要的 API Key';
+  $('d-cu-mile').textContent = k.first_milestone || full.check || `围绕「${card.title}」做一个单场景可演示 demo`;
+  $('d-cu-fal').textContent = asList(k.falsify_signals).join('；') || (full.risk || '大厂已覆盖、无付费意愿');
+  currentKick = full.kickoffPrompt || buildKickoffFallback(full);
+  $('kick-pre').textContent = currentKick;
+  const cb = $('kick-copy'); cb.classList.remove('ok'); cb.textContent = '复制提示词';
+  $('detail-veil').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    document.querySelectorAll('#d-dims .dim-fill').forEach(el => { el.style.width = el.dataset.w; });
+  }));
+}
+function closeDetail() { $('detail-veil').classList.remove('open'); document.body.style.overflow = ''; }
+$('detail-x').addEventListener('click', closeDetail);
+$('detail-veil').addEventListener('click', e => { if (e.target === $('detail-veil')) closeDetail(); });
+
+$('kick-copy').addEventListener('click', async () => {
+  const btn = $('kick-copy');
+  let ok = false;
+  try { await navigator.clipboard.writeText(currentKick); ok = true; }
+  catch {
+    const ta = document.createElement('textarea');
+    ta.value = currentKick; ta.style.cssText = 'position:fixed;opacity:0';
+    document.body.appendChild(ta); ta.select();
+    try { ok = document.execCommand('copy'); } catch { ok = false; }
+    ta.remove();
+  }
+  btn.textContent = ok ? '已复制 ✓' : '复制失败';
+  if (ok) btn.classList.add('ok');
+  setTimeout(() => { btn.textContent = '复制提示词'; btn.classList.remove('ok'); }, 2000);
+});
+
+/* ============ match selector ============ */
+/* 注意：competition 维度为反向编码（分高=竞争小），正向加权即偏好蓝海，勿再取反 */
+const MATCH_PROFILES = {
+  identity: {
+    pm:      { dims: { pain_real: .6, market_size: .4 },    why: '痛点洞察与市场判断价值高，适合产品经理深挖' },
+    indie:   { dims: { tech_feasibility: .6, ai_fit: .4 },  why: '技术可行性强，独立开发者能快速落地' },
+    founder: { dims: { monetization: .6, market_size: .4 }, why: '商业化路径与市场空间突出，值得创业投入' },
+  },
+  time: {
+    spare: { dims: { tech_feasibility: 1 },               why: '实现门槛低，业余时间也能推进' },
+    full:  { dims: { market_size: .5, monetization: .5 }, why: '市场空间足够大，值得全职押注' },
+  },
+  goal: {
+    learn:   { dims: { ai_fit: .5, tech_feasibility: .5 }, why: 'AI 技术含量高，练手价值大' },
+    revenue: { dims: { monetization: 1 },                  why: '付费意愿与变现路径清晰' },
+    insight: { dims: { pain_real: .5, competition: .5 },   why: '痛点真实、竞争格局值得研究沉淀' },
+  },
+};
+const matchSel = (() => {
+  try { return Object.assign({ identity: 'pm', time: 'spare', goal: 'learn' }, JSON.parse(localStorage.getItem('ll3_match')) || {}); }
+  catch { return { identity: 'pm', time: 'spare', goal: 'learn' }; }
+})();
+function matchCard(card) {
+  let bonus = 0, bestWhy = '', bestContrib = -1;
+  for (const [group, val] of Object.entries(matchSel)) {
+    const p = (MATCH_PROFILES[group] || {})[val];
+    if (!p) continue;
+    let contrib = 0;
+    for (const [dim, w] of Object.entries(p.dims)) contrib += dimVal(card, dim) * w;
+    bonus += contrib / 5 * 10;
+    if (contrib > bestContrib) { bestContrib = contrib; bestWhy = p.why; }
+  }
+  const why = bestWhy + (card.cardType === 'crossdomain' ? '；跨界组合，竞争壁垒更高' : '');
+  return { card, match: Math.round(card.score * 10 + bonus), why };
+}
+function renderPickRows(el, rows) {
+  if (!rows.length) { el.innerHTML = '<div class="empty">暂无符合条件的机会卡</div>'; return; }
+  el.innerHTML = rows.map((r, i) => `
+    <button class="pick-row" type="button">
+      <span class="pick-rank">#${i + 1}</span>
+      <span><span class="pick-title">${r.card.cardType === 'crossdomain' ? '⚡' : '◎'} ${esc(r.card.title)}</span>
+      <div class="pick-why">${esc(r.why)}</div></span>
+      <span class="pick-score">${r.score}<small>${r.label}</small></span>
+    </button>`).join('');
+  el.querySelectorAll('.pick-row').forEach((btn, i) => {
+    btn.addEventListener('click', () => { closeSheets(); openDetail(rows[i].card); });
+  });
+}
+function renderMatch() {
+  const rows = library.map(matchCard).sort((a, b) => b.match - a.match).slice(0, 3)
+    .map(r => ({ card: r.card, why: r.why, score: r.match, label: '匹配分' }));
+  renderPickRows($('match-results'), rows);
+}
+document.querySelectorAll('.bubbles .pill[data-g]').forEach(b => {
+  if (matchSel[b.dataset.g] === b.dataset.v) {
+    document.querySelectorAll(`.bubbles .pill[data-g="${b.dataset.g}"]`).forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+  }
+  b.addEventListener('click', () => {
+    document.querySelectorAll(`.bubbles .pill[data-g="${b.dataset.g}"]`).forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    matchSel[b.dataset.g] = b.dataset.v;
+    try { localStorage.setItem('ll3_match', JSON.stringify(matchSel)); } catch {}
+    renderMatch();
+  });
+});
+
+/* ============ weekly top ============ */
+function renderWeekly() {
+  const weekAgo = offsetDate(-7);
+  let pool = library.filter(c => c.createdAt && c.createdAt >= weekAgo);
+  let sub = `近 7 天（${weekAgo} 起）共 ${pool.length} 张机会卡，按评分取 TOP 5`;
+  if (!pool.length) { pool = library; sub = '近 7 天暂无新卡，展示全库 TOP 5'; }
+  const rows = pool.slice().sort((a, b) => b.score - a.score).slice(0, 5)
+    .map(c => ({ card: c, why: `${c.createdAt || '—'} · ${c.direction || ''}`, score: c.score.toFixed(1), label: '/10' }));
+  $('weekly-sub').textContent = sub;
+  renderPickRows($('weekly-list'), rows);
+}
+
+/* sheet open/close plumbing */
+function openSheet(id) { $(id).classList.add('open'); document.body.style.overflow = 'hidden'; }
+function closeSheets() {
+  ['detail-veil', 'match-veil', 'weekly-veil'].forEach(id => $(id).classList.remove('open'));
+  document.body.style.overflow = '';
+}
+$('btn-match').addEventListener('click', () => { renderMatch(); openSheet('match-veil'); });
+$('btn-weekly').addEventListener('click', () => { renderWeekly(); openSheet('weekly-veil'); });
+$('match-x').addEventListener('click', closeSheets);
+$('weekly-x').addEventListener('click', closeSheets);
+$('match-veil').addEventListener('click', e => { if (e.target === $('match-veil')) closeSheets(); });
+$('weekly-veil').addEventListener('click', e => { if (e.target === $('weekly-veil')) closeSheets(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheets(); });
+
+/* ============ share card (机会签) ============ */
+$('share-btn').addEventListener('click', () => { if (currentCard) shareCard(currentCard); });
+function shareCard(card) {
+  const w = 800, h = 1000;
+  const cv = document.createElement('canvas');
+  cv.width = w; cv.height = h;
+  const ctx = cv.getContext('2d');
+  const cross = card.cardType === 'crossdomain';
+  const accent = cross ? '#C4572E' : '#B8860B';
+  ctx.fillStyle = '#FAF8F3'; ctx.fillRect(0, 0, w, h);
+  const rng = seedRng('share' + card.id);
+  for (let i = 0; i < 60; i++) {
+    ctx.beginPath(); ctx.arc(rng() * w, rng() * h, .8 + rng() * 3.2, 0, Math.PI * 2);
+    ctx.fillStyle = accent; ctx.globalAlpha = .06 + rng() * .1; ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = '#2C2A26';
+  ctx.font = '700 44px Georgia, serif'; ctx.fillText('灵灵 · 机会签', 60, 96);
+  ctx.font = '400 24px sans-serif'; ctx.fillStyle = '#9C958A';
+  ctx.fillText(`第 ${issueNo()} 期 · ${card.createdAt || todayISO}`, 60, 138);
+  ctx.strokeStyle = '#2C2A26'; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(60, 164); ctx.lineTo(w - 60, 164); ctx.stroke();
+  ctx.fillStyle = accent; ctx.font = '600 28px sans-serif';
+  ctx.fillText(cross ? '⚡ 跨界创新' : '◎ 相关洞察', 60, 226);
+  ctx.font = '700 150px Georgia, serif';
+  const scoreTxt = card.score.toFixed(1);
+  ctx.fillText(scoreTxt, 60, 380);
+  const sw = ctx.measureText(scoreTxt).width;
+  ctx.font = '400 30px Georgia, serif'; ctx.fillStyle = '#9C958A';
+  ctx.fillText('/10', 60 + sw + 16, 380);
+  ctx.fillStyle = '#2C2A26'; ctx.font = '700 40px Georgia, serif';
+  wrapText(ctx, card.title, 60, 470, w - 120, 56);
+  ctx.fillStyle = '#6B6558'; ctx.font = '400 26px sans-serif';
+  wrapText(ctx, card.pain, 60, 640, w - 120, 42, 4);
+  ctx.fillStyle = '#9C958A'; ctx.font = '400 22px sans-serif';
+  ctx.fillText(card.direction || '', 60, h - 100);
+  ctx.fillText('Product LingLing · 每日机会日刊', 60, h - 62);
+  const a = document.createElement('a');
+  a.download = `lingling-${card.createdAt || todayISO}-${card.id}.png`;
+  a.href = cv.toDataURL('image/png');
+  a.click();
+}
+function wrapText(ctx, text, x, y, maxW, lineH, maxLines) {
+  const chars = String(text || '').split('');
+  let line = '', lines = 0;
+  for (const ch of chars) {
+    if (ctx.measureText(line + ch).width > maxW) {
+      ctx.fillText(line, x, y); y += lineH; line = ch; lines++;
+      if (maxLines && lines >= maxLines - 1) { line += '…'; break; }
+    } else line += ch;
+  }
+  if (line) ctx.fillText(line, x, y);
+}
+
+/* ============ init ============ */
+(async function init() {
+  await loadData();
+  renderMasthead();
+  renderToday();
+  renderLibrary();
+  renderSignals();
+  window.addEventListener('resize', () => drawBand($('seed-band'), 'mast'));
+})();
+</script>
 </body>
 </html>

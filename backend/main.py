@@ -62,10 +62,15 @@ def list_cards(
     keyword: str = Query("", description="Search keyword"),
     direction: str = Query("", description="Filter by direction"),
     date: str = Query("", description="Filter by date (YYYY-MM-DD)"),
+    page: int = Query(1, ge=1, description="Page number"),
+    page_size: int = Query(20, ge=1, le=100, description="Items per page"),
 ):
-    """List all opportunity cards with optional filters."""
-    cards = get_all_cards(keyword=keyword, direction=direction, date_filter=date)
-    return {"cards": cards, "total": len(cards)}
+    """List opportunity cards with optional filters and pagination."""
+    cards, total = get_all_cards(
+        keyword=keyword, direction=direction, date_filter=date,
+        page=page, page_size=page_size,
+    )
+    return {"cards": cards, "total": total, "page": page, "page_size": page_size}
 
 
 @app.get("/api/cards/today")
@@ -107,9 +112,9 @@ def generate_cards():
 # ── Sources ──
 
 @app.get("/api/sources")
-def list_sources():
-    """Return all cached feed items from the information source."""
-    items = get_all_rss_items()
+def list_sources(limit: int = Query(50, ge=1, le=500, description="Max items to return")):
+    """Return recent cached feed items from the information source."""
+    items = get_all_rss_items(limit=limit)
     sh_tz = ZoneInfo("Asia/Shanghai")
     for item in items:
         raw = item.get("published_at") or ""

@@ -76,12 +76,13 @@ def get_today_unanalyzed_items() -> list[dict]:
     return [dict(r) for r in rows]
 
 
-def get_all_rss_items() -> list[dict]:
-    """Return all RSS items."""
+def get_all_rss_items(limit: int = 50) -> list[dict]:
+    """Return RSS items, limited to the most recent entries."""
     conn = get_db()
     rows = conn.execute(
         "SELECT id, title, url, description, published_at, fetched_at, is_analyzed "
-        "FROM rss_items ORDER BY fetched_at DESC"
+        "FROM rss_items ORDER BY fetched_at DESC LIMIT ?",
+        (limit,),
     ).fetchall()
     conn.close()
     return [dict(r) for r in rows]
