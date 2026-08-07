@@ -8,3 +8,4 @@ dist/
 pull_db.py
 .claude/
 package-lock.json
+.wrangler/

@@ -213,12 +213,12 @@ a:hover { text-decoration: underline; }
 .d-field { display: grid; grid-template-columns: 84px 1fr; gap: 10px; padding: 9px 0; border-top: 1px solid var(--hairline); font-size: 13.5px; }
 .d-field b { font-size: 12px; color: var(--amber); font-weight: 600; }
 .d-field span { color: var(--ink-2); line-height: 1.65; }
-.dims { margin: 6px 0 4px; }
-.dim { display: grid; grid-template-columns: 74px 1fr 38px; gap: 10px; align-items: center; padding: 5px 0; }
-.dim-n { font-size: 12px; color: var(--ink-2); }
-.dim-bar { height: 6px; border-radius: 3px; background: var(--paper-2); overflow: hidden; }
-.dim-fill { height: 100%; border-radius: 3px; background: var(--amber); transition: width .7s ease-out; }
-.dim-v { font-size: 12px; color: var(--ink-3); text-align: right; font-variant-numeric: tabular-nums; }
+.dims { margin: 10px 0 4px; }
+.radar-wrap { display: flex; justify-content: center; padding: 6px 0 2px; }
+.radar-chart { width: 100%; max-width: 260px; height: auto; display: block; }
+.radar-anim { transform: scale(0); transform-origin: 120px 120px; transition: transform .7s ease-out; will-change: transform; }
+.radar-anim.go { transform: scale(1); }
+.radar-empty { padding: 28px 10px; text-align: center; color: var(--ink-3); font-size: 13px; }
 .d-sec-lbl { font-size: 11.5px; letter-spacing: .16em; color: var(--ink-3); font-weight: 600; margin: 18px 0 8px; }
 .kick-pre {
   background: #fff; border: 1px solid var(--hairline); border-radius: 12px;
@@ -278,7 +278,7 @@ a:hover { text-decoration: underline; }
 .both-flipped #collide-line, .both-flipped #collide-dot { opacity: 1; }
 
 @media (prefers-reduced-motion: reduce) {
-  .cardinner, .veil, .sheet, .dim-fill, .lib-card { transition: none !important; }
+  .cardinner, .veil, .sheet, .radar-anim, .lib-card { transition: none !important; }
   .card3d.play .clash-w.l, .card3d.play .clash-w.r, .card3d.play .clash-x,
   .card3d.play .spark, .card3d.rare .face-front { animation: none !important; opacity: 1; transform: none; }
 }
@@ -903,6 +903,91 @@ ${fal}
 最后给出明确结论：**值得做 / 需要转向 / 建议放弃**，附上关键证据和理由。如果是「需要转向」，说明转向后的新切入点。`;
 }
 
+function renderRadarChart(full, cross) {
+  const accent = cross ? 'var(--terra)' : 'var(--amber)';
+  const cx = 120, cy = 120, R = 75;
+
+  const angles = DIMS.map((_, i) => (-Math.PI / 2) + i * (Math.PI / 3));
+
+  const scores = DIMS.map(d => {
+    const raw = (full.scores || {})[d.key];
+    const v = raw && typeof raw === 'object' ? (raw.value || 0) : (Number(raw) || 0);
+    const reason = raw && typeof raw === 'object' ? (raw.reason || '') : '';
+    return { value: Math.min(5, Math.max(0, v)), reason };
+  });
+
+  if (!full.scores || Object.keys(full.scores).length === 0 || scores.every(s => s.value === 0)) {
+    return '<div class="radar-empty">暂无六维评分</div>';
+  }
+
+  const vx = (a, r) => (cx + r * Math.cos(a)).toFixed(2);
+  const vy = (a, r) => (cy + r * Math.sin(a)).toFixed(2);
+
+  let svg = '<div class="radar-wrap"><svg viewBox="-15 -15 270 270" class="radar-chart" aria-label="六维雷达图">';
+
+  /* Animated group: grid lines + data polygon */
+  svg += '<g class="radar-anim">';
+
+  /* 5 concentric hexagons (levels 1–5) */
+  for (let lv = 1; lv <= 5; lv++) {
+    const r = lv / 5 * R;
+    const pts = angles.map(a => vx(a, r) + ',' + vy(a, r)).join(' ');
+    svg += '<polygon points="' + pts + '" fill="none" stroke="var(--ink-3)" stroke-opacity="0.18" stroke-width="0.8" vector-effect="non-scaling-stroke"/>';
+  }
+
+  /* 6 radial lines from centre to each vertex */
+  angles.forEach(a => {
+    svg += '<line x1="' + cx + '" y1="' + cy + '" x2="' + vx(a, R) + '" y2="' + vy(a, R) + '" stroke="var(--ink-3)" stroke-opacity="0.12" stroke-width="0.6" vector-effect="non-scaling-stroke"/>';
+  });
+
+  /* Data polygon */
+  const dataPts = angles.map((a, i) => {
+    const r = scores[i].value / 5 * R;
+    return vx(a, r) + ',' + vy(a, r);
+  }).join(' ');
+  svg += '<polygon points="' + dataPts + '" fill="' + accent + '" fill-opacity="0.25" stroke="' + accent + '" stroke-width="1.8" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>';
+
+  /* Data-point dots */
+  angles.forEach((a, i) => {
+    const r = scores[i].value / 5 * R;
+    svg += '<circle cx="' + vx(a, r) + '" cy="' + vy(a, r) + '" r="2.8" fill="' + accent + '"/>';
+  });
+
+  svg += '</g>'; /* end radar-anim */
+
+  /* Dimension labels — outside the outer hexagon */
+  angles.forEach((a, i) => {
+    const d = DIMS[i];
+    const labelR = R + 18;
+    const lx = parseFloat(vx(a, labelR));
+    const ly = parseFloat(vy(a, labelR));
+    const cosA = Math.cos(a);
+    let anchor = 'middle';
+    if (cosA > 0.05) anchor = 'start';
+    else if (cosA < -0.05) anchor = 'end';
+    svg += '<text x="' + lx + '" y="' + ly + '" dy="0.35em" text-anchor="' + anchor + '" font-size="10.5" fill="var(--ink-2)" font-family="system-ui,-apple-system,sans-serif">';
+    if (scores[i].reason) svg += '<title>' + esc(scores[i].reason) + '</title>';
+    svg += esc(d.name) + '</text>';
+  });
+
+  /* Value labels near each vertex */
+  angles.forEach((a, i) => {
+    const r = scores[i].value / 5 * R;
+    if (r < 5) return; /* skip label for near-zero values to avoid centre clutter */
+    const offR = r + 10;
+    const ox = parseFloat(vx(a, offR));
+    const oy = parseFloat(vy(a, offR));
+    const cosA = Math.cos(a);
+    let anchor = 'middle';
+    if (cosA > 0.05) anchor = 'start';
+    else if (cosA < -0.05) anchor = 'end';
+    svg += '<text x="' + ox + '" y="' + oy + '" dy="0.35em" text-anchor="' + anchor + '" font-size="9.5" fill="var(--ink-3)" font-weight="600" font-family="system-ui,-apple-system,sans-serif">' + scores[i].value.toFixed(1) + '</text>';
+  });
+
+  svg += '</svg></div>';
+  return svg;
+}
+
 async function openDetail(card) {
   // Light cards from the list endpoint lack full detail — fetch the complete record
   let full = card;
@@ -930,15 +1015,7 @@ async function openDetail(card) {
   $('d-user').textContent = full.user; $('d-pain').textContent = full.pain;
   $('d-why').textContent = full.why; $('d-mvp').textContent = full.mvp;
   $('d-risk').textContent = full.risk; $('d-check').textContent = full.check;
-  $('d-dims').innerHTML = DIMS.map(d => {
-    const raw = (full.scores || {})[d.key];
-    const v = raw && typeof raw === 'object' ? (raw.value || 0) : (Number(raw) || 0);
-    const reason = raw && typeof raw === 'object' ? (raw.reason || '') : '';
-    return `<div class="dim">
-      <span class="dim-n" title="${esc(reason)}">${d.name}</span>
-      <span class="dim-bar"><span class="dim-fill" style="width:0" data-w="${v / 5 * 100}%"></span></span>
-      <span class="dim-v">${v}/5</span></div>`;
-  }).join('');
+  $('d-dims').innerHTML = renderRadarChart(full, cross);
   const k = full.kickoff || {};
   $('d-cu-res').textContent = asList(k.resources_needed).join('；') || '按 MVP 方案所列技术栈准备开发环境与必要的 API Key';
   $('d-cu-mile').textContent = k.first_milestone || full.check || `围绕「${card.title}」做一个单场景可演示 demo`;
@@ -949,7 +1026,8 @@ async function openDetail(card) {
   $('detail-veil').classList.add('open');
   document.body.style.overflow = 'hidden';
   requestAnimationFrame(() => requestAnimationFrame(() => {
-    document.querySelectorAll('#d-dims .dim-fill').forEach(el => { el.style.width = el.dataset.w; });
+    const g = document.querySelector('#d-dims .radar-anim');
+    if (g) g.classList.add('go');
   }));
 }
 function closeDetail() { $('detail-veil').classList.remove('open'); document.body.style.overflow = ''; }
