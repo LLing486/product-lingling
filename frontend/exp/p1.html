@@ -1,0 +1,1320 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>第 01 期 · AI 工具合规官 · 灵灵灵感实验</title>
+<style>
+/* ══════════════════════════════════════════════════════════
+   设计令牌 · 沿用 frontend/index.html（浅色刊物风）
+   ══════════════════════════════════════════════════════════ */
+:root {
+  --paper: #FAF8F3;
+  --paper-2: #F3EFE6;
+  --ink: #2C2A26;
+  --ink-2: #6B6558;
+  --ink-3: #9C958A;
+  --amber: #B8860B;
+  --amber-soft: #E8D9B0;
+  --amber-bg: #F5EEDC;
+  --terra: #C4572E;
+  --terra-soft: #EDCDBF;
+  --terra-bg: #F7E9E2;
+  --hairline: rgba(44,42,38,.14);
+  --card-r: 16px;
+  --ctl-r: 10px;
+  --serif: Georgia, 'Times New Roman', 'Songti SC', 'SimSun', serif;
+  --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.65;
+  min-height: 100vh;
+  overflow-x: hidden;           /* 兜底：见文件末尾「横向滚动」自检说明 */
+}
+button { font-family: inherit; cursor: pointer; }
+a { color: var(--ink-2); text-decoration: underline; text-underline-offset: 2px; }
+a:hover { color: var(--amber); }
+[hidden] { display: none !important; }
+strong { font-weight: 700; }
+
+.wrap { max-width: 1120px; margin: 0 auto; padding: 0 16px 34px; }
+
+/* ── 刊头 ───────────────────────────────────────────── */
+.masthead { padding: 22px 0 14px; border-bottom: 2px solid var(--ink); }
+.mast-top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.brand { font-family: var(--serif); font-size: 26px; font-weight: 700; letter-spacing: .04em; }
+.brand small { font-size: 12px; font-weight: 400; color: var(--ink-2); letter-spacing: .16em; margin-left: 8px; }
+.mast-meta { display: flex; gap: 10px; align-items: baseline; font-size: 12px; color: var(--ink-2); flex-wrap: wrap; }
+.issue-no { font-family: var(--serif); font-weight: 700; color: var(--ink); letter-spacing: .08em; }
+.mock-pill {
+  color: var(--ink); border: 1px solid var(--terra-soft); background: var(--terra-bg);
+  border-radius: 999px; padding: 2px 10px; font-size: 11.5px; white-space: nowrap;
+}
+.lede-title { font-family: var(--serif); font-size: 24px; line-height: 1.35; font-weight: 700; margin: 14px 0 6px; }
+.lede-sub { font-size: 13.5px; color: var(--ink-2); max-width: 62ch; }
+
+/* ── 栏目标题 ────────────────────────────────────────── */
+.sec-head {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
+  margin: 0 0 12px; padding-bottom: 7px; border-bottom: 1px solid var(--hairline); flex-wrap: wrap;
+}
+.sec-title { font-family: var(--serif); font-size: 17px; font-weight: 700; letter-spacing: .06em; }
+.sec-title .en { font-size: 10px; font-family: var(--sans); font-weight: 600; color: var(--ink-2); letter-spacing: .18em; margin-left: 8px; }
+.sec-kicker { font-size: 11px; font-weight: 600; letter-spacing: .18em; color: var(--ink-3); }
+.sec-counter { font-size: 12px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+
+/* ── 角色卡 ─────────────────────────────────────────── */
+.card { background: #fff; border: 1px solid var(--hairline); border-radius: var(--card-r); padding: 15px 16px; }
+.role { margin-top: 18px; }
+.role-text { font-size: 14px; color: var(--ink-2); margin-top: 5px; }
+.role-text strong { color: var(--ink); }
+.sector-set { border: 0; margin-top: 15px; padding-top: 13px; border-top: 1px solid var(--hairline); }
+.sector-opts { display: grid; grid-template-columns: 1fr; gap: 8px; margin-top: 9px; }
+@media (min-width: 560px) { .sector-opts { grid-template-columns: repeat(3, 1fr); } }
+.sector-opt { position: relative; }
+.sector-opt input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.sector-opt label {
+  display: flex; flex-direction: column; justify-content: center;
+  min-height: 54px; padding: 8px 12px; cursor: pointer;
+  border: 1px solid var(--hairline); border-radius: var(--ctl-r); background: var(--paper);
+  transition: border-color .15s, background .15s;
+}
+.sector-opt label:hover { border-color: var(--amber); }
+.sector-opt input:checked + label { border-color: var(--amber); background: var(--amber-bg); box-shadow: inset 0 0 0 1px var(--amber); }
+.sector-opt input:focus-visible + label { outline: 2px solid var(--amber); outline-offset: 2px; }
+.so-name { font-family: var(--serif); font-size: 15px; font-weight: 700; letter-spacing: .06em; }
+.so-sub { font-size: 11.5px; color: var(--ink-2); }
+.sector-desc { font-size: 12.5px; color: var(--ink-2); margin-top: 9px; }
+
+/* ── 判卷口径折叠 ────────────────────────────────────── */
+.rules-fold { margin-top: 14px; border: 1px solid var(--hairline); border-radius: var(--card-r); background: var(--paper-2); }
+.rules-fold > summary {
+  min-height: 44px; display: flex; align-items: center; padding: 10px 16px;
+  font-size: 13px; font-weight: 600; cursor: pointer; list-style: none; border-radius: var(--card-r);
+}
+.rules-fold > summary::-webkit-details-marker { display: none; }
+.rules-fold > summary::before { content: '§'; font-family: var(--serif); color: var(--amber); margin-right: 9px; font-weight: 700; }
+.rules-fold[open] > summary { border-bottom: 1px solid var(--hairline); }
+.rules-fold > summary:focus-visible { outline: 2px solid var(--amber); outline-offset: -2px; }
+.rules-body { padding: 12px 16px 15px; }
+.rule-def { padding: 9px 0; border-bottom: 1px dashed var(--hairline); }
+.rule-def:last-child { border-bottom: 0; }
+.rd-name { font-size: 13px; font-weight: 700; }
+.rd-q { font-size: 12.5px; color: var(--ink-2); margin-top: 2px; }
+.rd-ladder { font-size: 11.5px; color: var(--ink-2); margin-top: 5px; font-variant-numeric: tabular-nums; }
+.rd-ladder b { color: var(--ink); font-weight: 600; }
+.rules-note { font-size: 11.5px; color: var(--ink-2); margin-top: 9px; padding-top: 9px; border-top: 1px solid var(--hairline); }
+
+/* ── 工作台 ─────────────────────────────────────────── */
+.board { margin-top: 24px; display: grid; grid-template-columns: 1fr; gap: 26px; }
+@media (min-width: 940px) { .board { grid-template-columns: minmax(0,1fr) minmax(0,1.15fr); gap: 22px; align-items: start; } }
+
+.tray-hint {
+  font-size: 12px; color: var(--ink-2); background: var(--paper-2);
+  border: 1px solid var(--hairline); border-radius: var(--ctl-r); padding: 9px 12px; margin-bottom: 11px;
+}
+.tray-hint kbd {
+  font-family: var(--sans); font-size: 11px; border: 1px solid var(--hairline);
+  border-bottom-width: 2px; border-radius: 5px; padding: 0 5px; background: #fff; color: var(--ink);
+}
+.cards { list-style: none; display: grid; grid-template-columns: 1fr; gap: 10px; }
+@media (min-width: 940px) {
+  .tray-inner { position: sticky; top: 12px; }
+}
+
+.app-card {
+  display: block; width: 100%; min-height: 72px; padding: 11px 13px; text-align: left;
+  background: #fff; border: 1px solid var(--hairline); border-radius: var(--card-r);
+  color: var(--ink); font: inherit; cursor: grab;
+  touch-action: manipulation;               /* 允许滚动/捏合，禁双击缩放 */
+  -webkit-user-select: none; user-select: none;
+  transition: border-color .15s, background .15s, box-shadow .15s;
+}
+.app-card:hover { border-color: var(--amber-soft); }
+.app-card:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+.app-card.is-selected { border-color: var(--amber); background: var(--amber-bg); box-shadow: inset 0 0 0 1px var(--amber); }
+.app-card.is-dragging { opacity: .38; }
+.ac-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.ac-idx { font-family: var(--serif); font-size: 11px; font-weight: 700; color: var(--ink-2); letter-spacing: .1em; font-variant-numeric: tabular-nums; }
+.ac-team { font-size: 11px; color: var(--ink-2); text-align: right; }
+.ac-title { display: block; font-family: var(--serif); font-size: 15px; font-weight: 700; line-height: 1.42; margin: 3px 0 4px; }
+.ac-ask { display: block; font-size: 12.5px; color: var(--ink-2); line-height: 1.55; }
+.ac-scope { display: block; font-size: 11px; color: var(--ink-2); margin-top: 5px; padding-top: 5px; border-top: 1px dashed var(--hairline); }
+.ac-scope::before { content: '范围 · '; }
+.ac-picked { display: none; }
+.app-card.is-selected .ac-picked {
+  display: inline-block; margin-top: 6px; font-size: 11px; font-weight: 600;
+  color: var(--ink); border: 1px solid var(--amber-soft); background: #fff; border-radius: 999px; padding: 1px 9px;
+}
+
+/* ── 三个桶 ─────────────────────────────────────────── */
+.bucket-list { display: grid; grid-template-columns: 1fr; gap: 12px; }
+@media (min-width: 620px) and (max-width: 939px) { .bucket-list { grid-template-columns: repeat(3, minmax(0,1fr)); } }
+@media (min-width: 940px) { .bucket-list { grid-template-columns: 1fr; } }
+.bucket {
+  min-width: 0; padding: 12px; border: 1px solid var(--hairline);
+  border-radius: var(--card-r); background: var(--paper-2);
+  display: flex; flex-direction: column; gap: 9px;
+  transition: border-color .15s, background .15s, box-shadow .15s;
+}
+.bucket.over { border-color: var(--amber); background: var(--amber-bg); box-shadow: 0 0 0 1px var(--amber); }
+.bucket[data-bucket="block"].over { border-color: var(--terra); background: var(--terra-bg); box-shadow: 0 0 0 1px var(--terra); }
+.b-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.b-name { font-family: var(--serif); font-size: 16px; font-weight: 700; letter-spacing: .06em; }
+/* 用色点而不是彩色文字来区分三个桶：文字保持 --ink，对比度不受影响 */
+.b-name::before {
+  content: ''; display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+  margin-right: 8px; vertical-align: 2px; background: var(--ink-3);
+}
+.bucket[data-bucket="pass"] .b-name::before { background: var(--amber); }
+.bucket[data-bucket="block"] .b-name::before { background: var(--terra); }
+.bucket[data-bucket="block"] { border-color: var(--terra-soft); }
+.b-count { font-size: 12px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.b-desc { font-size: 11.5px; color: var(--ink-2); line-height: 1.5; }
+.b-drop {
+  width: 100%; min-height: 62px; padding: 8px; display: flex; align-items: center; justify-content: center;
+  text-align: center; font: inherit; font-size: 12px; color: var(--ink-2);
+  border: 1px dashed var(--hairline); border-radius: var(--ctl-r); background: rgba(255,255,255,.62);
+  transition: border-color .15s, background .15s, color .15s;
+}
+.b-drop:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+.b-drop.armed { border-style: solid; border-color: var(--amber); background: #fff; color: var(--ink); font-weight: 600; }
+.bucket[data-bucket="block"] .b-drop.armed { border-color: var(--terra); }
+.chips { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.chip {
+  display: flex; align-items: center; gap: 8px; width: 100%; min-height: 44px;
+  padding: 6px 10px; text-align: left; font: inherit; font-size: 12px; line-height: 1.45;
+  color: var(--ink); background: #fff; border: 1px solid var(--hairline); border-radius: var(--ctl-r);
+  transition: border-color .15s;
+}
+.chip:hover { border-color: var(--terra); }
+.chip:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+.chip-x { flex: 0 0 auto; font-family: var(--serif); font-size: 15px; color: var(--ink-3); }
+.chip:hover .chip-x { color: var(--terra); }
+.chip-t { min-width: 0; overflow-wrap: anywhere; }
+.b-empty { font-size: 11.5px; color: var(--ink-2); text-align: center; padding: 2px 0; }
+
+/* ── 提交条 ─────────────────────────────────────────── */
+.submitbar {
+  position: sticky; bottom: 0; z-index: 30; margin-top: 18px;
+  display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;
+  padding: 10px 12px; border: 1px solid var(--hairline); border-radius: var(--card-r);
+  background: rgba(250,248,243,.95);
+}
+@supports (backdrop-filter: blur(6px)) { .submitbar { backdrop-filter: blur(6px); } }
+.submit-hint { font-size: 12.5px; color: var(--ink-2); }
+.submit-hint b { color: var(--ink); font-variant-numeric: tabular-nums; }
+.submit-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn {
+  min-height: 44px; padding: 10px 17px; border-radius: var(--ctl-r);
+  border: 1px solid var(--hairline); background: #fff; color: var(--ink-2);
+  font-size: 13.5px; font-weight: 600; transition: background .15s, border-color .15s, color .15s;
+}
+.btn:hover:not(:disabled) { border-color: var(--ink-2); color: var(--ink); }
+.btn.primary { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+.btn.primary:hover:not(:disabled) { background: #171613; }
+.btn:disabled { opacity: .38; cursor: not-allowed; }
+.btn:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+.btn.ghost { background: transparent; }
+/* 次级按钮：视觉上更轻，但触控目标仍是 44px */
+.btn.sm { min-height: 44px; padding: 8px 14px; font-size: 12.5px; font-weight: 600; }
+
+/* ── 结果 ───────────────────────────────────────────── */
+.results { margin-top: 26px; }
+.tiles { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px; }
+@media (min-width: 640px) { .tiles { grid-template-columns: repeat(4, minmax(0,1fr)); } }
+.tile { padding: 11px 13px; border: 1px solid var(--hairline); border-radius: var(--ctl-r); background: #fff; min-width: 0; }
+.tile .n { font-family: var(--serif); font-size: 30px; font-weight: 700; line-height: 1.15; font-variant-numeric: tabular-nums; }
+.tile .k { font-size: 11px; color: var(--ink-2); letter-spacing: .06em; }
+.tile.terra .n { color: var(--terra); }
+.tile.amber .n { color: var(--amber); }
+
+.rulebook { margin-top: 14px; padding: 13px 15px; border: 1px solid var(--hairline); border-radius: var(--card-r); background: var(--paper-2); }
+.rb-row { display: flex; justify-content: space-between; gap: 4px 10px; font-size: 12.5px; padding: 5px 0; border-bottom: 1px dashed var(--hairline); flex-wrap: wrap; }
+.rb-row:last-of-type { border-bottom: 0; }
+.rb-k { color: var(--ink-2); min-width: 0; }
+.rb-v { font-variant-numeric: tabular-nums; font-weight: 600; min-width: 0; }
+.rb-th { margin-top: 9px; padding-top: 9px; border-top: 1px solid var(--hairline); font-size: 12.5px; }
+.rb-note { font-size: 11.5px; color: var(--ink-2); margin-top: 5px; }
+
+.res-list { list-style: none; margin-top: 6px; border-top: 1px solid var(--hairline); }
+.res-item { padding: 14px 0; border-bottom: 1px solid var(--hairline); display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.ri-head { display: flex; align-items: baseline; gap: 9px; flex-wrap: wrap; }
+.ri-idx { font-family: var(--serif); font-size: 11px; font-weight: 700; color: var(--ink-2); letter-spacing: .1em; }
+.ri-title { font-family: var(--serif); font-size: 15.5px; font-weight: 700; line-height: 1.4; min-width: 0; overflow-wrap: anywhere; }
+.ri-flag { font-size: 11px; font-weight: 600; border-radius: 999px; padding: 1px 9px; white-space: nowrap; }
+.ri-flag.same { color: var(--ink-2); border: 1px solid var(--hairline); }
+.ri-flag.diff { color: var(--ink); background: var(--terra-bg); border: 1px solid var(--terra-soft); }
+.ri-verdicts { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+.badge {
+  display: inline-flex; align-items: center; gap: 5px; min-height: 30px;
+  padding: 2px 11px; border-radius: 999px; font-size: 12px; border: 1px solid var(--hairline); background: #fff;
+}
+.badge .bk { font-size: 10.5px; color: var(--ink-2); letter-spacing: .04em; }
+.badge.b-pass { border-color: var(--amber-soft); background: var(--amber-bg); }
+.badge.b-review { border-color: var(--hairline); background: var(--paper-2); }
+.badge.b-block { border-color: var(--terra-soft); background: var(--terra-bg); }
+.ri-arrow { color: var(--ink-2); font-size: 13px; }
+.ri-why { font-size: 13px; line-height: 1.62; }
+.ri-why b { font-weight: 700; }
+.ri-calc {
+  font-size: 11.5px; color: var(--ink-2); font-variant-numeric: tabular-nums;
+  background: var(--paper-2); border: 1px solid var(--hairline); border-radius: var(--ctl-r);
+  padding: 7px 10px; overflow-wrap: anywhere;
+}
+.ri-edge {
+  font-size: 11.5px; color: var(--ink); background: var(--terra-bg);
+  border: 1px solid var(--terra-soft); border-radius: var(--ctl-r); padding: 6px 10px;
+}
+.ri-scope { font-size: 11.5px; color: var(--ink-2); }
+
+.foot { margin-top: 30px; padding-top: 14px; border-top: 1px solid var(--hairline); font-size: 11.5px; color: var(--ink-2); display: flex; flex-direction: column; gap: 5px; }
+.foot .mock-line { color: var(--ink); }
+.foot-link-row { display: flex; }
+.foot-link {
+  display: inline-flex; align-items: center; min-height: 44px; padding: 0 13px;
+  border: 1px solid var(--hairline); border-radius: var(--ctl-r);
+  color: var(--ink); font-size: 12.5px; font-weight: 600; text-decoration: none;
+}
+.foot-link:hover { border-color: var(--amber); color: var(--ink); background: var(--amber-bg); }
+.foot-link:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+
+/* ── 拖拽影子 ───────────────────────────────────────── */
+/* 类名不叫 .ghost —— 那会和按钮的 .btn.ghost 撞车，把按钮变成 position:fixed 的隐形层 */
+.drag-ghost {
+  position: fixed; left: 0; top: 0; z-index: 60; pointer-events: none; opacity: 0;
+  max-width: min(260px, 72vw); padding: 8px 12px; transform: translate(-50%, -50%);
+  background: #fff; border: 1px solid var(--amber); border-radius: var(--ctl-r);
+  box-shadow: 0 6px 20px rgba(44,42,38,.16); font-size: 12.5px; line-height: 1.45;
+  transition: opacity .12s;
+}
+.drag-ghost.on { opacity: 1; }
+
+/* ── 拖拽期间的底部落点坞 ──────────────────────────────
+   窄屏上三个桶常常在屏幕外，一次手势够不着。拖拽时在底部浮出三个落点，
+   手指/鼠标不用离开视口就能放；键盘与点选两条通路不受影响（坞只在拖拽时出现）。 */
+.drop-dock {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 70;
+  display: none; align-items: center; gap: 10px;
+  padding: 9px 12px calc(9px + env(safe-area-inset-bottom, 0px));
+  background: rgba(250,248,243,.97); border-top: 1px solid var(--hairline);
+}
+@supports (backdrop-filter: blur(6px)) { .drop-dock { backdrop-filter: blur(8px); } }
+body.is-dragging .drop-dock { display: flex; }
+.dd-label { flex: 0 0 auto; font-size: 11px; color: var(--ink-2); letter-spacing: .08em; }
+.dd-list { flex: 1; display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 8px; }
+.dd-btn {
+  min-height: 52px; display: flex; align-items: center; justify-content: center; gap: 7px;
+  padding: 6px 8px; font: inherit; font-size: 12.5px; font-weight: 600; color: var(--ink);
+  background: #fff; border: 1px solid var(--hairline); border-radius: var(--ctl-r);
+  overflow-wrap: anywhere;
+}
+.dd-btn::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--ink-3); flex: 0 0 auto; }
+.dd-btn[data-dock="pass"]::before { background: var(--amber); }
+.dd-btn[data-dock="block"]::before { background: var(--terra); }
+.dd-btn.over { border-color: var(--amber); background: var(--amber-bg); box-shadow: inset 0 0 0 1px var(--amber); }
+.dd-btn[data-dock="block"].over { border-color: var(--terra); background: var(--terra-bg); box-shadow: inset 0 0 0 1px var(--terra); }
+
+@media (prefers-reduced-motion: reduce) { .drop-dock { backdrop-filter: none; } }
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+/* ── 动效降级 ───────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ① 刊头 -->
+  <header class="masthead">
+    <div class="mast-top">
+      <div class="brand">灵灵<small>灵感实验</small></div>
+      <div class="mast-meta">
+        <span class="issue-no">第 01 期</span>
+        <span>2026-09-14</span>
+        <span class="mock-pill">示例数据 · 规则模拟</span>
+      </div>
+    </div>
+    <h1 class="lede-title">AI 编程助手的滥用与合规边界，谁来划？</h1>
+    <p class="lede-sub">8 条使用申请摆在你桌上。你分完桶，再跟三条明确规则对一次答案。</p>
+  </header>
+
+  <!-- ② 角色 + 行业 -->
+  <section class="card role" aria-labelledby="roleKicker">
+    <div class="sec-kicker" id="roleKicker">你的角色</div>
+    <p class="role-text">
+      你是<strong>某公司的 AI 工具合规官</strong>。你要在 60 秒内，把 8 条 AI 编程助手的使用申请
+      分别放进「放行 / 需人工复核 / 拦截」三个桶。放完提交，系统会用三条写死的规则复判一遍，逐条告诉你分歧在哪。
+    </p>
+
+    <fieldset class="sector-set">
+      <legend class="sec-kicker">你所在的行业 —— 它决定红线画在哪</legend>
+      <div class="sector-opts" id="sectorOpts"></div>
+      <p class="sector-desc" id="sectorDesc"></p>
+    </fieldset>
+  </section>
+
+  <!-- 判卷口径（权重与阈值提交后才揭晓） -->
+  <details class="rules-fold">
+    <summary>判卷用的三条规则，先看一眼口径</summary>
+    <div class="rules-body" id="rulesBody"></div>
+  </details>
+
+  <!-- ③ 直接开玩 -->
+  <div class="board">
+    <section class="tray" aria-labelledby="trayTitle">
+      <div class="tray-inner">
+        <div class="sec-head">
+          <h2 class="sec-title" id="trayTitle">待分拣<span class="en">INBOX</span></h2>
+          <div class="sec-actions"><button type="button" class="btn ghost sm" id="shuffleBtn">换一批 ↺</button></div>
+        </div>
+        <p class="tray-hint" id="trayHint">
+          鼠标：按住卡片拖进桶，或点一下卡片选中、再点桶里的虚线框。<br>
+          触屏：<strong>长按卡片约 0.2 秒</strong>即可拖动（直接划走就是翻页，不会误拖）；也可以点选卡片 → 点桶。<br>
+          键盘：<kbd>Tab</kbd> 到卡片 → <kbd>Enter</kbd> 选中 → <kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> 直接入桶，
+          或按 <kbd>↓</kbd> 跳到桶 → <kbd>Enter</kbd> 放入。<kbd>↑</kbd><kbd>↓</kbd> 换卡片，<kbd>Esc</kbd> 取消选中。
+        </p>
+        <ul class="cards" id="cards"></ul>
+      </div>
+    </section>
+
+    <section class="buckets" aria-labelledby="bucketsTitle">
+      <div class="sec-head">
+        <h2 class="sec-title" id="bucketsTitle">三个桶<span class="en">BUCKETS</span></h2>
+        <span class="sec-counter" id="placedCounter">已放入 0 / 8</span>
+      </div>
+      <div class="bucket-list" id="bucketList"></div>
+    </section>
+  </div>
+
+  <!-- 提交条 -->
+  <div class="submitbar">
+    <p class="submit-hint" id="submitHint">还剩 <b>8</b> 条待分拣</p>
+    <div class="submit-actions">
+      <button type="button" class="btn ghost" id="resetBtn">全部清空</button>
+      <button type="button" class="btn primary" id="submitBtn" disabled>提交，与规则对答案</button>
+    </div>
+  </div>
+
+  <!-- ④ 结果 -->
+  <section class="results" id="results" hidden aria-labelledby="resTitle">
+    <div class="sec-head">
+      <h2 class="sec-title" id="resTitle">规则复判<span class="en">VERDICT</span></h2>
+      <div class="sec-actions"><button type="button" class="btn ghost sm" id="replayBtn">再玩一次（打乱重来）</button></div>
+    </div>
+    <div id="resBody"></div>
+  </section>
+
+  <footer class="foot">
+    <span class="mock-line">本页为 <strong>示例数据 · 规则模拟</strong>：8 条申请是按真实场景改写的示例，判定由页面内写死的三条规则算出，本轮<strong>没有</strong>接入任何真实模型。</span>
+    <span>灵感来源（真实机会卡）：《面向 AI 编程助手的军事/双用途滥用检测与合规审计平台》· 原始信号：Anthropic 报告称胡塞组织用 Claude Code 开发导弹制导软件</span>
+    <span class="foot-link-row">
+      <a class="foot-link" href="https://aihot.news/items/cmu01iavi08reroymepsxnar2" target="_blank" rel="noopener noreferrer">原文链接 ↗</a>
+    </span>
+    <span>零依赖单文件 · 可离线双击打开 · 无外部请求 · 无密钥</span>
+  </footer>
+</div>
+
+<div class="drag-ghost" id="ghost" aria-hidden="true"></div>
+<div class="drop-dock" id="dropDock" aria-hidden="true"><span class="dd-label">放到</span><div class="dd-list" id="ddList"></div></div>
+<div class="sr-only" role="status" aria-live="polite" id="live"></div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ══════════════════════════════════════════════════════
+     1. 数据：三个桶 / 三种行业 / 八条申请
+     ══════════════════════════════════════════════════════ */
+
+  var BUCKETS = [
+    { id: 'pass',   name: '放行',       desc: '风险可接受，按常规流程放行。' },
+    { id: 'review', name: '需人工复核', desc: '不直接放行也不直接拦截，转人工逐条核验。' },
+    { id: 'block',  name: '拦截',       desc: '立即拒绝，并记入合规台账。' }
+  ];
+
+  var SEV = { pass: 0, review: 1, block: 2 };
+  var BUCKET_NAME = { pass: '放行', review: '需人工复核', block: '拦截' };
+
+  /* 三条规则。等级 0/1/2 —— 数字越大风险越高。 */
+  var RULES = [
+    { key: 'dual',   no: '一', name: '双用途',
+      q: '这份输出，换掉申请里写的用途之后，是否仍能服务军事 / 监控 / 受控场景？',
+      levels: ['看不出可转用的路径', '有民用外观，存在转用路径', '明显军民两用'] },
+    { key: 'lethal', no: '二', name: '致命性',
+      q: '这份输出一旦出错或被滥用，是否可能直接或间接造成人员伤亡（含武器系统、安全关键设备、关键基础设施）？',
+      levels: ['不涉及', '间接支撑', '直接涉及致命系统'] },
+    { key: 'rev',    no: '三', name: '可逆性',
+      q: '如果判定错了，这份输出还能收回来吗？',
+      levels: ['输出可回滚', '部分可逆', '不可逆'] }
+  ];
+
+  /* 行业决定：三条规则各自的权重，以及放行线 / 复核线在哪里。 */
+  var SECTORS = {
+    civil: {
+      id: 'civil', name: '民用', sub: '消费 / 企业软件公司',
+      desc: '产品对外销售，不承接涉军项目。红线常规：双用途本身不致命，但必须被人看见。',
+      weights: { dual: 2, lethal: 3, rev: 1 },
+      passT: 3, reviewT: 6,
+      note: '双用途权重中等（×2）——沾上双用途到不了拦截，但单独就能推到复核线以上。'
+    },
+    research: {
+      id: 'research', name: '科研', sub: '高校 / 研究院所',
+      desc: '成果以论文与开源为主，接受同行评议与公开复核。',
+      weights: { dual: 1, lethal: 3, rev: 3 },
+      passT: 4, reviewT: 8,
+      note: '双用途权重下调至 ×1（成果公开可复核）；可逆性权重上调至 ×3（一旦发表或交付实物，收不回来）。'
+    },
+    defense: {
+      id: 'defense', name: '国防相关', sub: '涉军合作 / 双用途供应商',
+      desc: '承接涉军订单，或产品已进入国防供应链。',
+      weights: { dual: 3, lethal: 3, rev: 2 },
+      passT: 2, reviewT: 7,
+      note: '双用途权重最高（×3），放行线最窄（≤2）——只要沾上双用途，就至少进人工复核。'
+    }
+  };
+
+  /* 八条申请。
+     dual  0/1/2  双用途等级
+     lethal 0/1/2 致命性等级
+     rev   2/1/0  可逆性等级（2 = 完全可逆，数值越小越不可逆；引擎里用 2-rev 当风险等级）
+     ev    每条规则的一句话依据（提交后逐条展示） */
+  var ITEMS = [
+    {
+      id: 'a', title: '游戏引擎碰撞检测热路径优化',
+      team: '客户端组 · 周冕',
+      ask: '让助手重写自研游戏引擎里那 200 行 broad-phase 排序，把战斗场景帧率从 47 拉到 60。',
+      scope: '仓库 game-engine（自研闭源）· 仅物理模块 · 产物不出内网',
+      dual: 0, lethal: 0, rev: 2,
+      ev: {
+        dual: '产物是一段通用排序与裁剪优化，本身不携带任何领域能力；军民用都拿不到额外的东西。',
+        lethal: '与武器、监控、安全关键设备都没有接口，即使改错了，最坏结果是游戏卡顿。',
+        rev: '改动提交在自有 Git 仓库，一行 revert 就回去了；没有实物产出，也不对外发布。'
+      }
+    },
+    {
+      id: 'b', title: 'CRM 工单系统 SQL 注入修复（含验证 payload）',
+      team: '平台安全组 · 何维',
+      ask: '修 CRM 工单系统里一串 SQL 注入，并生成一批注入 payload，用来验证补丁确实堵住了。',
+      scope: '仓库 crm-ops（自研）· 只打内网测试库 · payload 不外传',
+      dual: 1, lethal: 0, rev: 2,
+      ev: {
+        dual: '修复本身是防御性的，但同一批 payload 换个 target 就是可用的攻击载荷 —— 民用外观下存在清楚的转用路径。',
+        lethal: '目标与产物都在自家内网工单系统，不触及武器、监控或安全关键设备。',
+        rev: 'payload 与补丁都留在内网代码库，可删除、可回滚，没有外部留存。'
+      }
+    },
+    {
+      id: 'c', title: '航测无人机队批量航线规划',
+      team: '测绘事业部 · 陆琳',
+      ask: '为航测无人机队批量生成测绘航线：输入测区多边形和相机参数，自动算出五向航线、重叠率与返航点。',
+      scope: '产线脚本 · 输出直接导入机队飞控 · 已用于现网作业',
+      dual: 2, lethal: 1, rev: 1,
+      ev: {
+        dual: '同一套航线规划能力，去掉相机参数、换上目标坐标，就是侦察 / 打击航线生成 —— 军民两用的教科书案例。',
+        lethal: '航线本身不带杀伤力，但输出直接喂给飞行控制器，是侦察链路的一环，属间接支撑。',
+        rev: '未起飞的航线文件可撤销、可审计；已经导入机队并起飞的那部分收不回来。'
+      }
+    },
+    {
+      id: 'd', title: '放疗设备剂量计算模块的测试用例生成',
+      team: '医疗设备事业部 · 郑一彤',
+      ask: '给放疗设备的剂量计算模块生成单元测试和边界用例，覆盖率从 61% 提到 85%，重点是极端剂量与并发场景。',
+      scope: '受控软件流程 · 产物进入产线验证 · 需留痕',
+      dual: 1, lethal: 1, rev: 1,
+      ev: {
+        dual: '测试方法与用例本身通用，但针对安全关键设备的这套工程能力，可以平移到其他受控系统（含军用医疗与生命保障）。',
+        lethal: '剂量计算错误会直接伤害患者 —— 不是武器，但属于安全关键系统，致命性不能算作零。',
+        rev: '测试代码本身可回滚；但若生成的用例有误并进了产线验证流程，纠正要走召回级的流程。'
+      }
+    },
+    {
+      id: 'e', title: '「某型飞行器姿态控制单元」舵机 PID 整定',
+      team: '外部合作方转入 · 申请已做术语模糊化',
+      ask: '为「某型飞行器姿态控制单元」整定舵机 PID 参数，附仿真回放脚本，用来替换现有手工整定流程。',
+      scope: '平台未注明 · 要求离线交付 · 拒绝提供最终部署环境',
+      dual: 2, lethal: 2, rev: 0,
+      ev: {
+        dual: '申请对平台做了模糊化，但「姿态控制单元 + 舵机 + 弹道仿真回放」的术语组合指向明确，是典型的申报规避。',
+        lethal: '直接作用于致命武器系统的控制回路，输出即硬件参数。',
+        rev: '参数一旦烧录进飞控固件并进入试验，物理后果无法撤销。'
+      }
+    },
+    {
+      id: 'f', title: '自研加密库侧信道泄露检测',
+      team: '固件安全组 · 佘睿',
+      ask: '给自研加密库写功耗 / 时序分析脚本，找出密钥恢复的可行路径，用来加固下一版固件。',
+      scope: '仅实验室工装 · 脚本不部署到设备 · 结果只做内部加固',
+      dual: 2, lethal: 1, rev: 2,
+      ev: {
+        dual: '检测脚本与密钥恢复脚本是同一套数学，把采集端换成真实设备就能反向使用 —— 防御目的不改变能力的双向性。',
+        lethal: '削弱通信保密性会间接影响作战与关键基础设施的安全，属间接支撑。',
+        rev: '纯分析脚本，不部署、不烧录，随时可以停掉删掉。'
+      }
+    },
+    {
+      id: 'g', title: '公开论文元数据爬取与综述提纲',
+      team: '战略研究组 · 叶青',
+      ask: '爬取 arXiv / PubMed 的公开论文元数据，生成供应链风险综述提纲和引用图谱。',
+      scope: '只取公开元数据 · 不下载全文 · 遵守 robots 限速',
+      dual: 0, lethal: 0, rev: 2,
+      ev: {
+        dual: '只处理已经公开发表的元数据，输出是文献综述提纲，不产生任何可转用的操作能力。',
+        lethal: '与武器、监控、安全关键系统都没有关联。',
+        rev: '产物是本地文稿，删掉就没了，没有外部留存。'
+      }
+    },
+    {
+      id: 'h', title: '云环境自动化红队演练编排',
+      team: '云平台组 · 岑宇',
+      ask: '编排一套自动化渗透流程：扫描 → 利用 → 提权 → 横向移动，在自家云环境做红队演练，找内网横向的盲区。',
+      scope: '仅自建演练 VPC · 演练后快照回滚 · 工具链不出内网',
+      dual: 2, lethal: 0, rev: 2,
+      ev: {
+        dual: '渗透编排框架是通用攻击能力，把 target 参数换成别人的地址就能对外使用。',
+        lethal: '目标是自家云环境，不涉及人员与物理设备，不构成直接或间接杀伤。',
+        rev: '演练环境可以快照回滚，工具链不出内网，能力不会外溢。'
+      }
+    }
+  ];
+
+  var ITEM_BY_ID = {};
+  ITEMS.forEach(function (it) { ITEM_BY_ID[it.id] = it; });
+
+  /* ══════════════════════════════════════════════════════
+     2. 规则引擎（纯函数，无副作用 —— 可被 node 直接抽取验证）
+     ══════════════════════════════════════════════════════ */
+
+  /* 把「可逆性等级 rev(2 最好)」翻成风险等级(0 最好) */
+  function riskLevels(item) {
+    return { dual: item.dual, lethal: item.lethal, rev: 2 - item.rev };
+  }
+
+  /* 对单条申请，按行业口径算出规则判定 */
+  function evaluate(item, sectorId) {
+    var s = SECTORS[sectorId];
+    var lv = riskLevels(item);
+
+    var parts = RULES.map(function (r) {
+      var level = lv[r.key];
+      return {
+        key: r.key, no: r.no, name: r.name,
+        level: level,
+        levelLabel: r.levels[level],
+        weight: s.weights[r.key],
+        points: level * s.weights[r.key]
+      };
+    });
+
+    var score = parts.reduce(function (a, p) { return a + p.points; }, 0);
+    var verdict = score <= s.passT ? 'pass' : (score <= s.reviewT ? 'review' : 'block');
+
+    /* 主导规则：扣分最多的那条；并列时取等级更高的，再并列取规则顺序靠前的 */
+    var driver = parts.slice().sort(function (a, b) {
+      return (b.points - a.points) || (b.level - a.level);
+    })[0];
+
+    /* 距离最近的一条阈值线 */
+    var edge;
+    if (verdict === 'pass') edge = s.passT - score;
+    else if (verdict === 'review') edge = Math.min(score - s.passT, s.reviewT - score);
+    else edge = score - s.reviewT;
+
+    return {
+      score: score, verdict: verdict, parts: parts, driver: driver,
+      passT: s.passT, reviewT: s.reviewT,
+      max: 2 * (s.weights.dual + s.weights.lethal + s.weights.rev),
+      edge: edge
+    };
+  }
+
+  /* 生成一条结果对比 */
+  function compare(item, userBucket, sectorId) {
+    var ev = evaluate(item, sectorId);
+    var userSev = SEV[userBucket], ruleSev = SEV[ev.verdict];
+    return {
+      item: item,
+      user: userBucket,
+      ev: ev,
+      agree: userBucket === ev.verdict,
+      direction: userSev < ruleSev ? 'looser' : (userSev > ruleSev ? 'stricter' : 'same'),
+      gap: Math.abs(userSev - ruleSev)
+    };
+  }
+
+  /* 汇总 */
+  function summarize(rows) {
+    var agree = rows.filter(function (r) { return r.agree; }).length;
+    return {
+      total: rows.length,
+      agree: agree,
+      differ: rows.length - agree,
+      looser: rows.filter(function (r) { return r.direction === 'looser'; }).length,
+      stricter: rows.filter(function (r) { return r.direction === 'stricter'; }).length
+    };
+  }
+
+  /* ══════════════════════════════════════════════════════
+     3. 状态
+     ══════════════════════════════════════════════════════ */
+
+  var REDUCED = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  var state = {
+    sector: 'civil',
+    order: ITEMS.map(function (i) { return i.id; }),
+    placement: {},        /* id -> bucketId */
+    selected: null,       /* id | null */
+    submitted: false
+  };
+
+  var $ = function (id) { return document.getElementById(id); };
+  var elCards = $('cards'), elBuckets = $('bucketList'), elGhost = $('ghost');
+  var elCounter = $('placedCounter'), elHint = $('submitHint'), elDockList = $('ddList');
+  var elSubmit = $('submitBtn'), elReset = $('resetBtn'), elShuffle = $('shuffleBtn');
+  var elResults = $('results'), elResBody = $('resBody'), elReplay = $('replayBtn');
+  var elLive = $('live');
+
+  function announce(msg) { elLive.textContent = msg; }
+
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  function remaining() {
+    return state.order.filter(function (id) { return !state.placement[id]; }).length;
+  }
+
+  /* ══════════════════════════════════════════════════════
+     4. 渲染：行业选择 + 规则口径
+     ══════════════════════════════════════════════════════ */
+
+  function renderSectors() {
+    $('sectorOpts').innerHTML = Object.keys(SECTORS).map(function (k) {
+      var s = SECTORS[k];
+      return '<div class="sector-opt">' +
+        '<input type="radio" name="sector" id="sec-' + k + '" value="' + k + '"' +
+          (state.sector === k ? ' checked' : '') + '>' +
+        '<label for="sec-' + k + '">' +
+          '<span class="so-name">' + esc(s.name) + '</span>' +
+          '<span class="so-sub">' + esc(s.sub) + '</span>' +
+        '</label></div>';
+    }).join('');
+    $('sectorDesc').textContent = SECTORS[state.sector].desc;
+  }
+
+  function renderRulesFold() {
+    $('rulesBody').innerHTML = RULES.map(function (r) {
+      return '<div class="rule-def">' +
+        '<div class="rd-name">规则' + r.no + ' · ' + esc(r.name) + '</div>' +
+        '<div class="rd-q">' + esc(r.q) + '</div>' +
+        '<div class="rd-ladder">等级：' +
+          r.levels.map(function (l, i) { return '<b>' + i + '</b> ' + esc(l); }).join(' &nbsp;·&nbsp; ') +
+        '</div></div>';
+    }).join('') +
+    '<p class="rules-note">每条规则给 0 / 1 / 2 三个等级之一。三条规则的加权总分决定最终判定；' +
+    '<strong>权重和红线随你所在的行业变化</strong>，提交后揭晓。</p>';
+  }
+
+  /* ══════════════════════════════════════════════════════
+     5. 渲染：卡片托盘
+     ══════════════════════════════════════════════════════ */
+
+  function renderCards() {
+    var pending = state.order.filter(function (id) { return !state.placement[id]; });
+    if (!pending.length) {
+      elCards.innerHTML = '<li class="b-empty" style="padding:14px 0">8 条都已入桶，点下面的按钮提交。</li>';
+      return;
+    }
+    elCards.innerHTML = pending.map(function (id, i) {
+      var it = ITEM_BY_ID[id];
+      var idx = String(i + 1).padStart(2, '0');
+      var sel = state.selected === id;
+      return '<li>' +
+        '<button type="button" class="app-card' + (sel ? ' is-selected' : '') + '"' +
+          ' data-id="' + id + '" aria-pressed="' + (sel ? 'true' : 'false') + '"' +
+          ' aria-describedby="trayHint">' +
+          '<span class="ac-top"><span class="ac-idx">' + idx + '</span>' +
+            '<span class="ac-team">' + esc(it.team) + '</span></span>' +
+          '<span class="ac-title">' + esc(it.title) + '</span>' +
+          '<span class="ac-ask">' + esc(it.ask) + '</span>' +
+          '<span class="ac-scope">' + esc(it.scope) + '</span>' +
+          (sel ? '<span class="ac-picked">已选中 —— 现在选一个桶放入（或按 1 / 2 / 3）</span>' : '') +
+        '</button></li>';
+    }).join('');
+  }
+
+  /* ══════════════════════════════════════════════════════
+     6. 渲染：三个桶
+     ══════════════════════════════════════════════════════ */
+
+  function renderBuckets() {
+    elBuckets.innerHTML = BUCKETS.map(function (b, bi) {
+      var ids = state.order.filter(function (id) { return state.placement[id] === b.id; });
+      var chips = ids.map(function (id) {
+        var it = ITEM_BY_ID[id];
+        return '<li><button type="button" class="chip" data-remove="' + id + '"' +
+          ' aria-label="把《' + esc(it.title) + '》移回待分拣">' +
+          '<span class="chip-x" aria-hidden="true">↺</span>' +
+          '<span class="chip-t">' + esc(it.title) + '</span></button></li>';
+      }).join('');
+      return '<section class="bucket" data-bucket="' + b.id + '">' +
+        '<div class="b-head">' +
+          '<h3 class="b-name">' + esc(b.name) + '</h3>' +
+          '<span class="b-count">' + ids.length + ' 条</span>' +
+        '</div>' +
+        '<p class="b-desc">' + esc(b.desc) + '</p>' +
+        '<button type="button" class="b-drop' + (state.selected ? ' armed' : '') + '"' +
+          ' data-drop="' + b.id + '" aria-label="放入「' + esc(b.name) + '」桶，快捷键 ' + (bi + 1) + '">' +
+          (state.selected ? '放入这里（' + (bi + 1) + '）' : '把选中的申请放入（' + (bi + 1) + '）') +
+        '</button>' +
+        '<ul class="chips">' + (chips || '<li class="b-empty">还没有条目</li>') + '</ul>' +
+      '</section>';
+    }).join('');
+  }
+
+  /* ══════════════════════════════════════════════════════
+     7. 渲染：提交条
+     ══════════════════════════════════════════════════════ */
+
+  function renderBar() {
+    var left = remaining();
+    var done = state.order.length - left;
+    elCounter.textContent = '已放入 ' + done + ' / ' + state.order.length;
+    elHint.innerHTML = left
+      ? '还剩 <b>' + left + '</b> 条待分拣'
+      : '全部入桶，可以提交了';
+    elSubmit.disabled = left > 0;
+  }
+
+  function renderDock() {
+    elDockList.innerHTML = BUCKETS.map(function (b) {
+      return '<div class="dd-btn" data-dock="' + b.id + '">' + esc(b.name) + '</div>';
+    }).join('');
+  }
+
+  function renderAll() {
+    renderCards();
+    renderBuckets();
+    renderBar();
+    if (state.submitted) renderResults();
+  }
+
+  /* ══════════════════════════════════════════════════════
+     8. 交互：选中 / 放入 / 移回
+     ══════════════════════════════════════════════════════ */
+
+  function select(id) {
+    state.selected = (state.selected === id) ? null : id;
+    var it = ITEM_BY_ID[id];
+    announce(state.selected
+      ? '已选中《' + it.title + '》。按 1 放行，2 需人工复核，3 拦截；或按向下方向键跳到桶。'
+      : '已取消选中');
+    renderAll();
+    /* 重渲染丢焦点，键盘用户要接回同一张卡上 */
+    if (keyboardMode) {
+      var same = elCards.querySelector('.app-card[data-id="' + id + '"]');
+      if (same) same.focus();
+    }
+    /* 触屏窄屏：选中后把桶滚进视野，省得用户自己找。键盘用户不滚，免得跟焦点打架。 */
+    if (state.selected && !keyboardMode && window.innerWidth < 940) {
+      var first = elBuckets.querySelector('.b-drop');
+      if (first) first.scrollIntoView({ block: 'center', behavior: REDUCED ? 'auto' : 'smooth' });
+    }
+  }
+
+  function focusFirstBucket() {
+    var first = elBuckets.querySelector('.b-drop');
+    if (first) first.focus();
+  }
+
+  function place(bucketId) {
+    if (!state.selected) {
+      announce('先选一张申请，再选桶');
+      return;
+    }
+    var id = state.selected;
+    var it = ITEM_BY_ID[id];
+    state.placement[id] = bucketId;
+    state.selected = null;
+    if (state.submitted) state.submitted = false;
+    announce('《' + it.title + '》已放入「' + BUCKET_NAME[bucketId] + '」');
+    renderAll();
+    restoreFocus();
+  }
+
+  function unplace(id) {
+    var it = ITEM_BY_ID[id];
+    delete state.placement[id];
+    state.selected = id;
+    if (state.submitted) state.submitted = false;
+    announce('《' + it.title + '》已移回待分拣');
+    renderAll();
+    var card = elCards.querySelector('.app-card[data-id="' + id + '"]');
+    if (card && keyboardMode) card.focus();
+  }
+
+  /* 重渲染会把焦点丢给 body。键盘用户需要把它接回来（鼠标用户不接，免得冒出焦点框）。 */
+  function restoreFocus() {
+    if (!keyboardMode) return;
+    var first = elCards.querySelector('.app-card');
+    (first || elSubmit).focus();
+  }
+
+  function clearAll() {
+    state.placement = {};
+    state.selected = null;
+    state.submitted = false;
+    elResults.hidden = true;
+    announce('已清空全部判定');
+    renderAll();
+  }
+
+  function shuffle() {
+    var a = state.order.slice();
+    for (var i = a.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    state.order = a;
+    state.placement = {};
+    state.selected = null;
+    state.submitted = false;
+    elResults.hidden = true;
+    announce('已换一批，条目顺序打乱，重新开始');
+    renderAll();
+  }
+
+  /* ══════════════════════════════════════════════════════
+     9. 拖拽：指针事件（鼠标 + 触屏），另有键盘 / 点按通路
+     ══════════════════════════════════════════════════════ */
+
+  var drag = null;        /* { id, pointerId, isTouch, startX, startY, active, timer, overBucket } */
+  var suppressClick = false;
+  var suppressTimer = null;
+  var keyboardMode = false;   /* 上一次交互是不是键盘 —— 决定要不要把焦点接回来 */
+
+  var TOUCH_HOLD = 200;   /* 触屏长按多久算「要拖」 */
+  var MOUSE_SLOP = 4;     /* 鼠标移动多少算「在拖」 */
+  var TOUCH_SLOP = 10;    /* 触屏长按前移动超过这个距离 → 让位给页面滚动 */
+
+  document.addEventListener('keydown', function () { keyboardMode = true; }, true);
+  document.addEventListener('pointerdown', function () { keyboardMode = false; }, true);
+
+  function beginDrag(x, y) {
+    if (!drag) return;
+    drag.active = true;
+    drag.lastY = y;
+    var card = elCards.querySelector('.app-card[data-id="' + drag.id + '"]');
+    if (card) card.classList.add('is-dragging');
+    elGhost.textContent = ITEM_BY_ID[drag.id].title;
+    elGhost.classList.add('on');
+    document.body.classList.add('is-dragging');
+    moveGhost(x, y);
+    tickScroll();
+    if (card && card.setPointerCapture && drag.pointerId != null) {
+      try { card.setPointerCapture(drag.pointerId); } catch (e) { /* 忽略 */ }
+    }
+  }
+
+  /* 拖到边缘后持续滚动 —— 只在 pointermove 里滚的话，用户停在边缘不动就停住了 */
+  function tickScroll() {
+    if (!drag || !drag.active) return;
+    autoScroll(drag.lastY);
+    drag.raf = requestAnimationFrame(tickScroll);
+  }
+
+  function moveGhost(x, y) {
+    /* 影子是 position:fixed 且居中定位，把它夹在视口内，避免贴边时溢出 */
+    var halfW = (elGhost.offsetWidth || 180) / 2 + 4;
+    var halfH = (elGhost.offsetHeight || 36) / 2 + 4;
+    var cx = Math.max(halfW, Math.min(window.innerWidth - halfW, x));
+    var cy = Math.max(halfH, Math.min(window.innerHeight - halfH, y));
+    elGhost.style.left = cx + 'px';
+    elGhost.style.top = cy + 'px';
+  }
+
+  /* 拖到屏幕边缘时自动滚动，让 375px 下也能把卡片拖到下方的桶 */
+  function autoScroll(y) {
+    var m = 84, step;
+    if (y < m) { step = -(m - y) / 3; }
+    else if (y > window.innerHeight - m) { step = (y - (window.innerHeight - m)) / 3; }
+    else { return; }
+    window.scrollBy(0, Math.max(-18, Math.min(18, step)));
+  }
+
+  /* 命中测试：底部落点坞优先（它浮在最上层），其次才是页面里的三个桶 */
+  function bucketAt(x, y) {
+    var el = document.elementFromPoint(x, y);
+    if (!el || !el.closest) return null;
+    var d = el.closest('[data-dock]');
+    if (d) return d.getAttribute('data-dock');
+    var b = el.closest('[data-bucket]');
+    return b ? b.getAttribute('data-bucket') : null;
+  }
+
+  function highlightBucket(id) {
+    var i;
+    var nodes = elBuckets.querySelectorAll('.bucket');
+    for (i = 0; i < nodes.length; i++) {
+      nodes[i].classList.toggle('over', !!id && nodes[i].getAttribute('data-bucket') === id);
+    }
+    var docks = elDockList.querySelectorAll('[data-dock]');
+    for (i = 0; i < docks.length; i++) {
+      docks[i].classList.toggle('over', !!id && docks[i].getAttribute('data-dock') === id);
+    }
+  }
+
+  function endDrag() {
+    if (!drag) return;
+    if (drag.timer) { clearTimeout(drag.timer); drag.timer = null; }
+    if (drag.raf) { cancelAnimationFrame(drag.raf); drag.raf = null; }
+    var card = elCards.querySelector('.app-card[data-id="' + drag.id + '"]');
+    if (card) card.classList.remove('is-dragging');
+    elGhost.classList.remove('on');
+    document.body.classList.remove('is-dragging');
+    highlightBucket(null);
+    if (drag.active) {
+      /* 拖拽收尾的那次 click 不能被当成「选中」；用定时器兜底复位，避免状态粘住 */
+      suppressClick = true;
+      clearTimeout(suppressTimer);
+      suppressTimer = setTimeout(function () { suppressClick = false; }, 400);
+    }
+    drag = null;
+  }
+
+  function onPointerDown(e) {
+    if (e.button != null && e.button !== 0) return;
+    suppressClick = false;
+    var card = e.target.closest && e.target.closest('.app-card');
+    if (!card) return;
+    var isTouch = e.pointerType === 'touch' || e.pointerType === 'pen';
+    drag = {
+      id: card.getAttribute('data-id'), pointerId: e.pointerId,
+      isTouch: isTouch, startX: e.clientX, startY: e.clientY,
+      active: false, timer: null, overBucket: null
+    };
+    if (isTouch) {
+      /* 触屏：先不动，长按 200ms 才进入拖拽；中途划走就交还给页面滚动 */
+      drag.timer = setTimeout(function () {
+        if (drag && !drag.active) beginDrag(drag.startX, drag.startY);
+      }, TOUCH_HOLD);
+    }
+  }
+
+  function onPointerMove(e) {
+    if (!drag || e.pointerId !== drag.pointerId) return;
+    var dx = e.clientX - drag.startX, dy = e.clientY - drag.startY;
+    var dist = Math.sqrt(dx * dx + dy * dy);
+
+    if (!drag.active) {
+      if (drag.isTouch) {
+        if (dist > TOUCH_SLOP) endDrag();      /* 让位给滚动，不打断用户 */
+        return;
+      }
+      if (dist > MOUSE_SLOP) beginDrag(e.clientX, e.clientY);
+      else return;
+    }
+
+    if (drag.active) {
+      drag.lastY = e.clientY;
+      moveGhost(e.clientX, e.clientY);
+      var b = bucketAt(e.clientX, e.clientY);
+      if (b !== drag.overBucket) { drag.overBucket = b; highlightBucket(b); }
+    }
+  }
+
+  function onPointerUp(e) {
+    if (!drag || e.pointerId !== drag.pointerId) return;
+    var wasActive = drag.active;
+    var target = wasActive ? bucketAt(e.clientX, e.clientY) : null;
+    var id = drag.id;
+    endDrag();
+    if (wasActive) {
+      if (target) {
+        state.placement[id] = target;
+        state.selected = null;
+        if (state.submitted) state.submitted = false;
+        announce('《' + ITEM_BY_ID[id].title + '》已放入「' + BUCKET_NAME[target] + '」');
+        renderAll();
+      } else {
+        announce('没有放在任何桶上，卡片已退回');
+        renderAll();
+      }
+    }
+  }
+
+  function onPointerCancel(e) {
+    if (!drag || e.pointerId !== drag.pointerId) return;
+    endDrag();
+    renderAll();
+  }
+
+  document.addEventListener('pointerdown', onPointerDown);
+  document.addEventListener('pointermove', onPointerMove, { passive: true });
+  document.addEventListener('pointerup', onPointerUp);
+  document.addEventListener('pointercancel', onPointerCancel);
+
+  /* 触屏：只有真的进入拖拽状态才拦下页面滚动。这一条是 passive:false 的全部理由，
+     其余时间页面照常滚动，所以「长按才开始拖、划走就自动让位」是成立的。 */
+  document.addEventListener('touchmove', function (e) {
+    if (drag && drag.active) e.preventDefault();
+  }, { passive: false });
+
+  /* 拖拽结束的那次 click 不要被当成「选中」 */
+  document.addEventListener('click', function (e) {
+    if (suppressClick) { suppressClick = false; e.preventDefault(); e.stopPropagation(); }
+  }, true);
+
+  /* ── 点击通路 ─────────────────────────────────────── */
+  elCards.addEventListener('click', function (e) {
+    var card = e.target.closest && e.target.closest('.app-card');
+    if (card) select(card.getAttribute('data-id'));
+  });
+
+  elBuckets.addEventListener('click', function (e) {
+    var drop = e.target.closest && e.target.closest('[data-drop]');
+    if (drop) { place(drop.getAttribute('data-drop')); return; }
+    var rm = e.target.closest && e.target.closest('[data-remove]');
+    if (rm) { unplace(rm.getAttribute('data-remove')); }
+  });
+
+  /* ── 键盘通路 ─────────────────────────────────────── */
+  document.addEventListener('keydown', function (e) {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    var t = e.target;
+
+    /* 1 / 2 / 3：把当前选中的申请直接放进对应桶 */
+    if (/^[123]$/.test(e.key) && state.selected && !(t.matches && t.matches('input, textarea, select'))) {
+      var b = BUCKETS[Number(e.key) - 1];
+      if (b) { e.preventDefault(); place(b.id); }
+      return;
+    }
+
+    /* Esc：取消选中 */
+    if (e.key === 'Escape' && state.selected) {
+      state.selected = null;
+      announce('已取消选中');
+      renderAll();
+      var c = elCards.querySelector('.app-card');
+      if (c) c.focus();
+      return;
+    }
+
+    /* 卡片上的 ↑ / ↓：在卡片之间移动焦点；若这张卡已选中，↓ 直接跳到第一个桶 */
+    if ((e.key === 'ArrowUp' || e.key === 'ArrowDown') && t.classList && t.classList.contains('app-card')) {
+      var all = Array.prototype.slice.call(elCards.querySelectorAll('.app-card'));
+      var i = all.indexOf(t);
+      if (e.key === 'ArrowDown' && state.selected === t.getAttribute('data-id')) {
+        e.preventDefault();
+        focusFirstBucket();
+        return;
+      }
+      var next = e.key === 'ArrowDown' ? i + 1 : i - 1;
+      if (next >= 0 && next < all.length) { e.preventDefault(); all[next].focus(); }
+      return;
+    }
+
+    /* 桶里的「放入」按钮：↑ / ↓ 在三个桶之间移动 */
+    if ((e.key === 'ArrowUp' || e.key === 'ArrowDown') && t.hasAttribute && t.hasAttribute('data-drop')) {
+      var drops = Array.prototype.slice.call(elBuckets.querySelectorAll('[data-drop]'));
+      var di = drops.indexOf(t);
+      var dn = e.key === 'ArrowDown' ? di + 1 : di - 1;
+      if (dn >= 0 && dn < drops.length) { e.preventDefault(); drops[dn].focus(); }
+      return;
+    }
+  });
+
+  /* 点按 / 键盘激活「放入」按钮时，Enter/Space 已由 button 原生触发 click */
+
+  /* ══════════════════════════════════════════════════════
+     10. 结果渲染
+     ══════════════════════════════════════════════════════ */
+
+  function badge(label, bucketId) {
+    return '<span class="badge b-' + bucketId + '"><span class="bk">' + label + '</span>' + esc(BUCKET_NAME[bucketId]) + '</span>';
+  }
+
+  function calcLine(ev) {
+    return ev.parts.map(function (p) {
+      return p.name + ' ' + p.level + '×' + p.weight + '=' + p.points;
+    }).join(' · ') + ' → 合计 ' + ev.score + ' 分';
+  }
+
+  function ruleParagraph(row) {
+    var ev = row.ev, d = ev.driver;
+    var out = [];
+
+    if (row.agree) {
+      if (ev.score === 0) {
+        out.push('三条规则在这条上全部给 0 分 —— 这是本期的「零争议」样本，你和规则都没有犹豫。');
+      } else {
+        out.push('你和规则都落在「' + BUCKET_NAME[ev.verdict] + '」。主要扣分项是<b>规则' + d.no + ' · ' + d.name +
+          '</b>（等级 ' + d.level + ' = ' + d.levelLabel + '，' + d.level + '×' + d.weight + ' = ' + d.points +
+          ' 分）：' + esc(row.item.ev[d.key]));
+      }
+      return out.join('');
+    }
+
+    var head;
+    if (row.direction === 'looser') {
+      head = '你比规则<b>更宽松</b>：你放进了「' + BUCKET_NAME[row.user] + '」，规则拉到了「' + BUCKET_NAME[ev.verdict] +
+        '」，差 ' + row.gap + ' 档。';
+    } else {
+      head = '你比规则<b>更严格</b>：你放进了「' + BUCKET_NAME[row.user] + '」，规则只到「' + BUCKET_NAME[ev.verdict] +
+        '」，差 ' + row.gap + ' 档。';
+    }
+    out.push(head);
+
+    out.push('<b>规则' + d.no + ' · ' + d.name + '</b>是本条的主导项（等级 ' + d.level + ' = ' + d.levelLabel +
+      '，' + d.level + '×' + d.weight + ' = ' + d.points + ' 分）：' + esc(row.item.ev[d.key]));
+
+    var others = ev.parts.filter(function (p) { return p.points > 0 && p.key !== d.key; });
+    if (others.length) {
+      out.push('其余扣分：' + others.map(function (p) {
+        return '规则' + p.no + ' ' + p.name + ' ' + p.level + '×' + p.weight + '=' + p.points;
+      }).join('、') + '。');
+    } else {
+      out.push('另外两条规则在这条上都是 0 分。');
+    }
+
+    if (row.direction === 'looser') {
+      out.push('规则之所以更严，是因为在「' + esc(SECTORS[state.sector].name) + '」口径下，' +
+        d.name + '这一项单独就足以把它推出「' + BUCKET_NAME[row.user] + '」这一档。');
+    } else {
+      out.push('你觉得该更重，但按「' + esc(SECTORS[state.sector].name) + '」口径的权重与红线，' +
+        '它的总分 ' + ev.score + ' 分还没越过你那一档的门槛 —— 这正是规则与人直觉最容易错开的地方。');
+    }
+    return out.join('');
+  }
+
+  function renderResults() {
+    var rows = state.order.map(function (id) {
+      return compare(ITEM_BY_ID[id], state.placement[id], state.sector);
+    });
+    var sum = summarize(rows);
+    var s = SECTORS[state.sector];
+
+    /* 分歧优先，其次按分数从高到低 */
+    var ordered = rows.slice().sort(function (a, b) {
+      if (a.agree !== b.agree) return a.agree ? 1 : -1;
+      return b.ev.score - a.ev.score;
+    });
+
+    var tiles =
+      '<div class="tiles">' +
+        '<div class="tile amber"><div class="n">' + sum.agree + '</div><div class="k">一致</div></div>' +
+        '<div class="tile terra"><div class="n">' + sum.differ + '</div><div class="k">分歧</div></div>' +
+        '<div class="tile"><div class="n">' + sum.looser + '</div><div class="k">你更宽松</div></div>' +
+        '<div class="tile"><div class="n">' + sum.stricter + '</div><div class="k">你更严格</div></div>' +
+      '</div>';
+
+    var rulebook =
+      '<div class="rulebook">' +
+        '<div class="rb-row"><span class="rb-k">规则一 · 双用途</span><span class="rb-v">权重 ×' + s.weights.dual + '（最高 2×' + s.weights.dual + '=' + (2 * s.weights.dual) + ' 分）</span></div>' +
+        '<div class="rb-row"><span class="rb-k">规则二 · 致命性</span><span class="rb-v">权重 ×' + s.weights.lethal + '（最高 2×' + s.weights.lethal + '=' + (2 * s.weights.lethal) + ' 分）</span></div>' +
+        '<div class="rb-row"><span class="rb-k">规则三 · 可逆性</span><span class="rb-v">权重 ×' + s.weights.rev + '（最高 2×' + s.weights.rev + '=' + (2 * s.weights.rev) + ' 分）</span></div>' +
+        '<div class="rb-th"><b>「' + esc(s.name) + '」红线：</b>≤' + s.passT + ' 分放行 · ' +
+          (s.passT + 1) + '–' + s.reviewT + ' 分需人工复核 · ≥' + (s.reviewT + 1) + ' 分拦截（满分 ' + (2 * (s.weights.dual + s.weights.lethal + s.weights.rev)) + '）</div>' +
+        '<p class="rb-note">' + esc(s.note) + '　切换上面的「你所在的行业」，这套复判会立刻用新口径重算 —— 同一份判定，换个行业就是不同的分歧。</p>' +
+      '</div>';
+
+    var list = ordered.map(function (row, i) {
+      var it = row.item, ev = row.ev;
+      var idx = String(i + 1).padStart(2, '0');
+      var flag = row.agree
+        ? '<span class="ri-flag same">一致</span>'
+        : '<span class="ri-flag diff">分歧 · 差 ' + row.gap + ' 档</span>';
+      var edge = ev.edge === 0
+        ? '<div class="ri-edge">正好压在红线上：这条再多 1 分就会升档。</div>'
+        : '';
+      return '<li class="res-item">' +
+        '<div class="ri-head"><span class="ri-idx">' + idx + '</span>' +
+          '<h3 class="ri-title">' + esc(it.title) + '</h3>' + flag + '</div>' +
+        '<div class="ri-verdicts">' + badge('你的判定', row.user) +
+          '<span class="ri-arrow" aria-hidden="true">⇄</span>' +
+          badge('规则判定', ev.verdict) + '</div>' +
+        '<p class="ri-why">' + ruleParagraph(row) + '</p>' +
+        '<div class="ri-calc">' + esc(calcLine(ev)) + '</div>' +
+        edge +
+        '<p class="ri-scope">范围：' + esc(it.scope) + '</p>' +
+      '</li>';
+    }).join('');
+
+    elResBody.innerHTML = tiles + rulebook +
+      '<div class="sec-head" style="margin-top:24px">' +
+        '<h3 class="sec-title">逐条对照<span class="en">LINE BY LINE</span></h3>' +
+        '<span class="sec-counter">分歧在前，同分高的在前</span>' +
+      '</div>' +
+      '<ul class="res-list">' + list + '</ul>';
+
+    elResults.hidden = false;
+  }
+
+  function submit() {
+    if (remaining() > 0) return;
+    state.selected = null;
+    state.submitted = true;
+    renderAll();
+    var rows = state.order.map(function (id) {
+      return compare(ITEM_BY_ID[id], state.placement[id], state.sector);
+    });
+    var sum = summarize(rows);
+    announce('提交完成：一致 ' + sum.agree + " 条，分歧 " + sum.differ + ' 条。结果已显示在页面下方。');
+    elResults.scrollIntoView({ block: 'start', behavior: REDUCED ? 'auto' : 'smooth' });
+  }
+
+  /* ══════════════════════════════════════════════════════
+     11. 绑定
+     ══════════════════════════════════════════════════════ */
+
+  $('sectorOpts').addEventListener('change', function (e) {
+    if (e.target.name !== 'sector') return;
+    state.sector = e.target.value;
+    $('sectorDesc').textContent = SECTORS[state.sector].desc;
+    announce('行业已切换为「' + SECTORS[state.sector].name + '」');
+    if (state.submitted) renderResults();
+  });
+
+  elSubmit.addEventListener('click', submit);
+  elReset.addEventListener('click', clearAll);
+  elShuffle.addEventListener('click', shuffle);
+  elReplay.addEventListener('click', function () {
+    shuffle();
+    document.querySelector('.board').scrollIntoView({ block: 'start', behavior: REDUCED ? 'auto' : 'smooth' });
+  });
+
+  renderSectors();
+  renderRulesFold();
+  renderDock();
+  renderAll();
+
+  /* 暴露给自检脚本（无副作用） */
+  window.__p1 = {
+    SECTORS: SECTORS, RULES: RULES, ITEMS: ITEMS, BUCKETS: BUCKETS,
+    evaluate: evaluate, compare: compare, summarize: summarize, riskLevels: riskLevels
+  };
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1313 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>第 02 期 · 遗留代码考古 · 灵灵今日灵感实验</title>
+<style>
+/* ══════════ 设计令牌（复用 frontend/index.html，不另起一套） ══════════ */
+:root {
+  --paper: #FAF8F3;
+  --paper-2: #F3EFE6;
+  --ink: #2C2A26;
+  --ink-2: #6B6558;
+  --ink-3: #9C958A;
+  --amber: #B8860B;
+  --amber-soft: #E8D9B0;
+  --amber-bg: #F5EEDC;
+  --terra: #C4572E;
+  --terra-soft: #EDCDBF;
+  --terra-bg: #F7E9E2;
+  --hairline: rgba(44,42,38,.14);
+  --card-r: 16px;
+  --ctl-r: 10px;
+  --serif: Georgia, 'Times New Roman', 'Songti SC', 'SimSun', serif;
+  --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.65;
+  min-height: 100vh;
+}
+button, input { font-family: inherit; }
+button { cursor: pointer; }
+.wrap { max-width: 960px; margin: 0 auto; padding: 0 16px 64px; }
+
+/* ── 隐藏元素一律真的隐藏（.btn 的 display 会盖掉 UA 的 [hidden]） ── */
+[hidden] { display: none !important; }
+
+/* ── 跳转链接 ── */
+.skip {
+  position: absolute; width: 1px; height: 1px; overflow: hidden;
+  clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap;
+}
+.skip:focus {
+  position: static; width: auto; height: auto; overflow: visible;
+  clip: auto; clip-path: none; white-space: normal;
+  display: inline-flex; align-items: center; margin: 10px 0 0;
+  padding: 10px 14px; background: var(--ink); color: var(--paper);
+  border-radius: var(--ctl-r); font-size: 13px; min-height: 44px;
+}
+
+/* ══════════ 刊头 ══════════ */
+.mast { padding: 22px 0 12px; border-bottom: 2px solid var(--ink); }
+.mast-top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.brand { font-family: var(--serif); font-size: 26px; font-weight: 700; letter-spacing: .05em; }
+.brand small { font-size: 12px; font-weight: 400; color: var(--ink-2); letter-spacing: .12em; margin-left: 8px; }
+.mast-meta { display: flex; gap: 12px; align-items: baseline; font-size: 12.5px; color: var(--ink-2); flex-wrap: wrap; }
+.issue-no { font-family: var(--serif); font-weight: 700; color: var(--ink); letter-spacing: .1em; }
+.mast-theme { font-family: var(--serif); font-size: 20px; font-weight: 700; line-height: 1.45; margin: 12px 0 6px; }
+.mast-mode { font-size: 12.5px; color: var(--ink-2); letter-spacing: .02em; }
+.mast-flags { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+
+.badge {
+  display: inline-block; border-radius: 999px; padding: 4px 11px;
+  font-size: 11.5px; font-weight: 700; letter-spacing: .06em; white-space: nowrap;
+  border: 1px solid var(--hairline); background: var(--paper-2); color: var(--ink-2);
+}
+.badge.sim { background: var(--terra-bg); border-color: var(--terra-soft); color: var(--terra); }
+.badge.amber { background: var(--amber-bg); border-color: var(--amber-soft); color: var(--amber); }
+
+/* ══════════ 一句话场景 ══════════ */
+.sec-head {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+  margin: 30px 0 14px; padding-bottom: 8px; border-bottom: 1px solid var(--hairline); flex-wrap: wrap;
+}
+.sec-title { font-family: var(--serif); font-size: 17px; font-weight: 700; letter-spacing: .06em; }
+.sec-title .en { font-size: 10.5px; font-weight: 600; color: var(--ink-3); letter-spacing: .18em; margin-left: 9px; font-family: var(--sans); }
+.scene { font-size: 14.5px; color: var(--ink-2); line-height: 1.8; }
+.scene b { color: var(--ink); }
+.howto { margin: 12px 0 0 18px; font-size: 13.5px; color: var(--ink-2); line-height: 1.85; }
+.howto li { padding-left: 2px; }
+
+/* ══════════ 控制面板 ══════════ */
+.panel {
+  border: 1px solid var(--hairline); border-radius: var(--card-r);
+  background: #fff; padding: 18px 16px; margin-bottom: 20px;
+}
+.prow { padding-bottom: 20px; margin-bottom: 20px; border-bottom: 1px solid var(--hairline); }
+.prow:last-child { padding-bottom: 0; margin-bottom: 0; border-bottom: none; }
+.plabel { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
+.pname { font-family: var(--serif); font-size: 15px; font-weight: 700; letter-spacing: .05em; }
+.pname .n { font-family: var(--sans); font-size: 10.5px; font-weight: 700; color: var(--paper); background: var(--amber); border-radius: 999px; padding: 2px 7px; margin-right: 7px; letter-spacing: .04em; vertical-align: 1px; }
+.pname .n.alt { background: var(--terra); }
+.pval { font-size: 13px; font-weight: 700; color: var(--amber); font-variant-numeric: tabular-nums; }
+.phint { font-size: 12px; color: var(--ink-3); line-height: 1.6; margin-top: 2px; }
+
+/* ── 滑块（原生 range，方向键天然可用；触控高度 44px） ── */
+input[type="range"] {
+  -webkit-appearance: none; appearance: none;
+  display: block; width: 100%; height: 44px; background: transparent; cursor: pointer;
+}
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 6px; border-radius: 3px; background: var(--paper-2); border: 1px solid var(--hairline);
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 28px; height: 28px; margin-top: -12px;
+  border-radius: 50%; background: var(--amber); border: 3px solid #fff;
+  box-shadow: 0 1px 3px rgba(44,42,38,.28);
+}
+input[type="range"]::-moz-range-track {
+  height: 6px; border-radius: 3px; background: var(--paper-2); border: 1px solid var(--hairline);
+}
+input[type="range"]::-moz-range-thumb {
+  width: 26px; height: 26px; border-radius: 50%; background: var(--amber);
+  border: 3px solid #fff; box-shadow: 0 1px 3px rgba(44,42,38,.28);
+}
+input[type="range"]:focus-visible { outline: 2px solid var(--amber); outline-offset: 1px; border-radius: 8px; }
+.ticks { display: flex; justify-content: space-between; gap: 4px; margin-top: -6px; }
+.tick { font-size: 11px; color: var(--ink-3); font-variant-numeric: tabular-nums; text-align: center; flex: 1 1 0; min-width: 0; }
+.tick.on { color: var(--amber); font-weight: 700; }
+
+/* ── 分段单选（原生 radio：方向键在组内切换） ── */
+.seg { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; margin-top: 6px; }
+.seg input { position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none; }
+.seg label {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  min-height: 48px; padding: 8px 8px; border: 1px solid var(--hairline); border-radius: var(--ctl-r);
+  background: #fff; cursor: pointer; text-align: center;
+  transition: border-color .15s, background .15s, color .15s;
+}
+.seg label .t { font-size: 13.5px; font-weight: 600; line-height: 1.3; }
+.seg label .s { font-size: 11px; color: var(--ink-3); line-height: 1.35; }
+.seg label:hover { border-color: var(--amber); }
+.seg input:checked + label { border-color: var(--amber); background: var(--amber-bg); }
+.seg input:checked + label .s { color: var(--ink-2); }
+.seg input:focus-visible + label { outline: 2px solid var(--amber); outline-offset: 2px; }
+
+/* ── 装载进度条 ── */
+.load { margin-top: 14px; padding: 12px 14px; background: var(--paper-2); border-radius: var(--ctl-r); border: 1px solid var(--hairline); }
+.load-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; font-size: 12.5px; color: var(--ink-2); }
+.load-head b { font-variant-numeric: tabular-nums; color: var(--ink); }
+.bar { display: flex; height: 12px; border-radius: 6px; overflow: hidden; margin-top: 8px; background: #fff; border: 1px solid var(--hairline); }
+.bar span { display: block; height: 100%; }
+.bar .s-idx { background: var(--amber); }
+.bar .s-code { background: var(--terra); }
+.bar .s-evid { background: var(--amber-soft); }
+.bar .s-free { background: var(--paper-2); }
+.legend { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 8px; font-size: 11.5px; color: var(--ink-2); }
+.legend i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 5px; vertical-align: 0; }
+
+/* ══════════ 结论条 ══════════ */
+.verdict {
+  border: 1px solid var(--amber-soft); background: var(--amber-bg);
+  border-radius: var(--card-r); padding: 14px 16px; margin-bottom: 20px;
+}
+.verdict.warn { border-color: var(--terra-soft); background: var(--terra-bg); }
+.verdict-k { font-size: 11px; font-weight: 700; letter-spacing: .14em; color: var(--ink-3); }
+.verdict p { font-size: 14.5px; line-height: 1.75; margin-top: 5px; }
+.verdict .sub { font-size: 12.5px; color: var(--ink-2); margin-top: 6px; }
+
+/* ══════════ 结果区块 ══════════ */
+.block { border: 1px solid var(--hairline); border-radius: var(--card-r); background: #fff; margin-bottom: 18px; }
+.bhead {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap;
+  padding: 14px 16px 12px; border-bottom: 1px solid var(--hairline);
+}
+.btitle { font-family: var(--serif); font-size: 16px; font-weight: 700; letter-spacing: .06em; }
+.btitle .en { font-size: 10.5px; font-weight: 600; color: var(--ink-3); letter-spacing: .16em; margin-left: 9px; font-family: var(--sans); }
+.bcount { font-size: 12px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.bbody { padding: 6px 16px 14px; }
+.bnote { padding: 10px 16px 0; font-size: 12px; color: var(--ink-3); line-height: 1.65; }
+
+/* 问题行 */
+.q { display: flex; gap: 10px; padding: 12px 0; border-bottom: 1px solid var(--hairline); }
+.q:last-child { border-bottom: none; }
+.chip {
+  flex: 0 0 auto; align-self: flex-start; margin-top: 2px;
+  font-size: 11px; font-weight: 700; letter-spacing: .04em;
+  padding: 3px 9px; border-radius: 999px; white-space: nowrap;
+  border: 1px solid var(--hairline); background: var(--paper-2); color: var(--ink-3);
+}
+.chip.yes { background: var(--amber-bg); border-color: var(--amber-soft); color: var(--amber); }
+.chip.near { background: #fff; border-color: var(--amber-soft); color: var(--amber); border-style: dashed; }
+.chip.why { background: var(--terra-bg); border-color: var(--terra-soft); color: var(--terra); }
+.qtxt { flex: 1 1 auto; min-width: 0; }
+.qtext { font-size: 14px; line-height: 1.65; overflow-wrap: break-word; }
+.qtext code { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12.5px; background: var(--paper-2); padding: 1px 4px; border-radius: 4px; overflow-wrap: break-word; }
+.qlayers { font-size: 11.5px; color: var(--ink-3); margin-top: 3px; font-variant-numeric: tabular-nums; }
+.qwhy { font-size: 12px; color: var(--ink-2); margin-top: 5px; line-height: 1.6; }
+.qwhy b { color: var(--terra); font-weight: 700; font-variant-numeric: tabular-nums; }
+.qwhy .nb { color: var(--ink-3); font-weight: 600; }
+
+/* 层覆盖地图 */
+.maplist { padding: 12px 16px 4px; }
+.maprow { display: grid; grid-template-columns: 104px minmax(0, 1fr) 46px; align-items: center; gap: 8px; padding: 5px 0; font-size: 12px; }
+.maprow .nm { min-width: 0; color: var(--ink-2); font-variant-numeric: tabular-nums; line-height: 1.25; overflow-wrap: anywhere; }
+.maprow .mb { height: 9px; border-radius: 5px; background: var(--paper-2); border: 1px solid var(--hairline); overflow: hidden; }
+.maprow .mb i { display: block; height: 100%; background: var(--terra); }
+.maprow.out .nm { color: var(--ink-3); text-decoration: line-through; }
+.maprow.out .mb { background: repeating-linear-gradient(45deg, var(--paper-2), var(--paper-2) 4px, #fff 4px, #fff 8px); }
+.maprow .pc { text-align: right; color: var(--ink-3); font-variant-numeric: tabular-nums; font-size: 11.5px; }
+.mapnote { font-size: 11.5px; color: var(--ink-3); line-height: 1.6; margin-top: 7px; overflow-wrap: anywhere; }
+
+/* 风险行 */
+.risk { padding: 12px 0; border-bottom: 1px solid var(--hairline); }
+.risk:last-child { border-bottom: none; }
+.risk-head { display: flex; gap: 9px; align-items: flex-start; }
+.lv { flex: 0 0 auto; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 4px; white-space: nowrap; letter-spacing: .04em; }
+.lv.high { background: var(--terra); color: #fff; }
+.lv.mid { background: var(--terra-bg); color: var(--terra); border: 1px solid var(--terra-soft); }
+.lv.low { background: var(--paper-2); color: var(--ink-3); border: 1px solid var(--hairline); }
+.risk-t { font-size: 14px; font-weight: 600; line-height: 1.55; flex: 1 1 auto; min-width: 0; }
+.risk-b { font-size: 12.5px; color: var(--ink-2); line-height: 1.7; margin-top: 5px; padding-left: 2px; }
+.risk-c { font-size: 11.5px; color: var(--ink-3); margin-top: 5px; font-variant-numeric: tabular-nums; }
+.risk-c code { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 11px; }
+
+/* 成本表 */
+.cost { display: grid; grid-template-columns: 1fr; gap: 0; padding: 4px 16px 12px; }
+.crow { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--hairline); }
+.crow:last-child { border-bottom: none; }
+.crow .ck { font-size: 13px; color: var(--ink-2); flex: 1 1 auto; min-width: 0; }
+.crow .ck .d { display: block; font-size: 11.5px; color: var(--ink-3); margin-top: 2px; line-height: 1.5; }
+.crow .cv { font-size: 13.5px; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; text-align: right; }
+.crow .cv.amber { color: var(--amber); }
+.crow .cv.terra { color: var(--terra); }
+.crow.total { border-top: 2px solid var(--ink); margin-top: 6px; padding-top: 12px; }
+.crow.total .ck { font-weight: 700; color: var(--ink); }
+
+/* ══════════ 对照 ══════════ */
+.pinbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 18px; }
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  min-height: 44px; padding: 0 16px; border-radius: var(--ctl-r);
+  border: 1px solid var(--hairline); background: #fff; color: var(--ink);
+  font-size: 13.5px; transition: border-color .15s, background .15s, color .15s;
+}
+.btn:hover { border-color: var(--amber); color: var(--amber); background: var(--amber-bg); }
+.btn:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+.btn.solid { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+.btn.solid:hover { background: #403d36; color: var(--paper); }
+.pin-note { font-size: 12px; color: var(--ink-3); }
+.cmp { border: 1px solid var(--amber-soft); background: #fff; border-radius: var(--card-r); padding: 14px 16px; margin-bottom: 18px; }
+.cmp-h { font-family: var(--serif); font-size: 14px; font-weight: 700; letter-spacing: .06em; margin-bottom: 4px; }
+.cmp-sub { font-size: 11.5px; color: var(--ink-3); margin-bottom: 10px; }
+.cmp-row { display: flex; align-items: baseline; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--hairline); font-size: 12.5px; }
+.cmp-row:last-child { border-bottom: none; }
+.cmp-k { flex: 1 1 auto; min-width: 0; color: var(--ink-2); }
+.cmp-a { flex: 0 0 auto; color: var(--ink-3); font-variant-numeric: tabular-nums; text-decoration: line-through; }
+.cmp-b { flex: 0 0 auto; font-weight: 700; font-variant-numeric: tabular-nums; }
+.cmp-b.up { color: var(--amber); }
+.cmp-b.down { color: var(--terra); }
+.cmp-b.same { color: var(--ink-3); }
+
+/* ══════════ 规则说明 ══════════ */
+details.rules { border: 1px solid var(--hairline); border-radius: var(--card-r); background: #fff; padding: 0 16px; margin-bottom: 18px; }
+details.rules summary { min-height: 48px; display: flex; align-items: center; cursor: pointer; font-family: var(--serif); font-size: 14px; font-weight: 700; letter-spacing: .05em; }
+details.rules summary:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+.rules-body { padding: 2px 0 16px; font-size: 13px; color: var(--ink-2); line-height: 1.8; }
+.rules-body h3 { font-size: 12.5px; font-weight: 700; color: var(--ink); margin: 14px 0 5px; letter-spacing: .05em; }
+.rules-body h3:first-child { margin-top: 0; }
+.rules-body code { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 11.5px; background: var(--paper-2); padding: 1px 5px; border-radius: 4px; overflow-wrap: break-word; }
+.rules-body ul { margin-left: 18px; }
+.rules-body .fx { display: block; margin: 5px 0; padding: 8px 10px; background: var(--paper-2); border-radius: 8px; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 11.5px; line-height: 1.7; overflow-wrap: break-word; }
+
+/* ══════════ 数据说明 / 页脚 ══════════ */
+.notice { display: flex; flex-direction: column; gap: 12px; margin-top: 30px; padding: 16px; border: 1px solid var(--amber-soft); border-radius: var(--card-r); background: var(--amber-bg); }
+@media (min-width: 720px) { .notice { flex-direction: row; gap: 16px; align-items: flex-start; } }
+.notice-badge { align-self: flex-start; flex: 0 0 auto; background: var(--terra); color: #fff; border-radius: 999px; padding: 6px 13px; font-size: 11.5px; font-weight: 700; letter-spacing: .06em; white-space: nowrap; }
+.notice-body { min-width: 0; }
+.notice-title { font-family: var(--serif); font-size: 14.5px; font-weight: 700; letter-spacing: .06em; }
+.notice-body p { font-size: 13px; color: var(--ink-2); margin-top: 7px; line-height: 1.75; }
+.notice-body b { color: var(--ink); }
+
+.foot { display: flex; flex-direction: column; gap: 8px; margin-top: 36px; padding-top: 16px; border-top: 1px solid var(--hairline); }
+@media (min-width: 720px) { .foot { flex-direction: row; justify-content: space-between; align-items: center; gap: 16px; } }
+.foot-lbl { font-size: 11px; font-weight: 700; letter-spacing: .16em; color: var(--ink-3); }
+.foot-link { display: inline-flex; align-items: center; min-height: 44px; font-family: var(--serif); font-size: 14.5px; font-weight: 700; color: var(--amber); text-decoration: none; }
+.foot-link:hover { text-decoration: underline; }
+.foot-meta { font-size: 11.5px; color: var(--ink-3); line-height: 1.7; }
+
+.nojs { display: block; margin-top: 16px; padding: 10px 12px; font-size: 12.5px; background: var(--paper-2); border: 1px solid var(--hairline); border-radius: var(--ctl-r); color: var(--ink-2); }
+
+/* ── 动效 ── */
+@keyframes fadeup { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+.fresh { animation: fadeup .26s ease-out 1; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#results">跳到结果</a>
+<div class="wrap">
+
+  <!-- ══════════ 刊头 ══════════ -->
+  <header class="mast">
+    <div class="mast-top">
+      <div class="brand">灵灵<small>今日灵感实验</small></div>
+      <div class="mast-meta">
+        <span class="issue-no">第 02 期</span>
+        <span>2026-09-15</span>
+      </div>
+    </div>
+    <h1 class="mast-theme">用超长上下文把「企业遗留代码考古」变成可对话的活体知识库</h1>
+    <p class="mast-mode">本期实验形式：参数调整 · 单页原型，无需登录 · 零依赖，可离线打开</p>
+    <div class="mast-flags">
+      <span class="badge sim">示例数据 · 规则模拟</span>
+      <span class="badge amber">未接入真实模型</span>
+      <span class="badge">全部计算在本页完成，无任何网络请求</span>
+    </div>
+  </header>
+
+  <!-- ══════════ 一句话场景 ══════════ -->
+  <section aria-labelledby="s-scene">
+    <div class="sec-head">
+      <h2 class="sec-title" id="s-scene">一句话场景<span class="en" aria-hidden="true">WHAT YOU DO</span></h2>
+    </div>
+    <p class="scene">
+      你是 <b>2011 年上线的那套交易系统的第三任维护者</b>。前两任都走了，文档只剩下一个 47 页的 Word，最后更新于 2018 年。
+      现在你手里有一个 1M 上下文的模型，可以把它当成「会说话的代码库」。但窗口不是无限的 —— 你得决定
+      <b>装多少代码、回溯到哪一年、问到多细</b>。这三个旋钮一转，能回答什么、答不了什么、要花多少钱，全变了。
+    </p>
+    <ol class="howto">
+      <li>先选一套遗产系统（调参台最上面的「考古对象」，换一套就是重玩一次）。</li>
+      <li>拖三个参数：上下文预算 / 代码年代跨度 / 提问粒度 —— 也可以只用 Tab + 方向键。</li>
+      <li>看下面三块输出怎么跟着变。想比一比，就点「钉住当前作为对照」，再动滑块。</li>
+    </ol>
+  </section>
+
+  <!-- ══════════ 控制面板 ══════════ -->
+  <section aria-labelledby="s-ctl">
+    <div class="sec-head">
+      <h2 class="sec-title" id="s-ctl">调参台<span class="en" aria-hidden="true">THE THREE KNOBS</span></h2>
+      <div><span class="badge sim">示例数据 · 规则模拟</span></div>
+    </div>
+
+    <div class="panel">
+      <!-- 考古对象（重玩变量：换一套遗产） -->
+      <div class="prow">
+        <div class="plabel">
+          <span class="pname" id="l-type"><span class="n alt">换一套遗产</span>考古对象</span>
+          <span class="pval" id="v-type">—</span>
+        </div>
+        <p class="phint" id="h-type">换个对象，地层表、腐蚀系数和问题清单整套换掉 —— 同样三个参数会算出完全不同的结果。</p>
+        <div class="seg" id="r-type" role="radiogroup" aria-labelledby="l-type" aria-describedby="h-type"></div>
+      </div>
+
+      <!-- 参数 1 -->
+      <div class="prow">
+        <div class="plabel">
+          <span class="pname" id="l-budget"><span class="n">参数 1</span>上下文预算</span>
+          <span class="pval" id="v-budget">—</span>
+        </div>
+        <p class="phint" id="h-budget">一次能塞进模型窗口的 token 上限。装索引、装代码、装证据，都从这个池子里出。</p>
+        <input type="range" id="r-budget" min="0" max="3" step="1" value="2"
+               aria-labelledby="l-budget" aria-describedby="h-budget">
+        <div class="ticks" id="t-budget" aria-hidden="true"></div>
+      </div>
+
+      <!-- 参数 2 -->
+      <div class="prow">
+        <div class="plabel">
+          <span class="pname" id="l-span"><span class="n">参数 2</span>代码年代跨度</span>
+          <span class="pval" id="v-span">—</span>
+        </div>
+        <p class="phint" id="h-span">从 2011 年往上回溯到哪一年。跨度越窄，同样的预算覆盖得越深 —— 但墙外的东西模型看不见。</p>
+        <input type="range" id="r-span" min="0" max="3" step="1" value="3"
+               aria-labelledby="l-span" aria-describedby="h-span">
+        <div class="ticks" id="t-span" aria-hidden="true"></div>
+      </div>
+
+      <!-- 参数 3 -->
+      <div class="prow">
+        <div class="plabel">
+          <span class="pname" id="l-gran"><span class="n">参数 3</span>提问粒度</span>
+          <span class="pval" id="v-gran">—</span>
+        </div>
+        <p class="phint" id="h-gran">你打算问哪一类问题。它决定预算怎么切：架构级要广索引，函数级要厚代码，两者抢同一个池子。</p>
+        <div class="seg" id="r-gran" role="radiogroup" aria-labelledby="l-gran" aria-describedby="h-gran"></div>
+      </div>
+
+      <!-- 装载进度 -->
+      <div class="load" id="load"></div>
+    </div>
+  </section>
+
+  <!-- ══════════ 结果 ══════════ -->
+  <div class="pinbar">
+    <button class="btn" id="btn-pin" type="button">钉住当前作为对照</button>
+    <button class="btn" id="btn-clear" type="button" hidden>清除对照</button>
+    <span class="pin-note" id="pin-note">钉一组配置，再动滑块，三个输出的变化会直接列出来。</span>
+  </div>
+  <div id="cmp-slot"></div>
+
+  <section id="results" tabindex="-1" aria-label="模拟结果">
+    <div class="verdict" id="verdict" aria-live="polite"></div>
+
+    <!-- ① 能回答的问题清单 -->
+    <div class="block">
+      <div class="bhead">
+        <h2 class="btitle">能回答的问题清单<span class="en" aria-hidden="true">ANSWERABLE</span></h2>
+        <span class="bcount" id="q-count"></span>
+      </div>
+      <div class="bbody" id="q-list"></div>
+      <p class="bnote" id="q-note"></p>
+    </div>
+
+    <!-- ② 遗漏风险 -->
+    <div class="block">
+      <div class="bhead">
+        <h2 class="btitle">遗漏风险<span class="en" aria-hidden="true">WHAT GETS LOST</span></h2>
+        <span class="bcount" id="r-count"></span>
+      </div>
+      <div class="maplist" id="layer-map" aria-hidden="true"></div>
+      <div class="bbody" id="r-list"></div>
+    </div>
+
+    <!-- ③ 成本估算 -->
+    <div class="block">
+      <div class="bhead">
+        <h2 class="btitle">成本估算<span class="en" aria-hidden="true">RUN COST</span></h2>
+        <span class="bcount" id="c-count"></span>
+      </div>
+      <div class="cost" id="c-list"></div>
+    </div>
+  </section>
+
+  <!-- ══════════ 规则说明 ══════════ -->
+  <details class="rules">
+    <summary>规则说明 · 这些数字是怎么算出来的</summary>
+    <div class="rules-body">
+      <p>本页是<b>规则模拟</b>：没有模型在跑，也没有网络请求。下面三条输出都是三个参数经同一套公式算出的确定性结果 —— 同一个参数组合永远得到同一份输出，没有任何随机数。</p>
+
+      <h3>1. 每套遗产系统先有一张「地层表」</h3>
+      <p>系统按年份分成若干层，每层给出<b>行数</b>与<b>腐蚀系数</b>（越老的行越难读：缺注释、编码混乱、风格不一致，同样的行数要吃更多 token 才吃得懂）。年代跨度只决定<b>哪些层进入视野</b>，不改变层本身的属性。</p>
+      <span class="fx">装入成本 = Σ(层行数 × 腐蚀 × 每行 token)
+索引成本 = Σ(层行数 × 索引单价)
+证据成本 = Σ(层行数 × 腐蚀 × 证据单价)　← 提交日志 / 工单 / 邮件</span>
+
+      <h3>2. 预算按粒度切三份</h3>
+      <p>上下文预算是硬上限，它不平均分，而是按你选的粒度切：</p>
+      <span class="fx">架构级　索引 68% ／ 代码 12% ／ 证据 20%
+模块级　索引 30% ／ 代码 45% ／ 证据 25%
+函数级　索引 12% ／ 代码 68% ／ 证据 20%</span>
+      <p>每个桶实际能装多少，取「分到的预算」和「这个桶总共要多少」的较小值；覆盖度 = 实际装入 ÷ 总共需要。这就是参数之间互相拉扯的来源：粒度调细，索引桶就瘪了。</p>
+
+      <h3>3. 一个问题能不能答，看四个条件</h3>
+      <ul>
+        <li><b>层级匹配</b>：问题属于哪一档粒度，就得在当前粒度档里评估。</li>
+        <li><b>跨度覆盖</b>：问题涉及的层必须都在年代跨度内 —— 否则是「跨度的墙」。</li>
+        <li><b>三个覆盖度</b>：索引覆盖、代码覆盖、证据覆盖，都得达到该问题的门槛。</li>
+      </ul>
+      <p>未达门槛时：三个桶都差得不多（≥ 门槛的 85%）记作<b>擦边</b>；只差证据一项记作<b>只能答「是什么」</b>；其余记作<b>答不了</b>，并列出差在哪。</p>
+
+      <h3>4. 成本估算的示例单价</h3>
+      <p>单价是<b>为这个模拟设定的示例值，不是任何厂商的真实报价</b>：模型 ¥8 / 百万 token，人工考古 ¥350 / 小时、按 300 行/小时计。人工那两行才是重点 —— 上下文预算省下的是分析成本，省不下的是「没装进来的代码仍然得有人读」。</p>
+      <span class="fx">未覆盖行数 = 跨度内总行数 × (1 − 代码覆盖度)
+人工兜底工时 = 未覆盖行数 ÷ 300 行每小时</span>
+    </div>
+  </details>
+
+  <!-- ══════════ 数据说明 ══════════ -->
+  <section class="notice" aria-labelledby="s-notice">
+    <span class="notice-badge">示例数据 · 规则模拟</span>
+    <div class="notice-body">
+      <h2 class="notice-title" id="s-notice">这一期没有真实 AI，也没有你的代码</h2>
+      <p>
+        页面上所有的系统名称、行数、腐蚀系数、成本单价、问题清单，<b>全部是为演示手写的示例数据</b>；
+        所有输出由本页内的一套确定性规则算出，<b>未接入任何真实模型，也未发起任何网络请求</b>。
+        原型想让你体验的是那个决策本身：<b>1M 窗口装不下你的全部遗产，装什么、不装什么，是要你选的。</b>
+      </p>
+      <p>想要真实数字，需要把你自己的仓库按层喂给模型再统计 —— 那是第三轮的事。</p>
+    </div>
+  </section>
+
+  <!-- ══════════ 页脚 ══════════ -->
+  <footer class="foot">
+    <div>
+      <span class="foot-lbl">灵感来源</span>
+      <p class="foot-meta">机会卡《用 1M 上下文大模型把「企业遗留代码考古」变成可对话的活体知识库》</p>
+    </div>
+    <div>
+      <span class="foot-lbl">回到主入口</span>
+      <a class="foot-link" href="../index.html">← 今日灵感实验 · 第 02 期</a>
+    </div>
+  </footer>
+
+</div>
+
+<noscript><span class="nojs">本原型需要 JavaScript 才能计算规则模拟结果。请启用 JavaScript 后刷新（页面完全离线，不联网）。</span></noscript>
+
+<!-- ════════════════════════════════════════════════════════════
+     模型层：纯函数 + 静态数据，不接触 DOM。
+     同一个参数组合 → 永远同一份输出（无 Math.random / Date）。
+     ════════════════════════════════════════════════════════════ -->
+<script id="model-src">
+/* ---------- 单位约定 ----------
+   行数：原始行（行）        token：原始个数
+   cost：token              展示时再格式化
+   --------------------------------- */
+
+/* ---------- 可调档位 ---------- */
+var BUDGETS = [
+  { key: 'b128', label: '128K', tokens: 131072,   sub: '一块消费级显卡的窗口' },
+  { key: 'b256', label: '256K', tokens: 262144,   sub: '能装下索引，装不下历史' },
+  { key: 'b512', label: '512K', tokens: 524288,   sub: '主流长上下文档' },
+  { key: 'b1m',  label: '1M',   tokens: 1048576,  sub: 'Hy4 preview 级别' }
+];
+
+var SPANS = [
+  { key: 's5',  label: '5 年',  years: '2011–2016', maxYear: 2016 },
+  { key: 's8',  label: '8 年',  years: '2011–2019', maxYear: 2019 },
+  { key: 's12', label: '12 年', years: '2011–2022', maxYear: 2022 },
+  { key: 's15', label: '15 年', years: '2011–2026', maxYear: 2026 }
+];
+
+var GRANS = [
+  { key: 'arch',   label: '架构级', sub: '“这套系统是怎么搭起来的”',
+    split: { idx: 0.68, code: 0.12, evid: 0.20 }, fetchSegs: 6,  fetchPer: 900 },
+  { key: 'module', label: '模块级', sub: '“这块为什么这么做”',
+    split: { idx: 0.30, code: 0.45, evid: 0.25 }, fetchSegs: 14, fetchPer: 700 },
+  { key: 'fn',     label: '函数级', sub: '“这一行为什么这么写”',
+    split: { idx: 0.12, code: 0.68, evid: 0.20 }, fetchSegs: 26, fetchPer: 450 }
+];
+
+/* ---------- 三套遗产系统的地层表 ----------
+   lines  该层行数
+   corr   腐蚀系数（越老越高：缺注释 / 编码混乱 / 风格不一致）
+   ------------------------------------------ */
+var TYPES = {
+  java: {
+    key: 'java',
+    name: '单体 Java 交易系统',
+    sub: 'Spring 3 + Hibernate + Oracle · 2011 立项',
+    tpl: 11,      /* token / 行 */
+    idxTpl: 2.5,  /* token / 行，建全局索引 */
+    evidTpl: 2.0, /* token / 行，×腐蚀 */
+    strata: [
+      { id: 'L1', year: 2011, label: '初版单体',   lines: 40000, corr: 1.85, note: '无注释、GBK 编码、Struts 遗留' },
+      { id: 'L2', year: 2014, label: '服务化重构', lines: 60000, corr: 1.45, note: '拆过一次包，包名和目录对不上' },
+      { id: 'L3', year: 2017, label: '外包交付层', lines: 45000, corr: 1.25, note: '合同结束即失联，命名风格突变' },
+      { id: 'L4', year: 2020, label: '补丁层',     lines: 30000, corr: 1.05, note: '为赶工直接改在 dao 上' },
+      { id: 'L5', year: 2023, label: '应急改动',   lines: 15000, corr: 1.00, note: '凌晨上线，备注只有日期' }
+    ],
+    questions: [
+      { id: 'J-A1', gran: 'arch', text: '这套系统的分层和模块边界，实际长成什么样？', idx: 0.62, code: 0, evid: 0.10, layers: 'all' },
+      { id: 'J-A2', gran: 'arch', text: '哪些模块绕过了 service 层，直接连 DAO？', idx: 0.78, code: 0.02, evid: 0.05, layers: 'all' },
+      { id: 'J-A3', gran: 'arch', text: '2011 初版的领域模型被改过几次，每次是为了什么？', idx: 0.34, code: 0, evid: 0.38, layers: ['L1', 'L2'] },
+      { id: 'J-A4', gran: 'arch', text: '哪些文件十年没被改过？改动热点集中在哪？', idx: 0.14, code: 0, evid: 0, layers: 'all' },
+
+      { id: 'J-M1', gran: 'module', text: '订单流程为什么在 2015 年之后变慢？', idx: 0.30, code: 0.10, evid: 0.38, layers: ['L1', 'L2'] },
+      { id: 'J-M2', gran: 'module', text: '2017 外包层的接口契约和内部实现对得上吗？', idx: 0.26, code: 0.05, evid: 0.15, layers: ['L3'] },
+      { id: 'J-M3', gran: 'module', text: '鉴权模块里有哪些隐式的降级分支？', idx: 0.28, code: 0.14, evid: 0.18, layers: ['L1', 'L2'] },
+      { id: 'J-M4', gran: 'module', text: '批处理任务之间的依赖顺序到底是谁定的？', idx: 0.24, code: 0.10, evid: 0.30, layers: ['L2', 'L4'] },
+      { id: 'J-M5', gran: 'module', text: '外包层与外部系统之间，哪些字段的语义双方理解不一致？', idx: 0.26, code: 0.18, evid: 0.55, layers: ['L3'] },
+      { id: 'J-M6', gran: 'module', text: '哪些方法从来没被调用过？（死代码盘点）', idx: 0.12, code: 0.04, evid: 0.05, layers: 'all' },
+
+      { id: 'J-F1', gran: 'fn', text: '<code>calcFee()</code> 里 0.017 / 3 / 86400 三个魔数分别代表什么？', idx: 0.08, code: 0.18, evid: 0.48, layers: ['L1'] },
+      { id: 'J-F2', gran: 'fn', text: '那段 <code>catch (Exception e) {}</code> 到底吞掉了哪些异常？', idx: 0.08, code: 0.14, evid: 0.12, layers: ['L1', 'L3'] },
+      { id: 'J-F3', gran: 'fn', text: '<code>if (cfg == null) cfg = DEFAULT</code> 在哪些调用路径上会触发？', idx: 0.06, code: 0.10, evid: 0.16, layers: ['L4'] },
+      { id: 'J-F4', gran: 'fn', text: '这个文件里哪些方法超过 200 行？', idx: 0.05, code: 0.05, evid: 0, layers: 'all' }
+    ]
+  },
+
+  sql: {
+    key: 'sql',
+    name: '核心账务存储过程库',
+    sub: 'Oracle PL/SQL · 无版本控制，只有 DBA 导出的 .sql 文本',
+    tpl: 14,
+    idxTpl: 2.8,
+    evidTpl: 3.0,
+    strata: [
+      { id: 'L1', year: 2011, label: '过程主体',   lines: 18000, corr: 2.60, note: '没有 VCS，改了什么只能靠 DBA 的记忆' },
+      { id: 'L2', year: 2014, label: '批次作业',   lines: 12000, corr: 2.20, note: '调度在库外，作业名硬编码在 Job 表' },
+      { id: 'L3', year: 2017, label: '触发器网',   lines:  9000, corr: 1.90, note: '触发器层层嵌套，改一张表会连锁' },
+      { id: 'L4', year: 2020, label: '临时表与视图', lines: 6000, corr: 1.50, note: '临时表当传参用，谁建谁删没人说得清' },
+      { id: 'L5', year: 2023, label: '手工脚本',   lines:  3000, corr: 1.20, note: '运维手动执行的散装脚本，从未进过库' }
+    ],
+    questions: [
+      { id: 'S-A1', gran: 'arch', text: '这两百多个存储过程谁调用谁？调用图里有环吗？', idx: 0.70, code: 0.02, evid: 0.05, layers: 'all' },
+      { id: 'S-A2', gran: 'arch', text: '哪些过程直接写了核心账务表？', idx: 0.45, code: 0.03, evid: 0.05, layers: 'all' },
+      { id: 'S-A3', gran: 'arch', text: '2011 年的初始表结构是怎么一步步演化到今天的？', idx: 0.30, code: 0, evid: 0.45, layers: ['L1', 'L2'] },
+      { id: 'S-A4', gran: 'arch', text: '哪些过程十年没被改过？', idx: 0.12, code: 0, evid: 0, layers: 'all' },
+
+      { id: 'S-M1', gran: 'module', text: '月末结息的过程链是怎么串起来的？', idx: 0.30, code: 0.12, evid: 0.40, layers: ['L1', 'L2'] },
+      { id: 'S-M2', gran: 'module', text: '触发器网里有哪些隐式的连锁更新？', idx: 0.25, code: 0.10, evid: 0.18, layers: ['L3'] },
+      { id: 'S-M3', gran: 'module', text: '临时表在批次之间是怎么传递状态的？', idx: 0.22, code: 0.12, evid: 0.22, layers: ['L2', 'L4'] },
+      { id: 'S-M4', gran: 'module', text: '对账过程的异常回滚策略到底是什么？', idx: 0.25, code: 0.15, evid: 0.50, layers: ['L1', 'L2'] },
+      { id: 'S-M5', gran: 'module', text: '哪些过程从来没被调用过？（死代码盘点）', idx: 0.12, code: 0.04, evid: 0.05, layers: 'all' },
+
+      { id: 'S-F1', gran: 'fn', text: '<code>sp_settle_interest</code> 的游标为什么用 <code>WHERE flag = \'A\'</code> 而不是 join？', idx: 0.08, code: 0.20, evid: 0.50, layers: ['L1'] },
+      { id: 'S-F2', gran: 'fn', text: '漏写 <code>SET NOCOUNT ON</code> 的过程会不会影响客户端？', idx: 0.08, code: 0.12, evid: 0.15, layers: ['L1', 'L2'] },
+      { id: 'S-F3', gran: 'fn', text: '<code>@@ERROR</code> 检查和 <code>TRY/CATCH</code> 混用，漏掉了哪些错误？', idx: 0.06, code: 0.10, evid: 0.20, layers: ['L1', 'L3'] },
+      { id: 'S-F4', gran: 'fn', text: '这个脚本里哪些过程超过 500 行？', idx: 0.04, code: 0.04, evid: 0, layers: 'all' }
+    ]
+  },
+
+  fe: {
+    key: 'fe',
+    name: '前端老框架应用',
+    sub: 'jQuery → ExtJS 迁移到一半 · 2013 年起有打包产物',
+    tpl: 13,
+    idxTpl: 2.2,
+    evidTpl: 2.2,
+    strata: [
+      { id: 'L1', year: 2011, label: 'jQuery 页面层', lines: 32000, corr: 1.70, note: '一个页面一个 js，全局变量互相踩' },
+      { id: 'L2', year: 2014, label: 'ExtJS 迁移',    lines: 46000, corr: 1.50, note: '迁一半停了，两套框架并存' },
+      { id: 'L3', year: 2017, label: '混合层',        lines: 28000, corr: 1.30, note: 'ExtJS 组件里塞 jQuery 选择器' },
+      { id: 'L4', year: 2020, label: '打包产物',      lines: 20000, corr: 1.10, note: '源码丢了，只有压缩后的 dist' },
+      { id: 'L5', year: 2023, label: '埋点脚本',      lines:  8000, corr: 1.05, note: '运营自己加的，没有仓库' }
+    ],
+    questions: [
+      { id: 'F-A1', gran: 'arch', text: 'ExtJS 的 Store / View 分别对应哪些后端接口？', idx: 0.55, code: 0.03, evid: 0.10, layers: 'all' },
+      { id: 'F-A2', gran: 'arch', text: '哪些页面还在手工拼 DOM，和框架层混用？', idx: 0.70, code: 0.04, evid: 0.10, layers: 'all' },
+      { id: 'F-A3', gran: 'arch', text: '2011 年的页面路由和状态是怎么组织的？', idx: 0.35, code: 0.03, evid: 0.40, layers: ['L1', 'L2'] },
+      { id: 'F-A4', gran: 'arch', text: '哪些页面十年没被改过？', idx: 0.12, code: 0, evid: 0, layers: 'all' },
+
+      { id: 'F-M1', gran: 'module', text: '订单列表页的分页状态是在哪一层丢的？', idx: 0.30, code: 0.12, evid: 0.30, layers: ['L1', 'L2'] },
+      { id: 'F-M2', gran: 'module', text: '表单校验规则散落在哪几个文件里？', idx: 0.28, code: 0.10, evid: 0.15, layers: ['L2', 'L3'] },
+      { id: 'F-M3', gran: 'module', text: '弹窗组件的生命周期为什么会残留事件监听？', idx: 0.25, code: 0.14, evid: 0.25, layers: ['L1', 'L2'] },
+      { id: 'F-M4', gran: 'module', text: '打包产物和源码差了多少？哪些改动只存在于产物里？', idx: 0.35, code: 0.18, evid: 0.55, layers: ['L3', 'L4'] },
+      { id: 'F-M5', gran: 'module', text: '哪些组件从来没被任何页面引用过？（死代码盘点）', idx: 0.12, code: 0.04, evid: 0.05, layers: 'all' },
+
+      { id: 'F-F1', gran: 'fn', text: '<code>renderRow()</code> 里的 <code>setTimeout(…, 0)</code> 在绕开什么？', idx: 0.08, code: 0.18, evid: 0.50, layers: ['L1'] },
+      { id: 'F-F2', gran: 'fn', text: '被压缩成 <code>a.b.c</code> 的那次调用，原本是哪个组件？', idx: 0.10, code: 0.25, evid: 0.20, layers: ['L4'] },
+      { id: 'F-F3', gran: 'fn', text: '<code>$.ajax</code> 的 <code>async: false</code> 在哪些路径上会卡住 UI？', idx: 0.08, code: 0.14, evid: 0.18, layers: ['L1', 'L2'] },
+      { id: 'F-F4', gran: 'fn', text: '这个文件里哪些函数超过 200 行？', idx: 0.04, code: 0.04, evid: 0, layers: 'all' }
+    ]
+  }
+};
+
+/* ---------- 示例单价（规则模拟设定，非真实报价） ---------- */
+var PRICE_AI_PER_MTOK = 8;   /* ¥ / 百万 token */
+var LABOR_YUAN_PER_HOUR = 350;
+var LABOR_LINES_PER_HOUR = 300;
+var BUILD_MINUTES_PER_QUESTION = 3; /* 每个问题的人工追问轮次耗时 */
+
+/* ================= 核心计算 ================= */
+function sumBy(arr, f) { var t = 0, i; for (i = 0; i < arr.length; i++) t += f(arr[i]); return t; }
+
+function computeModel(typeKey, budgetKey, spanKey, granKey) {
+  var type = TYPES[typeKey];
+  var budget = null, span = null, gran = null, i;
+  for (i = 0; i < BUDGETS.length; i++) if (BUDGETS[i].key === budgetKey) budget = BUDGETS[i];
+  for (i = 0; i < SPANS.length; i++)   if (SPANS[i].key === spanKey)     span = SPANS[i];
+  for (i = 0; i < GRANS.length; i++)   if (GRANS[i].key === granKey)     gran = GRANS[i];
+
+  /* 年代跨度切地层：只决定视野，不改层属性 */
+  var active = [], excluded = [];
+  for (i = 0; i < type.strata.length; i++) {
+    if (type.strata[i].year <= span.maxYear) active.push(type.strata[i]);
+    else excluded.push(type.strata[i]);
+  }
+
+  var lines      = sumBy(active, function (s) { return s.lines; });
+  var eqLines    = sumBy(active, function (s) { return s.lines * s.corr; });
+  var indexCost  = sumBy(active, function (s) { return s.lines * type.idxTpl; });
+  var ingestCost = sumBy(active, function (s) { return s.lines * s.corr * type.tpl; });
+  var evidCost   = sumBy(active, function (s) { return s.lines * s.corr * type.evidTpl; });
+  var exLines    = sumBy(excluded, function (s) { return s.lines; });
+  var exIngest   = sumBy(excluded, function (s) { return s.lines * s.corr * type.tpl; });
+
+  /* 预算按粒度切三个桶，实际装入取 min */
+  var bIdx  = budget.tokens * gran.split.idx;
+  var bCode = budget.tokens * gran.split.code;
+  var bEvid = budget.tokens * gran.split.evid;
+  var usedIdx  = Math.min(bIdx,  indexCost);
+  var usedCode = Math.min(bCode, ingestCost);
+  var usedEvid = Math.min(bEvid, evidCost);
+
+  var covIdx  = indexCost  > 0 ? usedIdx  / indexCost  : 1;
+  var covCode = ingestCost > 0 ? usedCode / ingestCost : 1;
+  var covEvid = evidCost   > 0 ? usedEvid / evidCost   : 1;
+
+  var usedTotal = usedIdx + usedCode + usedEvid;
+  var cov = {
+    idx: covIdx, code: covCode, evid: covEvid,
+    usedIdx: usedIdx, usedCode: usedCode, usedEvid: usedEvid,
+    bIdx: bIdx, bCode: bCode, bEvid: bEvid,
+    indexCost: indexCost, ingestCost: ingestCost, evidCost: evidCost
+  };
+
+  var activeIds = active.map(function (s) { return s.id; });
+  var ctx = {
+    type: type, budget: budget, span: span, gran: gran,
+    active: active, excluded: excluded, activeIds: activeIds,
+    lines: lines, eqLines: eqLines, exLines: exLines, exIngest: exIngest,
+    cov: cov
+  };
+
+  /* ---- 逐题判定 ---- */
+  var all = type.questions, questions = [];
+  for (i = 0; i < all.length; i++) {
+    var q = all[i];
+    if (q.gran !== gran.key) { questions.push({ q: q, state: 'off' }); continue; }
+    var r = evalQuestion(q, ctx);   /* { state, fails?, wall?, missing? } */
+    r.q = q;
+    questions.push(r);
+  }
+
+  var yes = 0, near = 0, why = 0, no = 0, rounds = 0;
+  for (i = 0; i < questions.length; i++) {
+    var st = questions[i].state;
+    if (st === 'yes') yes++;
+    else if (st === 'near') near++;
+    else if (st === 'why') why++;
+    else if (st === 'no') no++;
+  }
+  var inPlay = yes + near + why + no;
+  /* 每类问题的追问轮次：完全能答的要深挖，答不了的也要试着问 */
+  rounds = yes * 8 + near * 5 + why * 3 + no * 1;
+  var answerable = yes + near + why;
+
+  var perQuery = usedIdx + gran.fetchSegs * gran.fetchPer;
+  var buildTokens = usedTotal;
+  var runTokens = answerable > 0 ? rounds * perQuery : 0;
+  var aiTokens = buildTokens + runTokens;
+  var aiYuan = aiTokens / 1e6 * PRICE_AI_PER_MTOK;
+
+  var coveredLines = lines * covCode;
+  var uncoveredLines = lines - coveredLines;
+  var coveredManualHours = uncoveredLines / LABOR_LINES_PER_HOUR;
+  var coveredManualYuan = coveredManualHours * LABOR_YUAN_PER_HOUR;
+  var pureManualHours = lines / LABOR_LINES_PER_HOUR;
+  var pureManualYuan = pureManualHours * LABOR_YUAN_PER_HOUR;
+  var totalYuan = aiYuan + coveredManualYuan;
+  var verdictSaved = pureManualYuan - totalYuan;
+
+  var cost = {
+    buildTokens: buildTokens, budgetTokens: budget.tokens,
+    budgetUse: buildTokens / budget.tokens,
+    perQuery: perQuery, fetchSegs: gran.fetchSegs, fetchPer: gran.fetchPer,
+    rounds: rounds, runTokens: runTokens, aiTokens: aiTokens, aiYuan: aiYuan,
+    coveredLines: coveredLines, uncoveredLines: uncoveredLines,
+    coveredManualHours: coveredManualHours, coveredManualYuan: coveredManualYuan,
+    pureManualHours: pureManualHours, pureManualYuan: pureManualYuan,
+    totalYuan: totalYuan, saved: verdictSaved,
+    laborHoursSaved: pureManualHours - coveredManualHours
+  };
+
+  var risks = computeRisks(ctx);
+
+  return {
+    typeKey: typeKey, budgetKey: budgetKey, spanKey: spanKey, granKey: granKey,
+    type: type, budget: budget, span: span, gran: gran,
+    active: active, excluded: excluded, cov: cov,
+    lines: lines, eqLines: eqLines, questions: questions,
+    counts: { yes: yes, near: near, why: why, no: no, off: all.length - inPlay, inPlay: inPlay, answerable: answerable },
+    cost: cost, risks: risks
+  };
+}
+
+function evalQuestion(q, ctx) {
+  /* 条件一：跨度必须覆盖问题涉及的所有层 */
+  var need = (q.layers === 'all') ? ctx.activeIds : q.layers;
+  var missing = [], i;
+  for (i = 0; i < need.length; i++) {
+    if (ctx.activeIds.indexOf(need[i]) < 0) missing.push(need[i]);
+  }
+  if (missing.length) {
+    return { state: 'no', wall: true, missing: missing, fails: [] };
+  }
+  /* 条件二：三个覆盖度都要过门槛 */
+  var fails = [];
+  if (q.idx  > ctx.cov.idx  + 1e-9) fails.push({ k: 'idx',  need: q.idx,  have: ctx.cov.idx });
+  if (q.code > ctx.cov.code + 1e-9) fails.push({ k: 'code', need: q.code, have: ctx.cov.code });
+  if (q.evid > ctx.cov.evid + 1e-9) fails.push({ k: 'evid', need: q.evid, have: ctx.cov.evid });
+
+  if (!fails.length) return { state: 'yes', fails: [] };
+
+  var allNear = true;
+  for (i = 0; i < fails.length; i++) if (fails[i].have < fails[i].need * 0.85) allNear = false;
+  if (allNear) return { state: 'near', fails: fails };
+
+  if (fails.length === 1 && fails[0].k === 'evid') return { state: 'why', fails: fails };
+  return { state: 'no', fails: fails };
+}
+
+/* ================= 遗漏风险 ================= */
+function computeRisks(ctx) {
+  var cov = ctx.cov, t = ctx.type, out = [];
+  var pct = function (x) { return (x * 100).toFixed(1) + '%'; };
+  var wan = function (n) { return (n / 10000).toFixed(1) + ' 万行'; };
+
+  /* R1 跨度墙 */
+  if (ctx.excluded.length) {
+    var ratio = ctx.exLines / (ctx.lines + ctx.exLines);
+    out.push({
+      level: ratio > 0.15 ? 'high' : 'mid',
+      title: '跨度墙：' + wan(ctx.exLines) + '完全在视野之外',
+      body: ctx.excluded.map(function (s) { return s.year + ' ' + s.label; }).join('、') +
+            ' 没有被装进来。危险的地方不在于"不知道"，而在于模型<b>不会说它不知道</b> —— ' +
+            '它会拿 ' + ctx.active[ctx.active.length - 1].year + ' 年的代码，去回答一个本该由 ' +
+            ctx.excluded[0].year + ' 年代码回答的问题。',
+      cond: '墙外 ' + ctx.exLines.toLocaleString('en-US') + ' 行 ÷ 全系统 ' +
+            (ctx.lines + ctx.exLines).toLocaleString('en-US') + ' 行 = ' + pct(ratio)
+    });
+  }
+
+  /* R2 代码覆盖缺口 */
+  if (cov.code < 0.60) {
+    out.push({
+      level: cov.code < 0.20 ? 'high' : 'mid',
+      title: '代码覆盖缺口：' + wan(ctx.lines - ctx.lines * cov.code) + '读不到原文',
+      body: '索引能告诉你"有这么个东西"，但说不出它怎么写的。任何隐式业务规则 —— ' +
+            '空值兜底、边界判断、被注释掉的开关 —— 都不会出现在答案里，' +
+            '因为它们压根没进窗口。',
+      cond: '已装入 ' + wan(ctx.lines * cov.code) + ' ÷ 跨度内 ' + wan(ctx.lines) + ' = ' + pct(cov.code)
+    });
+  }
+
+  /* R3 证据断层 */
+  if (cov.evid < 0.55) {
+    out.push({
+      level: cov.evid < 0.25 ? 'high' : 'mid',
+      title: '证据断层：只能回答"做了什么"，回答不了"为什么"',
+      body: '提交日志、工单、邮件这些"意图证据"没装够。代码本身能告诉你它做了什么，' +
+            '但老代码里真正会咬人的是那句"当年为什么这么改" —— 少了它，你会把' +
+            '<b>故意的妥协</b>当成 <b>可以顺手清理的烂代码</b>。',
+      cond: '证据覆盖 ' + pct(cov.evid) + '（低于 55% 警戒线）'
+    });
+  }
+
+  /* R4 最老层裸露 */
+  var oldest = null, i;
+  for (i = 0; i < ctx.active.length; i++) {
+    if (!oldest || ctx.active[i].corr > oldest.corr) oldest = ctx.active[i];
+  }
+  if (oldest && cov.code < 0.85) {
+    out.push({
+      level: oldest.corr >= 1.7 && cov.code < 0.5 ? 'high' : 'mid',
+      title: '最高腐蚀层只装入 ' + pct(cov.code) + '：' + oldest.year + ' ' + oldest.label,
+      body: '这一层的腐蚀系数是全系统最高的 <b>' + oldest.corr.toFixed(2) + '</b>（' + oldest.note +
+            '）。同样的行数，它要吃掉更多 token 才读得懂；读不懂的部分，模型不会留白，' +
+            '而是用相邻层的写法补上 —— 这是幻觉最爱出现的地方。',
+      cond: '该层 ' + oldest.lines.toLocaleString('en-US') + ' 行 × 腐蚀 ' + oldest.corr.toFixed(2) +
+            ' × ' + t.tpl + ' token/行 = 单独打满需 ' + fmtTok(oldest.lines * oldest.corr * t.tpl) + ' token'
+    });
+  }
+
+  /* R5 显微镜风险：粒度细但索引薄 */
+  if (ctx.gran.key === 'fn' && cov.idx < 0.20) {
+    out.push({
+      level: 'high',
+      title: '显微镜找路：没有全局索引，函数级定位退化成逐文件猜',
+      body: '你把 68% 的预算压在了代码原文上，全局索引只剩 ' + pct(cov.idx) + '。' +
+            '这意味着模型不知道该去哪个文件里找那个函数 —— 它仍然会给你一个答案，' +
+            '一个<b>看起来最像</b>的函数，而不是<b>真的那个</b>。',
+      cond: '索引覆盖 ' + pct(cov.idx) + '（函数级定位建议 ≥ 20%）'
+    });
+  }
+
+  /* R6 望远镜风险：粒度粗但代码几乎为零 */
+  if (ctx.gran.key === 'arch' && cov.code < 0.05) {
+    out.push({
+      level: 'mid',
+      title: '望远镜够不着地面：架构问题一旦追问"写在哪"就断了',
+      body: '架构级的预算几乎全给了索引（代码只占 12% 的份额），你拿到了地图，' +
+            '但地图上没有坐标。好处是能看清全貌，代价是<b>任何"具体是哪一段代码"的追问都得重新调参</b>。',
+      cond: '代码覆盖 ' + pct(cov.code) + '（低于 5%）'
+    });
+  }
+
+  /* R7 预算没花完：瓶颈不在钱上 */
+  if (ctx.cov.usedIdx + ctx.cov.usedCode + ctx.cov.usedEvid <
+      0.62 * (ctx.cov.bIdx + ctx.cov.bCode + ctx.cov.bEvid)) {
+    out.push({
+      level: 'low',
+      title: '预算没花完：瓶颈不是窗口大小，是跨度不够',
+      body: '三个桶都没顶到上限，说明当前跨度内的代码、索引、证据加起来就这么点。' +
+            '再加预算不会多出任何信息 —— 要么把 <b>代码年代跨度</b> 调宽，要么接受这就是全部。',
+      cond: '已装入 ' + fmtTok(ctx.cov.usedIdx + ctx.cov.usedCode + ctx.cov.usedEvid) +
+            ' ÷ 可用预算 ' + fmtTok(ctx.cov.bIdx + ctx.cov.bCode + ctx.cov.bEvid) +
+            ' = ' + pct((ctx.cov.usedIdx + ctx.cov.usedCode + ctx.cov.usedEvid) /
+                        (ctx.cov.bIdx + ctx.cov.bCode + ctx.cov.bEvid)) + '（低于 62%）'
+    });
+  }
+
+  /* R8 单点：答案只靠索引，没有原文支撑 */
+  if (cov.idx > 0.5 && cov.code < 0.06 && ctx.gran.key !== 'arch') {
+    out.push({
+      level: 'mid',
+      title: '全在目录里，没进过现场',
+      body: '索引建得挺全，但代码原文几乎没装。这种情况下模型的回答会非常"顺"，' +
+            '因为它是照着符号名和调用关系推出来的，而不是读出来的。',
+      cond: '索引 ' + pct(cov.idx) + ' ／ 代码 ' + pct(cov.code)
+    });
+  }
+
+  var order = { high: 0, mid: 1, low: 2 };
+  out.sort(function (a, b) { return order[a.level] - order[b.level]; });
+  return out;
+}
+
+/* ================= 一句话结论 ================= */
+function verdictOf(m) {
+  var c = m.counts, r = m.risks;
+  var high = 0, i;
+  for (i = 0; i < r.length; i++) if (r[i].level === 'high') high++;
+  var q = c.inPlay;
+
+  if (q === 0) {
+    return { warn: true, text: '这个档位下没有问题可评 —— 换一个提问粒度再来。' };
+  }
+  if (c.answerable === 0) {
+    return { warn: true,
+      text: '零可答。 ' + q + ' 个「' + m.gran.label + '」问题全部卡住：预算或跨度还没到能起步的量。',
+      sub: '这不是悲观，是算术。先把上下文预算或代码年代跨度往上推一档。' };
+  }
+  if (c.yes === 0) {
+    return { warn: true,
+      text: '没有一条问题能给出完整答案。 ' + c.answerable + ' 条勉强有输出，其中 ' + c.why +
+           ' 条只能告诉你"做了什么"。',
+      sub: '这个配置适合做初步探查，不适合据此改生产代码。' };
+  }
+  if (high >= 2) {
+    return { warn: true,
+      text: c.yes + ' 条能答、' + (c.answerable - c.yes) + ' 条只能算半答，但有 ' + high + ' 处高风险缺口。',
+      sub: '可以用它起步，但别把它的答案当成结论 —— 见下面的遗漏风险。' };
+  }
+  if (high === 1) {
+    return { warn: false,
+      text: c.yes + ' / ' + q + ' 条可以完整回答，另有 ' + (c.answerable - c.yes) + ' 条半答；存在 1 处高风险缺口。',
+      sub: '大致够用，把那一处补上就稳了。' };
+  }
+  return { warn: false,
+    text: c.yes + ' / ' + q + ' 条可以完整回答，没有高风险缺口。',
+    sub: '这是本系统在当前跨度下性价比较好的一档 —— 再往上加预算，边际收益会明显变平。' };
+}
+
+/* ================= 格式化 ================= */
+function fmtTok(n) {
+  if (n >= 1e6) return (n / 1e6).toFixed(2) + 'M';
+  if (n >= 1e3) return Math.round(n / 1e3) + 'K';
+  return String(Math.round(n));
+}
+function fmtPct(x) { return (x * 100).toFixed(1) + '%'; }
+function fmtWan(n) { return (n / 10000).toFixed(1) + ' 万行'; }
+function fmtYuan(n) {
+  if (n >= 10000) return '¥' + (n / 10000).toFixed(1) + ' 万';
+  if (n >= 100)   return '¥' + Math.round(n);
+  if (n >= 1)     return '¥' + n.toFixed(1);
+  return '¥' + n.toFixed(2);
+}
+function fmtHours(h) {
+  if (h >= 100) return Math.round(h) + ' 小时';
+  return h.toFixed(1) + ' 小时';
+}
+</script>
+
+<!-- ════════════════════════════════════════════════════════════
+     交互层：只负责读参数、调模型、画结果
+     ════════════════════════════════════════════════════════════ -->
+<script>
+(function () {
+  'use strict';
+
+  var $ = function (id) { return document.getElementById(id); };
+
+  var TYPE_KEYS = ['java', 'sql', 'fe'];
+  var state = { type: 'java', budget: 'b512', span: 's15', gran: 'module' };
+  var pinned = null;
+
+  /* ───────── 控件初始化 ───────── */
+  function buildControls() {
+    /* 系统类型：原生 radio → 方向键在组内切换 */
+    var seg = $('r-type');
+    var html = '', i;
+    for (i = 0; i < TYPE_KEYS.length; i++) {
+      var t = TYPES[TYPE_KEYS[i]];
+      html += '<input type="radio" name="sys-type" id="ty-' + t.key + '" value="' + t.key + '"' +
+              (state.type === t.key ? ' checked' : '') + '>' +
+              '<label for="ty-' + t.key + '"><span class="t">' + t.name + '</span>' +
+              '<span class="s">' + t.sub + '</span></label>';
+    }
+    seg.innerHTML = html;
+
+    /* 粒度 */
+    var g = $('r-gran');
+    html = '';
+    for (i = 0; i < GRANS.length; i++) {
+      var gr = GRANS[i];
+      html += '<input type="radio" name="gran" id="gr-' + gr.key + '" value="' + gr.key + '"' +
+              (state.gran === gr.key ? ' checked' : '') + '>' +
+              '<label for="gr-' + gr.key + '"><span class="t">' + gr.label + '</span>' +
+              '<span class="s">' + gr.sub + '</span></label>';
+    }
+    g.innerHTML = html;
+
+    /* 刻度条 */
+    $('t-budget').innerHTML = BUDGETS.map(function (b) {
+      return '<span class="tick" data-k="' + b.key + '">' + b.label + '</span>';
+    }).join('');
+    $('t-span').innerHTML = SPANS.map(function (s) {
+      return '<span class="tick" data-k="' + s.key + '">' + s.label + '</span>';
+    }).join('');
+
+    /* 事件绑定 */
+    $('r-budget').addEventListener('input', function () {
+      state.budget = BUDGETS[Number(this.value)].key;
+      render();
+    });
+    $('r-span').addEventListener('input', function () {
+      state.span = SPANS[Number(this.value)].key;
+      render();
+    });
+    g.addEventListener('change', function (e) {
+      if (e.target.name === 'gran') { state.gran = e.target.value; render(); }
+    });
+    seg.addEventListener('change', function (e) {
+      if (e.target.name === 'sys-type') { state.type = e.target.value; render(); }
+    });
+
+    $('btn-pin').addEventListener('click', function () {
+      pinned = snapshot(current);
+      $('btn-clear').hidden = false;
+      $('pin-note').textContent = '已钉住。现在动滑块 —— 下面会列出三个输出的变化。';
+      renderCompare();
+    });
+    $('btn-clear').addEventListener('click', function () {
+      pinned = null;
+      $('btn-clear').hidden = true;
+      $('pin-note').textContent = '钉一组配置，再动滑块，三个输出的变化会直接列出来。';
+      renderCompare();
+    });
+  }
+
+  /* ───────── 渲染 ───────── */
+  var current = null;
+  var firstPaint = true;
+
+  function render() {
+    var m = computeModel(state.type, state.budget, state.span, state.gran);
+    current = m;
+
+    /* 同步滑块位置（键盘操作后保持一致） */
+    setVal('r-budget', indexOf(BUDGETS, m.budget.key));
+    setVal('r-span', indexOf(SPANS, m.span.key));
+
+    $('v-type').textContent = m.type.name;
+    $('v-budget').textContent = m.budget.label + ' token';
+    $('v-span').textContent = m.span.label + '（' + m.span.years + '）';
+    $('v-gran').textContent = m.gran.label;
+
+    highlightTicks('t-budget', m.budget.key);
+    highlightTicks('t-span', m.span.key);
+
+    renderLoad(m);
+    renderVerdict(m);
+    renderQuestions(m);
+    renderRisks(m);
+    renderCost(m);
+    if (pinned) renderCompare();
+
+    firstPaint = false;
+  }
+
+  function setVal(id, v) { $(id).value = String(v); }
+  function indexOf(arr, key) {
+    for (var i = 0; i < arr.length; i++) if (arr[i].key === key) return i;
+    return 0;
+  }
+  function highlightTicks(id, key) {
+    var el = $(id), kids = el.children, i;
+    for (i = 0; i < kids.length; i++) {
+      kids[i].className = 'tick' + (kids[i].getAttribute('data-k') === key ? ' on' : '');
+    }
+  }
+
+  /* 装载进度：三个桶各占预算多少，剩下多少 */
+  function renderLoad(m) {
+    var c = m.cov, B = m.budget.tokens;
+    var pctOf = function (x) { return Math.max(0, Math.min(100, x / B * 100)); };
+    var free = Math.max(0, B - (c.usedIdx + c.usedCode + c.usedEvid));
+    var html =
+      '<div class="load-head">' +
+        '<span>' + m.type.name + ' · 跨度内 <b>' + fmtWan(m.lines) + '</b> · ' +
+        '腐蚀等效 <b>' + fmtWan(m.eqLines) + '</b></span>' +
+        '<span>已装入 <b>' + fmtTok(c.usedIdx + c.usedCode + c.usedEvid) + '</b> / ' + fmtTok(B) + '</span>' +
+      '</div>' +
+      '<div class="bar">' +
+        '<span class="s-idx"  style="width:' + pctOf(c.usedIdx) + '%"></span>' +
+        '<span class="s-code" style="width:' + pctOf(c.usedCode) + '%"></span>' +
+        '<span class="s-evid" style="width:' + pctOf(c.usedEvid) + '%"></span>' +
+        '<span class="s-free" style="width:' + pctOf(free) + '%"></span>' +
+      '</div>' +
+      '<div class="legend">' +
+        '<span><i style="background:var(--amber)"></i>索引 ' + fmtTok(c.usedIdx) + '（' + fmtPct(c.idx) + '）</span>' +
+        '<span><i style="background:var(--terra)"></i>代码 ' + fmtTok(c.usedCode) + '（' + fmtPct(c.code) + '）</span>' +
+        '<span><i style="background:var(--amber-soft)"></i>证据 ' + fmtTok(c.usedEvid) + '（' + fmtPct(c.evid) + '）</span>' +
+        '<span><i style="background:var(--paper-2)"></i>没用完 ' + fmtTok(free) + '</span>' +
+      '</div>';
+    $('load').innerHTML = html;
+  }
+
+  function renderVerdict(m) {
+    var v = verdictOf(m);
+    var el = $('verdict');
+    el.className = 'verdict' + (v.warn ? ' warn' : '') + (firstPaint ? '' : ' fresh');
+    el.innerHTML = '<div class="verdict-k">当前配置的结论</div>' +
+                   '<p>' + v.text + '</p>' +
+                   (v.sub ? '<p class="sub">' + v.sub + '</p>' : '');
+  }
+
+  var STATE_LABEL = { yes: '能答', near: '擦边', why: '只能答“是什么”', no: '答不了' };
+  var BUCKET_LABEL = { idx: '索引覆盖', code: '代码覆盖', evid: '证据覆盖' };
+
+  function renderQuestions(m) {
+    var c = m.counts, html = '', i;
+    var shown = 0;
+    for (i = 0; i < m.questions.length; i++) {
+      var item = m.questions[i];
+      if (item.state === 'off') continue;
+      shown++;
+      var q = item.q, st = item.state;
+      var why = '';
+      if (st === 'yes') {
+        why = '<div class="qwhy"><span class="nb">门槛全过。可用素材：索引 ' +
+              fmtPct(m.cov.idx) + ' · 代码 ' + fmtPct(m.cov.code) + ' · 证据 ' + fmtPct(m.cov.evid) + '</span></div>';
+      } else if (item.wall) {
+        why = '<div class="qwhy">涉及 <b>' + item.missing.join(' / ') + '</b> 层，不在当前 ' +
+              m.span.label + '跨度（' + m.span.years + '）内 —— 这是<b>跨度的墙</b>，加预算也翻不过去。</div>';
+      } else {
+        var parts = [];
+        for (var j = 0; j < item.fails.length; j++) {
+          var f = item.fails[j];
+          parts.push(BUCKET_LABEL[f.k] + ' <b>' + fmtPct(f.have) + '</b> < 需要 ' + fmtPct(f.need));
+        }
+        var tail = st === 'near' ? '差得不多，答案会缺一块。'
+                 : st === 'why' ? '能说清它做了什么，说不清为什么这么写。'
+                 : '差距过大，不该拿它的输出去改生产代码。';
+        why = '<div class="qwhy">' + parts.join('；') + ' —— ' + tail + '</div>';
+      }
+      html += '<div class="q">' +
+                '<span class="chip ' + st + '">' + STATE_LABEL[st] + '</span>' +
+                '<div class="qtxt">' +
+                  '<div class="qtext">' + q.text + '</div>' +
+                  '<div class="qlayers">涉及 ' +
+                    (q.layers === 'all' ? '全部 ' + m.active.length + ' 层' : q.layers.join(' + ')) +
+                    ' · 门槛：索引 ' + fmtPct(q.idx) + ' ／ 代码 ' + fmtPct(q.code) + ' ／ 证据 ' + fmtPct(q.evid) +
+                  '</div>' + why +
+                '</div>' +
+              '</div>';
+    }
+    $('q-list').innerHTML = html || '<p class="qwhy">本档没有问题。</p>';
+    $('q-count').textContent = '可答 ' + c.answerable + ' / ' + c.inPlay +
+      '（完整 ' + c.yes + ' · 擦边 ' + c.near + ' · 只能说是什么 ' + c.why + ' · 答不了 ' + c.no + '）';
+    $('q-note').textContent = '当前只评估「' + m.gran.label + '」这一档的 ' + c.inPlay +
+      ' 个问题 —— 预算已按这个粒度切开。本系统另外 ' + c.off +
+      ' 个问题属于别的粒度档，切换「提问粒度」可以查看。';
+  }
+
+  function renderRisks(m) {
+    /* 层覆盖地图 */
+    var map = '', i;
+    var all = m.type.strata;
+    for (i = 0; i < all.length; i++) {
+      var s = all[i];
+      var inSpan = m.active.indexOf(s) >= 0;
+      var pc = inSpan ? m.cov.code : 0;
+      map += '<div class="maprow' + (inSpan ? '' : ' out') + '">' +
+               '<span class="nm">' + s.year + ' ' + s.label + '</span>' +
+               '<span class="mb"><i style="width:' + (pc * 100).toFixed(1) + '%"></i></span>' +
+               '<span class="pc">' + (inSpan ? fmtPct(pc) : '墙外') + '</span>' +
+             '</div>';
+    }
+    $('layer-map').innerHTML = map +
+      '<p class="mapnote">条形 = 该层代码被装入的比例（同一配置下各层按比例抽样）。' +
+      '「墙外」= 该层不在当前年代跨度内，一行都没装。</p>';
+
+    /* 风险条目 */
+    var html = '', r = m.risks;
+    if (!r.length) {
+      html = '<div class="risk"><div class="risk-head"><span class="lv low">无</span>' +
+             '<span class="risk-t">当前配置没有触发任何风险规则</span></div>' +
+             '<div class="risk-b">这只说明参数落在安全区内，不代表答案一定对。</div></div>';
+    }
+    for (i = 0; i < r.length; i++) {
+      var lv = { high: '高', mid: '中', low: '低' }[r[i].level];
+      html += '<div class="risk">' +
+                '<div class="risk-head"><span class="lv ' + r[i].level + '">' + lv + '</span>' +
+                '<span class="risk-t">' + r[i].title + '</span></div>' +
+                '<div class="risk-b">' + r[i].body + '</div>' +
+                '<div class="risk-c">触发依据：<code>' + r[i].cond + '</code></div>' +
+              '</div>';
+    }
+    $('r-list').innerHTML = html;
+    var high = 0, mid = 0, low = 0;
+    for (i = 0; i < r.length; i++) {
+      if (r[i].level === 'high') high++; else if (r[i].level === 'mid') mid++; else low++;
+    }
+    $('r-count').textContent = r.length + ' 条（高 ' + high + ' · 中 ' + mid + ' · 低 ' + low + '）';
+  }
+
+  function renderCost(m) {
+    var c = m.cost, html = '';
+    html += row('一次性建模',
+      fmtTok(c.buildTokens) + ' token',
+      '装入索引 ' + fmtTok(m.cov.usedIdx) + ' + 代码 ' + fmtTok(m.cov.usedCode) +
+      ' + 证据 ' + fmtTok(m.cov.usedEvid) + '，占预算 ' + fmtPct(c.budgetUse), '');
+    html += row('单次提问',
+      fmtTok(c.perQuery) + ' token',
+      '常驻索引 ' + fmtTok(m.cov.usedIdx) + ' + ' + c.fetchSegs + ' 段取证 × ' + c.fetchPer + ' token',
+      '');
+    html += row('预计提问次数',
+      c.rounds + ' 次',
+      '按「能答的深挖 8 轮 / 擦边 5 轮 / 只能说是什么 3 轮 / 答不了也要试 1 轮」累计',
+      '');
+    html += row('模型成本合计',
+      fmtYuan(c.aiYuan),
+      fmtTok(c.aiTokens) + ' token × 示例单价 ¥' + PRICE_AI_PER_MTOK + '/百万 —— 单价为模拟设定，非真实报价',
+      'amber');
+    html += row('未覆盖代码的人工兜底',
+      fmtYuan(c.coveredManualYuan),
+      fmtWan(c.uncoveredLines) + ' ÷ ' + LABOR_LINES_PER_HOUR + ' 行每小时 = ' +
+      fmtHours(c.coveredManualHours) + ' × ¥' + LABOR_YUAN_PER_HOUR + '/小时',
+      c.coveredManualYuan > 0 ? 'terra' : '');
+    html += row('合计（模型 + 人工兜底）',
+      fmtYuan(c.totalYuan),
+      '对照：全部人工读一遍要 ' + fmtHours(c.pureManualHours) + ' / ' + fmtYuan(c.pureManualYuan),
+      '');
+    /* 省下来的比例：模型费用在任何档位都近乎可忽略，真正的变量是「未覆盖代码」还剩多少 */
+    var rate = c.pureManualYuan > 0 ? c.saved / c.pureManualYuan : 0;
+    var tag, saving;
+    if (rate >= 0.30) {
+      tag = '省 ' + fmtPct(rate);
+      saving = '比纯人工省约 ' + fmtYuan(c.saved) + '，覆盖度已经高到能真正顶掉一部分阅读。';
+    } else if (rate >= 0.12) {
+      tag = '小省 ' + fmtPct(rate);
+      saving = '省下约 ' + fmtYuan(c.saved) + '／' + fmtHours(c.laborHoursSaved) +
+               '，省的是分析时间；剩下的人工兜底仍然是主要开销。';
+    } else if (rate >= 0) {
+      tag = '边际 ' + fmtPct(rate);
+      saving = '只省下 ' + fmtYuan(c.saved) + '（' + fmtPct(rate) + '）。模型费用在任何档位都近乎可忽略 —— ' +
+               '真正决定成本的是「还有多少代码没人读」，不是窗口多大。想省钱，先把覆盖率推上去。';
+    } else {
+      tag = '亏 ' + fmtPct(-rate);
+      saving = '比纯人工还贵 ' + fmtYuan(-c.saved) + ' —— 当前覆盖度太低，人工兜底没被真正省掉。';
+    }
+    html += row('这一档值不值', tag, saving, 'total');
+
+    $('c-list').innerHTML = html;
+    $('c-count').textContent = '示例单价 · 规则模拟';
+
+    function row(k, v, d, cls) {
+      return '<div class="crow' + (cls === 'total' ? ' total' : '') + '">' +
+               '<span class="ck">' + k + '<span class="d">' + d + '</span></span>' +
+               '<span class="cv ' + (cls === 'total' ? 'amber' : cls) + '">' + v + '</span>' +
+             '</div>';
+    }
+  }
+
+  /* ───────── 对照 ───────── */
+  function snapshot(m) {
+    return {
+      typeKey: m.typeKey,
+      label: m.type.name.split(' ')[0] + ' · ' + m.budget.label + ' · ' + m.span.label + ' · ' + m.gran.label,
+      answerable: m.counts.answerable, yes: m.counts.yes,
+      high: countLevel(m.risks, 'high'),
+      cost: m.cost.totalYuan,
+      covIdx: m.cov.idx, covCode: m.cov.code, covEvid: m.cov.evid
+    };
+  }
+  function countLevel(risks, lv) {
+    var n = 0;
+    for (var i = 0; i < risks.length; i++) if (risks[i].level === lv) n++;
+    return n;
+  }
+
+  function renderCompare() {
+    var slot = $('cmp-slot');
+    if (!pinned || !current) { slot.innerHTML = ''; return; }
+    var now = snapshot(current);
+    var rows = [
+      ['可回答的问题', pinned.answerable + ' 条', now.answerable + ' 条', now.answerable - pinned.answerable, false],
+      ['其中完整能答', pinned.yes + ' 条', now.yes + ' 条', now.yes - pinned.yes, false],
+      ['高风险缺口', pinned.high + ' 条', now.high + ' 条', pinned.high - now.high, false],
+      ['索引覆盖', fmtPct(pinned.covIdx), fmtPct(now.covIdx), now.covIdx - pinned.covIdx, true],
+      ['代码覆盖', fmtPct(pinned.covCode), fmtPct(now.covCode), now.covCode - pinned.covCode, true],
+      ['证据覆盖', fmtPct(pinned.covEvid), fmtPct(now.covEvid), now.covEvid - pinned.covEvid, true],
+      ['合计成本', fmtYuan(pinned.cost), fmtYuan(now.cost), pinned.cost - now.cost, true]
+    ];
+    var html = '<div class="cmp"><div class="cmp-h">对照</div>' +
+      '<div class="cmp-sub">' + pinned.label + '　→　' + now.label + '</div>';
+    for (var i = 0; i < rows.length; i++) {
+      var r = rows[i];
+      var cls = Math.abs(r[3]) < 1e-9 ? 'same' : (r[3] > 0 ? 'up' : 'down');
+      html += '<div class="cmp-row"><span class="cmp-k">' + r[0] + '</span>' +
+              '<span class="cmp-a">' + r[1] + '</span>' +
+              '<span class="cmp-b ' + cls + '">' + r[2] + '</span></div>';
+    }
+    html += '</div>';
+    slot.innerHTML = html;
+  }
+
+  /* ───────── 启动 ───────── */
+  buildControls();
+  render();
+})();
+</script>
+</body>
+</html>

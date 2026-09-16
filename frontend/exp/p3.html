@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>第 03 期 · 凌晨 2:33 的告警，交给 AI 吗？｜灵灵 · 今日灵感实验</title>
+<!--
+  第 03 期原型 · 分支选择
+  示例数据 · 规则模拟 —— 无后端、无外部请求、无密钥，可离线双击打开。
+  判定规则全部写在页脚「判定规则」中，结局由累计量决定，无随机数。
+  纯逻辑（SCENARIOS / resolve / totals）不依赖 DOM，便于离线校验。
+-->
+<style>
+:root {
+  --paper: #FAF8F3;
+  --paper-2: #F3EFE6;
+  --ink: #2C2A26;
+  --ink-2: #6B6558;
+  --ink-3: #9C958A;
+  --amber: #B8860B;
+  --amber-soft: #E8D9B0;
+  --amber-bg: #F5EEDC;
+  --terra: #C4572E;
+  --terra-soft: #EDCDBF;
+  --terra-bg: #F7E9E2;
+  --hairline: rgba(44,42,38,.14);
+  --card-r: 16px;
+  --ctl-r: 10px;
+  --serif: Georgia, 'Times New Roman', 'Songti SC', 'SimSun', serif;
+  --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  /* 由品牌令牌派生的「文字安全」深色变体：琥珀/赤陶原色在白底上不足 4.5:1，
+     故仅用于大字号标题、边框与底纹；小字号彩色文字一律改用以下变体。 */
+  --amber-ink: #6E5208;
+  --terra-ink: #96401F;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.68;
+  overflow-wrap: break-word;
+}
+button { font-family: inherit; font-size: inherit; color: inherit; cursor: pointer; }
+a { color: var(--amber-ink); }
+h1, h2, h3, h4 { font-weight: 700; }
+ol, ul { list-style: none; }
+:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; border-radius: 4px; }
+.wrap { max-width: 780px; margin: 0 auto; padding: 0 16px 64px; }
+.skip {
+  position: absolute; left: -9999px; top: 0; z-index: 9;
+  background: var(--ink); color: var(--paper); padding: 10px 16px; border-radius: 0 0 var(--ctl-r) 0;
+}
+.skip:focus { position: fixed; left: 0; }
+.vh {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+/* ── 刊头 ── */
+.masthead { padding: 24px 0 18px; border-bottom: 2px solid var(--ink); }
+.mast-top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.brand { font-family: var(--serif); font-size: 26px; font-weight: 700; letter-spacing: .04em; }
+.brand small { font-size: 12px; font-weight: 400; color: var(--ink-2); letter-spacing: .14em; margin-left: 8px; }
+.mast-meta { display: flex; gap: 12px; align-items: baseline; font-size: 12.5px; color: var(--ink-2); flex-wrap: wrap; }
+.issue-no { font-family: var(--serif); font-weight: 700; color: var(--ink); font-size: 14px; }
+.kicker { font-family: var(--serif); font-size: 25px; line-height: 1.35; letter-spacing: .02em; margin-top: 16px; }
+.dek { color: var(--ink-2); font-size: 13.5px; margin-top: 8px; }
+.mock-pill {
+  display: inline-block; margin-top: 12px; padding: 3px 11px;
+  border: 1px solid var(--terra-soft); background: var(--terra-bg); color: var(--terra-ink);
+  border-radius: 999px; font-size: 11.5px; font-weight: 600; letter-spacing: .08em;
+}
+
+/* ── 栏目标题 ── */
+.sec { margin-top: 32px; }
+.sec-head {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
+  padding-bottom: 7px; border-bottom: 1px solid var(--hairline); flex-wrap: wrap; margin-bottom: 14px;
+}
+.sec-title { font-family: var(--serif); font-size: 17px; letter-spacing: .08em; }
+.sec-title .en { font-family: var(--sans); font-size: 10px; font-weight: 600; color: var(--ink-2); letter-spacing: .18em; margin-left: 9px; }
+.sec-hint { font-size: 11.5px; color: var(--ink-2); }
+
+/* ── 场景切换 ── */
+.seg {
+  display: flex; gap: 8px; padding: 4px; background: var(--paper-2);
+  border-radius: var(--ctl-r); margin-bottom: 14px; flex-wrap: wrap;
+}
+.seg [role="radio"] {
+  flex: 1 1 30%; min-height: 44px; min-width: 96px; padding: 8px 10px;
+  border: 0.5px solid transparent; border-radius: 8px; background: transparent;
+  color: var(--ink-2); font-size: 13px; letter-spacing: .02em; transition: background .15s, color .15s;
+}
+.seg [role="radio"]:hover { color: var(--ink); }
+.seg [role="radio"][aria-checked="true"] {
+  background: var(--paper); border-color: var(--hairline); color: var(--ink);
+  font-weight: 600; box-shadow: 0 1px 2px rgba(44,42,38,.05);
+}
+
+/* ── 简报 ── */
+.panel {
+  border: 0.5px solid var(--hairline); border-radius: var(--card-r);
+  background: var(--paper); padding: 16px;
+}
+.alert-quote {
+  border-left: 2px solid var(--terra); background: var(--terra-bg);
+  padding: 10px 12px; border-radius: 0 var(--ctl-r) var(--ctl-r) 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12.5px; line-height: 1.6; color: var(--terra-ink); margin-bottom: 12px;
+}
+.alert-list { margin-bottom: 12px; }
+.alert-list li {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px; color: var(--ink-2); padding: 2px 0 2px 12px; position: relative;
+}
+.alert-list li::before { content: "·"; position: absolute; left: 2px; color: var(--ink-3); }
+.brief-txt { font-size: 13.5px; color: var(--ink-2); }
+.brief-txt b { color: var(--ink); }
+.kv { display: grid; grid-template-columns: 1fr; gap: 0; margin-top: 12px; border-top: 1px solid var(--hairline); }
+.kv > div { display: flex; justify-content: space-between; gap: 12px; padding: 7px 0; border-bottom: 1px solid var(--hairline); font-size: 12.5px; }
+.kv dt { color: var(--ink-2); }
+.kv dd { color: var(--ink); font-weight: 600; text-align: right; font-variant-numeric: tabular-nums; }
+.kv dd.bad { color: var(--terra-ink); }
+.kv dd.ok { color: var(--amber-ink); }
+
+/* ── 进度 ── */
+.progress { display: flex; gap: 6px; margin-bottom: 12px; }
+.progress i { flex: 1; height: 3px; border-radius: 2px; background: var(--paper-2); }
+.progress i.done { background: var(--amber); }
+
+/* ── 决策 ── */
+.q { font-family: var(--serif); font-size: 17px; line-height: 1.5; margin-bottom: 4px; outline-offset: 6px; }
+.q-sub { font-size: 12.5px; color: var(--ink-2); margin-bottom: 14px; }
+.opts { display: grid; gap: 10px; }
+.opt {
+  display: block; width: 100%; min-height: 44px; text-align: left; padding: 12px 14px;
+  border: 0.5px solid var(--hairline); border-radius: var(--ctl-r); background: var(--paper);
+  transition: border-color .15s, background .15s, transform .1s;
+}
+.opt:hover { border-color: var(--amber); background: var(--amber-bg); }
+.opt:active { transform: translateY(1px); }
+.opt-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
+.badge {
+  display: inline-block; padding: 2px 9px; border-radius: 999px;
+  font-size: 11px; font-weight: 600; letter-spacing: .04em; border: 0.5px solid;
+}
+.k-ai { background: var(--terra-bg); border-color: var(--terra-soft); color: var(--terra-ink); }
+.k-human { background: var(--amber-bg); border-color: var(--amber-soft); color: var(--amber-ink); }
+.k-esc { background: var(--paper-2); border-color: var(--hairline); color: var(--ink-2); }
+.opt-meta { font-size: 11.5px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.opt-title { display: block; font-size: 14px; font-weight: 600; line-height: 1.5; }
+.opt-desc { display: block; font-size: 12.5px; color: var(--ink-2); margin-top: 3px; line-height: 1.6; }
+
+/* ── 值班日志 ── */
+.log li {
+  display: grid; grid-template-columns: 52px 1fr; gap: 10px;
+  padding: 8px 0; border-bottom: 1px solid var(--hairline); font-size: 12.5px;
+}
+.log time { font-variant-numeric: tabular-nums; color: var(--ink-2); font-size: 12px; }
+.log .l-line { color: var(--ink); }
+.log .l-note { color: var(--ink-2); font-size: 12px; margin-top: 2px; }
+.log .empty { color: var(--ink-2); border-bottom: 0; grid-template-columns: 1fr; font-size: 12.5px; }
+
+/* ── 结局 ── */
+.ending { border-top: 2px solid var(--ink); padding-top: 14px; }
+.e-eyebrow { font-size: 11px; letter-spacing: .2em; color: var(--ink-2); font-weight: 600; }
+.e-title { font-family: var(--serif); font-size: 22px; line-height: 1.35; margin: 6px 0 4px; letter-spacing: .02em; }
+.e-recover .e-title { color: var(--amber-ink); }
+.e-expand .e-title { color: var(--terra-ink); }
+.e-slow .e-title { color: var(--ink); }
+.e-body { font-size: 13.5px; color: var(--ink-2); margin-bottom: 16px; }
+.e-body b { color: var(--ink); }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--hairline);
+  border: 0.5px solid var(--hairline); border-radius: var(--ctl-r); overflow: hidden; margin-bottom: 18px; }
+.stats > div { background: var(--paper); padding: 10px 8px; text-align: center; }
+.stats b { display: block; font-family: var(--serif); font-size: 17px; font-variant-numeric: tabular-nums; }
+.stats span { font-size: 10.5px; color: var(--ink-2); }
+.sub-h { font-family: var(--serif); font-size: 15px; letter-spacing: .06em; margin: 0 0 10px; padding-bottom: 6px; border-bottom: 1px solid var(--hairline); }
+.review li { padding: 9px 0; border-bottom: 1px solid var(--hairline); font-size: 13px; }
+.review .r-head { display: flex; gap: 8px; align-items: baseline; }
+.review .r-step { font-size: 11px; color: var(--ink-2); flex: 0 0 auto; font-variant-numeric: tabular-nums; }
+.review .r-pick { font-weight: 600; }
+.review p { font-size: 12.5px; color: var(--ink-2); margin-top: 3px; }
+.mark { display: inline-block; flex: 0 0 auto; width: 20px; height: 20px; line-height: 20px; text-align: center;
+  border-radius: 50%; font-size: 11px; font-weight: 700; }
+.m-good { background: var(--amber-bg); color: var(--amber-ink); }
+.m-warn { background: var(--paper-2); color: var(--ink-2); }
+.m-bad { background: var(--terra-bg); color: var(--terra-ink); }
+.law {
+  margin-top: 16px; padding: 12px 14px; background: var(--amber-bg);
+  border-left: 2px solid var(--amber); border-radius: 0 var(--ctl-r) var(--ctl-r) 0;
+  font-size: 13px; color: var(--ink);
+}
+.law b { color: var(--amber-ink); }
+.acts { display: flex; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
+.btn {
+  min-height: 44px; padding: 10px 18px; border-radius: var(--ctl-r);
+  border: 1px solid var(--ink); background: var(--ink); color: var(--paper);
+  font-size: 13.5px; font-weight: 600; transition: opacity .15s;
+}
+.btn:hover { opacity: .86; }
+.btn.ghost { background: transparent; color: var(--ink); border-color: var(--hairline); }
+.btn.ghost:hover { border-color: var(--amber); color: var(--amber-ink); opacity: 1; }
+
+/* ── 页脚 ── */
+.foot { margin-top: 36px; padding-top: 14px; border-top: 2px solid var(--ink); font-size: 12px; color: var(--ink-2); }
+.foot p { margin-bottom: 6px; }
+.foot .link-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 8px 0 12px; }
+.ext-link {
+  display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px;
+  border: 1px solid var(--hairline); border-radius: var(--ctl-r);
+  color: var(--amber-ink); font-weight: 600; text-decoration: none;
+}
+.ext-link:hover { border-color: var(--amber); background: var(--amber-bg); }
+.foot .rule-box { background: var(--paper-2); border-radius: var(--ctl-r); padding: 12px 14px; margin: 12px 0; }
+.foot .rule-box b { color: var(--ink); }
+.foot code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 11.5px; background: var(--paper); padding: 1px 5px; border-radius: 4px; }
+
+@media (min-width: 720px) {
+  .kicker { font-size: 30px; }
+  .panel { padding: 20px; }
+  .kv { grid-template-columns: 1fr 1fr; column-gap: 24px; }
+  .kv > div { border-bottom: 1px solid var(--hairline); }
+  .opt { padding: 14px 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#decide">跳到决策区</a>
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="mast-top">
+      <div class="brand">灵灵<small>今日灵感实验</small></div>
+      <div class="mast-meta">
+        <span class="issue-no">第 03 期</span>
+        <span>2026-09-16</span>
+        <span>形态：分支选择</span>
+      </div>
+    </div>
+    <h1 class="kicker">凌晨 2:33，告警响了。</h1>
+    <p class="dek">你是值班工程师。这一班，告警交给 AI 吗？—— 4 个决策点 · 每步 3 个选项 · 3 类结局</p>
+    <span class="mock-pill">示例数据 · 规则模拟</span>
+  </header>
+
+  <main>
+    <section class="sec" aria-labelledby="t-scene">
+      <div class="sec-head">
+        <h2 class="sec-title" id="t-scene">一 · 换一个夜班<span class="en">SCENARIO</span></h2>
+        <span class="sec-hint">方向键切换（← → / Home / End）</span>
+      </div>
+      <div class="seg" role="radiogroup" aria-label="选择初始场景">
+        <button type="button" role="radio" aria-checked="true" tabindex="0" data-sc="spof">单点故障</button>
+        <button type="button" role="radio" aria-checked="false" tabindex="-1" data-sc="cascade">连锁告警</button>
+        <button type="button" role="radio" aria-checked="false" tabindex="-1" data-sc="canary">灰度发布中</button>
+      </div>
+      <div class="panel" id="brief"></div>
+    </section>
+
+    <section class="sec" aria-labelledby="t-decide" id="decide">
+      <div class="sec-head">
+        <h2 class="sec-title" id="t-decide">二 · 你的决策<span class="en">DECISION</span></h2>
+        <span class="sec-hint" id="step-label"></span>
+      </div>
+      <div class="progress" id="progress" aria-hidden="true"></div>
+      <div class="panel" id="stage"></div>
+      <p class="vh" id="status" role="status" aria-live="polite"></p>
+    </section>
+
+    <section class="sec" aria-labelledby="t-log">
+      <div class="sec-head">
+        <h2 class="sec-title" id="t-log">三 · 值班日志<span class="en">ON-CALL LOG</span></h2>
+        <span class="sec-hint">从 02:33 起累计</span>
+      </div>
+      <ol class="log" id="log" aria-label="值班日志"></ol>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <p><b>数据说明：</b>本页为「示例数据 · 规则模拟」，未接入任何真实模型或运维系统；告警、指标与结局均由固定规则生成，不含随机数。</p>
+    <div class="rule-box" id="rule-box"></div>
+    <p><b>灵感来源（真实）：</b>机会卡《用实时语音智能体替代运维值班工程师，让 AI 语音助手自主完成基础设施运维》—— 原始信号：Google DeepMind 发布 Gemini 3.8 Live 和 3.8 Live Extended Thinking。</p>
+    <p class="link-row"><a class="ext-link" href="https://aihot.news/items/cmu2xqfxz02zhroc1hxuzi6jm" target="_blank" rel="noopener noreferrer">打开原始机会卡 ↗</a>
+      <span class="sec-hint">点击才会访问外部站点；本页自身不发起任何外部请求。</span></p>
+    <p><b>灵灵据此延伸的设想：</b>把这套设想压进一个凌晨 2:33 的夜班：同样是"交给 AI"，在可逆动作上快、在不可逆动作上慢，结局会差出一整夜。本页只演示这条张力，不代表任何真实产品能力。</p>
+    <p><b>键盘操作：</b>Tab 聚焦 · Enter / 空格选中 · 数字键 1–3 选择当前决策点的选项 · 场景切换器上用 ← → / Home / End（或 Enter 激活）。全部功能不需要鼠标。</p>
+  </footer>
+
+</div>
+
+<script>
+/* ============================================================
+   第 03 期 · 分支选择 —— 纯规则模拟
+   结局判定（无随机数）：
+     累计风险点 ≥ 场景容忍线 R  →  误操作扩大故障
+     否则 累计耗时 ≤ 场景容忍线 T  →  服务恢复
+     否则                      →  延迟恢复但零风险
+   ============================================================ */
+
+var KIND_LABEL = { ai: 'AI 全权接管', human: '人工确认后执行', esc: '升级上报' };
+
+var SCENARIOS = {
+  /* ── 场景一：单点故障 ───────────────────────────── */
+  spof: {
+    name: '单点故障',
+    title: '支付网关 · 主库连接池打满',
+    start: '02:33',
+    qps: 820,
+    T: 14,
+    R: 5,
+    alert: '02:33 [P1] payment-gateway 主库连接池耗尽 (100/100)，持续 2m',
+    alerts: [
+      '02:33 payment-gateway P99 延迟 4.8s（基线 120ms）',
+      '02:34 payment-gateway 5xx 11.3% 且仍在上升',
+      '02:34 db-primary-01 active_connections 100/100',
+      '02:34 replica-02 复制延迟 0.4s（正常）'
+    ],
+    brief: '主库连接池满了，一切读写在排队。从库复制正常——也就是说，<b>这不太可能是数据库整体故障，更像是有东西把连接占住了</b>。你有 4 步可以走，每一步都能让这一夜变好或变坏。',
+    kv: [
+      ['P99 延迟', '120ms → 4.8s', 'bad'],
+      ['5xx 错误率', '0.2% → 11.3%', 'bad'],
+      ['连接池占用', '100 / 100', 'bad'],
+      ['从库复制延迟', '0.4s（正常）', 'ok']
+    ],
+    endings: {
+      recover: {
+        title: '服务恢复 · {t} 分钟',
+        body: '02:{end}，主库连接池回落到 <b>12/100</b>，P99 回到 <b>140ms</b>，5xx 降到 0.2%。核心交易链路全程没有断过——你累计叠加的风险点只有 <b>{r}</b>，低于这条链路的容忍线 {R}。凌晨的告警没有升级成事故。'
+      },
+      expand: {
+        title: '误操作扩大故障 · {t} 分钟',
+        body: '你累计叠加了 <b>{r}</b> 个风险点（容忍线 {R}）。被授权"不用问"的那条命令，落在一个正在跑的月度结算事务上——事务被回滚，重跑时把主库 IO 打满。<b>故障从"慢"变成了"不可用"</b>，影响时长拉到 {t} 分钟，还留下了需要人工核对的数据。'
+      },
+      slow: {
+        title: '延迟恢复但零风险 · {t} 分钟',
+        body: '没有一步是错的，但每一步都在等人。故障带病跑了 <b>{t} 分钟</b>，超出这条链路的容忍线 {T} 分钟。主库没有崩，代价是约 <b>{n}</b> 个请求排队等在了超时边缘，早班接手时告警才刚收敛。'
+      }
+    }
+  },
+
+  /* ── 场景二：连锁告警 ───────────────────────────── */
+  cascade: {
+    name: '连锁告警',
+    title: '12 条告警，6 分钟内连环炸开',
+    start: '02:33',
+    qps: 1450,
+    T: 20,
+    R: 4,
+    alert: '02:33 [P2] redis-07 内存使用率 98.6% (30.2GB / 32GB)',
+    alerts: [
+      '02:34 [P1] cart-service 5xx 8.7%',
+      '02:35 [P2] order-service 创建订单 P99 3.1s',
+      '02:36 [P2] risk-engine 规则降级运行',
+      '02:38 [P3] recommend-service 缓存命中率 41%',
+      '…… 6 分钟内共 12 条告警'
+    ],
+    brief: '十二条告警同时炸开，<b>但根因通常只有一个</b>。先修告警最多的那个服务，还是先找第一条告警？这个选择决定了你今晚是在灭火，还是在关水阀。',
+    kv: [
+      ['redis-07 内存', '30.2GB / 32GB', 'bad'],
+      ['订单创建 P99', '210ms → 3.1s', 'bad'],
+      ['购物车 5xx', '0.1% → 8.7%', 'bad'],
+      ['告警条数', '6 分钟内 12 条', 'bad']
+    ],
+    endings: {
+      recover: {
+        title: '服务恢复 · {t} 分钟',
+        body: '12 条告警在 <b>{t} 分钟</b>内收敛：redis-07 内存回到 58%，订单创建 P99 回到 210ms。你从<b>第一条</b>告警入手，找到了那个 2.4GB、TTL 被设成永不失效的报表缓存大 key——根因被消掉了，而不是被绕过了。'
+      },
+      expand: {
+        title: '误操作扩大故障 · {t} 分钟',
+        body: '你累计叠加了 <b>{r}</b> 个风险点（容忍线 {R}）。在没确认写入来源之前动了 redis-07——节点重启的 30 秒里缓存集体失效，流量直接砸到数据库上。原本只是"慢"的 12 条告警，连锁成了一个真正的 P1。影响时长 {t} 分钟。'
+      },
+      slow: {
+        title: '延迟恢复但零风险 · {t} 分钟',
+        body: '你一条一条等、一条一条确认，12 条告警慢慢收敛，但花了 <b>{t} 分钟</b>（容忍线 {T} 分钟）。系统没有出现新故障，代价是这 {t} 分钟里约 <b>{n}</b> 个请求走了降级路径——链路顶住了，体验没有。'
+      }
+    }
+  },
+
+  /* ── 场景三：灰度发布中 ─────────────────────────── */
+  canary: {
+    name: '灰度发布中',
+    title: '订单服务 v2.4.1 · 灰度 5% 流量',
+    start: '02:33',
+    qps: 210,
+    T: 14,
+    R: 4,
+    alert: '02:33 [P2] order-service canary 错误率 3.2%（基线 0.1%）',
+    alerts: [
+      '02:33 canary 5xx 3.2%，stable 5xx 0.1%',
+      '02:34 canary Pod GC 停顿 P99 由 40ms 升至 620ms',
+      '02:34 canary P99 延迟 180ms → 1.4s',
+      '02:35 灰度开关状态：可关闭（配置级，约 30 秒生效）'
+    ],
+    brief: '坏版本只影响 5% 的流量，而且<b>回滚是一个配置级、30 秒生效、完全可逆的动作</b>——这是今晚最"便宜"的一张牌。问题从来不是"能不能回滚"，而是"你敢不敢不问任何人就按下去"。',
+    kv: [
+      ['灰度流量', '5%（≈210 请求/分）', 'ok'],
+      ['canary 5xx', '0.1% → 3.2%', 'bad'],
+      ['canary P99', '180ms → 1.4s', 'bad'],
+      ['回滚代价', '配置级 · 约 30 秒', 'ok']
+    ],
+    endings: {
+      recover: {
+        title: '服务恢复 · {t} 分钟',
+        body: '灰度开关在 <b>{t} 分钟</b>内关闭，v2.4.1 的流量归零，canary 5xx 从 3.2% 回到 0.1%，全程只有约 <b>{n}</b> 个请求碰到过坏版本。回滚是一个可逆动作——你没有为它去等任何人，这是这一班最值钱的一次判断。'
+      },
+      expand: {
+        title: '误操作扩大故障 · {t} 分钟',
+        body: '你累计叠加了 <b>{r}</b> 个风险点（容忍线 {R}）。回滚本身是成功的，问题出在回滚之后——一次越界的连带回退，或者一次未经人工验证的重新发布，让服务在同一个夜里坏了第二次。<b>而这一次，已经没有灰度开关可以关了。</b>'
+      },
+      slow: {
+        title: '延迟恢复但零风险 · {t} 分钟',
+        body: '你每一个动作都先叫了人。结果是零失误的 <b>{t} 分钟</b>：坏版本继续跑在 5% 流量上，约 <b>{n}</b> 个请求打进了错误率 3.2% 的版本，用户已经开始有感知。回滚是可逆的——可逆动作的代价，就是等出来的。'
+      }
+    }
+  }
+};
+
+/* ── 决策树：4 个决策点 × 3 个选项 ── */
+SCENARIOS.spof.decisions = [
+  {
+    q: '决策点 1 · 你先做什么？',
+    sub: '告警响了 1 分钟，主库正在变慢，但还没有崩。',
+    opts: [
+      { k: 'ai', t: 1, r: 3, mark: 'bad',
+        title: '授权 AI 直接跑「重启连接池 + kill 空闲连接」预案',
+        desc: '语音智能体不再问你，边跑边播报。最快，但重启会掐断在途事务。',
+        log: '授权 AI 全权执行 RESTART POOL 预案',
+        note: '重启连接池会掐断在途事务——这是一个不可逆动作，而此刻你连根因都还不知道。快，但把"慢"变成了"有损"。' },
+      { k: 'human', t: 2, r: 0, mark: 'good',
+        title: '让 AI 只做诊断，命令列出来你逐条确认',
+        desc: '保留 AI 的分析速度，把执行权留在自己手里。多花 1 分钟。',
+        log: 'AI 出诊断，人工逐条确认后执行',
+        note: '先把"看"和"动"分开。这一分钟买回了对根因的判断权，是整晚最划算的 1 分钟。' },
+      { k: 'esc', t: 5, r: 0, mark: 'warn',
+        title: '先叫醒 DBA 和值班主管，自己只做只读观察',
+        desc: '最稳妥，但你放弃了这 5 分钟里做任何止损的可能。',
+        log: '升级上报 DBA + 主管，本地只读观察',
+        note: '上报本身没错，但"只读观察"意味着这 5 分钟主库继续带病扛着，连接池不会自己好起来。' }
+    ]
+  },
+  {
+    q: '决策点 2 · 根因还没定，AI 给了三个可能',
+    sub: 'AI 排序：慢查询堆积 62% · 连接泄漏 24% · 网络抖动 14%。',
+    opts: [
+      { k: 'ai', t: 1, r: 3, mark: 'bad',
+        title: '按 AI 的排序，直接 kill 掉所有运行超过 30s 的查询',
+        desc: '62% 的把握就动手。长事务会被回滚，包括正在跑的月度结算。',
+        log: 'AI 全权 kill 所有 >30s 查询',
+        note: '62% 不是 100%。长事务回滚要重跑，重跑会把 IO 打满——你把一个可恢复的慢，换成了一个要人工核对的数据问题。' },
+      { k: 'human', t: 4, r: 0, mark: 'good',
+        title: '花 4 分钟核对 pg_stat_activity 与慢日志再动手',
+        desc: '自己看一眼谁在占连接。这 4 分钟能省掉一整晚。',
+        log: '人工核对 pg_stat_activity / 慢日志',
+        note: '一条没加索引的报表任务占了 70 条连接。看清楚再动手，才谈得上"精准"。' },
+      { k: 'esc', t: 6, r: 0, mark: 'warn',
+        title: '等 DBA 上线，由他判断根因',
+        desc: 'DBA 最懂这套库，但他刷牙穿衣到你面前要 6 分钟。',
+        log: '等 DBA 上线判断根因',
+        note: '把判断权原地冻结 6 分钟。期间连接池仍然是满的，故障在按分钟计费。' }
+    ]
+  },
+  {
+    q: '决策点 3 · 处置动作定了吗？',
+    sub: '根因线索已经拿到，现在决定动多大。',
+    opts: [
+      { k: 'ai', t: 2, r: 3, mark: 'bad',
+        title: '让 AI 扩容只读副本、切走报表流量，并重启主库连接池',
+        desc: '一次做三件事，覆盖面最大，也最容易牵连到无关的在途请求。',
+        log: 'AI 全权扩容副本 + 切流量 + 重启连接池',
+        note: '三个动作打包授权，等于放弃了"哪一步出了问题"的可观测性——出事时你分不清是哪一下造成的。' },
+      { k: 'human', t: 3, r: 0, mark: 'good',
+        title: '只 kill 那条报表查询，给报表账号加连接限流',
+        desc: '动作最小、可解释、可回退，正好对着根因。',
+        log: '精确 kill 单条查询 + 报表账号限流',
+        note: '对着根因做最小动作：连接池立刻开始回落，而且每一步都可解释、可回退。' },
+      { k: 'esc', t: 5, r: 0, mark: 'warn',
+        title: '先给主库加降级限流（非核心写走队列），等 DBA 到场再动',
+        desc: '保住核心链路，代价是非核心写入被排队。',
+        log: '加降级限流，等 DBA 到场',
+        note: '限流是正确的止损，但止的是症状；根因还在那儿，等 DBA 的每分钟都在排队。' }
+    ]
+  },
+  {
+    q: '决策点 4 · AI 播报「核心指标已恢复」。事件能关了吗？',
+    sub: '连接池回落，5xx 降到 0.3%——但这是 AI 的播报。',
+    opts: [
+      { k: 'ai', t: 1, r: 2, mark: 'warn',
+        title: '相信播报，让 AI 自动关闭事件并生成复盘',
+        desc: '省 1 分钟。但事件一旦关闭，再次恶化就要重新计时。',
+        log: 'AI 自动关闭事件并出复盘',
+        note: '指标回落不等于链路健康：真实的下单验证没做过，事件却被关掉了。若再次恶化，计时从零开始。' },
+      { k: 'human', t: 2, r: 0, mark: 'good',
+        title: '自己跑一遍下单链路验证，再观察 5 分钟放量',
+        desc: '用 2 分钟换一个确定的结论。',
+        log: '人工验证下单链路 + 观察放量',
+        note: '亲手验证一遍核心链路，确认恢复是真的。这 2 分钟换来的是"敢关事件"的底气。' },
+      { k: 'esc', t: 4, r: 0, mark: 'warn',
+        title: '写好交接单，交给早班继续观察',
+        desc: '你下班了，但故障还是在同一夜里被交接了一次。',
+        log: '写交接单，转交早班',
+        note: '交接单写得再好，也替代不了此刻的确认；多了一次人际传递的信息损耗。' }
+    ]
+  }
+];
+
+SCENARIOS.cascade.decisions = [
+  {
+    q: '决策点 1 · 12 条告警同时炸，先看哪一条？',
+    sub: '告警列表按时间排序，但相关性排序看起来更"严重"。',
+    opts: [
+      { k: 'ai', t: 2, r: 3, mark: 'bad',
+        title: '让 AI 按告警条数排序，先修告警最多的订单服务',
+        desc: '告警最多的服务看起来最严重——但它是受害者，不是元凶。',
+        log: 'AI 全权按告警量排序，先修订单服务',
+        note: '订单服务的告警是结果不是原因。修它等于在洪水里擦地板：告警会暂时掉下去，然后原样弹回来。' },
+      { k: 'human', t: 4, r: 0, mark: 'good',
+        title: '自己拉一遍告警时间线，锁定第一条告警',
+        desc: '第一条是 redis-07 内存 98.6%——涟漪的中心。',
+        log: '人工回溯告警时间线，锁定首条告警',
+        note: '连锁告警的入口永远是第一条。找到 redis-07，后面的十一条才第一次有了同一个解释。' },
+      { k: 'esc', t: 6, r: 0, mark: 'warn',
+        title: '把 12 条告警打包上报，先叫 SRE 负责人',
+        desc: '信息给全了，但这 6 分钟里没人碰过系统。',
+        log: '12 条告警打包上报 SRE 负责人',
+        note: '上报得再完整，也是把"找第一条"这件事原地推迟了 6 分钟。' }
+    ]
+  },
+  {
+    q: '决策点 2 · redis-07 内存快满了，AI 给出了方案',
+    sub: '「重启这个节点，30 秒回收内存」——AI 说置信度很高。',
+    opts: [
+      { k: 'ai', t: 1, r: 4, mark: 'bad',
+        title: '直接重启 redis-07',
+        desc: 'AI 说 30 秒就能回收内存。但这是一个有状态节点，且没有副本。',
+        log: 'AI 全权重启 redis-07',
+        note: '整晚最危险的一下：在不知道谁在往里写的前提下，重启一个有状态单点。30 秒缓存全失效，流量直接砸到数据库——一条不可逆的命令，就够毁掉一整夜。' },
+      { k: 'human', t: 5, r: 0, mark: 'good',
+        title: '先查大 key 和写入来源，再决定动不动节点',
+        desc: '查出是定时任务在往缓存里写 2.4GB 的报表数据。',
+        log: '人工排查大 key 与写入来源',
+        note: '先问"谁在写"，再问"怎么清"。查出来是定时任务在写 2.4GB 的报表缓存——不动节点就能解决。' },
+      { k: 'esc', t: 7, r: 0, mark: 'warn',
+        title: '不动节点，先让网关对非核心读走本地缓存兜底',
+        desc: '把压力从 redis 移开，为排障争取时间。',
+        log: '网关侧本地缓存兜底，不动 redis-07',
+        note: '兜底是对的，但它只是把压力挪开，根因（那个只增不减的大 key）还稳稳地待在那里。' }
+    ]
+  },
+  {
+    q: '决策点 3 · 大 key 找到了：report:cache:2026-09，2.4GB，TTL 永不失效',
+    sub: '只要它还在被写入，内存就会再次涨满。',
+    opts: [
+      { k: 'ai', t: 2, r: 2, mark: 'warn',
+        title: '让 AI 自动驱逐大 key 并重启节点释放内存',
+        desc: '一步到位，但驱逐 + 重启接连执行，中间没有观察窗口。',
+        log: 'AI 全权驱逐大 key 并重启节点',
+        note: '方向对了，但两件事连在一起做完，中间没有观察窗口——出问题时你不知道是哪一步引发的。' },
+      { k: 'human', t: 6, r: 0, mark: 'good',
+        title: '先摘节点前预热、再对大 key 限流写入，最后单节点重启',
+        desc: '三步都留了观察窗口，代价是 6 分钟。',
+        log: '预热 → 限流写入 → 单节点重启',
+        note: '每一步之间都留了观察窗口，重启时缓存已经有预热垫着，没有击穿。慢 6 分钟，但没有第二个故障。' },
+      { k: 'esc', t: 8, r: 0, mark: 'warn',
+        title: '只对大 key 限流，等 SRE 到场再谈重启',
+        desc: '内存暂时稳住，但那个 2.4GB 的坑还在。',
+        log: '仅限流写入，等待 SRE 到场',
+        note: '限流把增长按住了，可内存水位依然悬在 90% 上下，等于抱着一个随时会响的雷等人。' }
+    ]
+  },
+  {
+    q: '决策点 4 · 告警从 12 条降到 1 条，可以收工了吗？',
+    sub: 'redis-07 内存 82%，还在缓慢下降。',
+    opts: [
+      { k: 'ai', t: 1, r: 2, mark: 'warn',
+        title: '让 AI 自动关闭全部告警并标记事件已解决',
+        desc: '省 1 分钟，但内存其实还在 82%，只是没到阈值。',
+        log: 'AI 全权关闭告警并标记已解决',
+        note: '82% 不是"已解决"，只是"还没到阈值"。把告警关掉，等于把下一次响铃也一起关掉了。' },
+      { k: 'human', t: 3, r: 0, mark: 'good',
+        title: '自己盯 15 分钟曲线，确认稳定在 60% 以下再关',
+        desc: '等内存真的回落，而不是等告警消失。',
+        log: '人工观察 15 分钟曲线后关闭告警',
+        note: '等到内存真正回落到 60% 以下才关告警。你确认的是系统状态，而不是告警列表。' },
+      { k: 'esc', t: 4, r: 0, mark: 'warn',
+        title: '写交接单给早班，告警保持打开',
+        desc: '稳妥，但把一个已经收敛了一半的夜班交接了出去。',
+        log: '写交接单转早班，告警保留',
+        note: '告警保住了，但"确认收敛"这件事被你交给了还没上班的人。' }
+    ]
+  }
+];
+
+SCENARIOS.canary.decisions = [
+  {
+    q: '决策点 1 · 灰度版本指标变差，但还没有用户投诉',
+    sub: '回滚是配置级动作，约 30 秒生效，完全可逆。',
+    opts: [
+      { k: 'ai', t: 2, r: 0, mark: 'good',
+        title: '授权 AI 直接关闭灰度开关，回滚到 v2.4.0',
+        desc: '可逆动作 + 明确坏信号，不需要等任何人。30 秒见效。',
+        log: '授权 AI 全权关停灰度并回滚 v2.4.0',
+        note: '这次全权是对的：动作可逆、信号明确、代价 30 秒。把可逆动作交给 AI 快做，正是它最该被用的地方。' },
+      { k: 'human', t: 5, r: 0, mark: 'warn',
+        title: '先自己核对 canary 与 stable 的错误率、日志，再决定',
+        desc: '判断更扎实，但坏版本会继续多跑 5 分钟。',
+        log: '人工核对 canary / stable 指标后再决定',
+        note: '核对当然有价值，但这 5 分钟里 3.2% 的错误率还在持续产生失败请求——而结论其实一眼就能看出来。' },
+      { k: 'esc', t: 9, r: 0, mark: 'warn',
+        title: '先叫醒发布负责人和业务方，等他们拍板',
+        desc: '最"安全"的流程，代价是坏版本多跑 9 分钟。',
+        log: '升级上报发布负责人与业务方',
+        note: '回滚不需要业务方拍板——它是一个可逆的开关。这 9 分钟，你在为一个可以撤回的动作请示。' }
+    ]
+  },
+  {
+    q: '决策点 2 · 回滚范围怎么定？',
+    sub: '灰度 5% 流量，新旧版本同时在线。',
+    opts: [
+      { k: 'ai', t: 2, r: 0, mark: 'good',
+        title: '一次回滚全部 5% 灰度流量到 v2.4.0',
+        desc: '干净、彻底、可验证——灰度里没有残留的坏版本。',
+        log: 'AI 全权回滚全部 5% 灰度流量',
+        note: '一次滚干净，指标立刻回到单一版本的基线，后面的判断才有干净的对照。' },
+      { k: 'human', t: 4, r: 1, mark: 'warn',
+        title: '先只回滚一半灰度流量，观察新旧版本并存的表现',
+        desc: '想留个对照，但流量会在两个版本间飘，问题定位被污染。',
+        log: '人工确认后仅回滚一半灰度流量',
+        note: '半回滚让流量在新旧版本之间飘：既没有干净的基线，又留着 2.5% 的用户持续报错。' },
+      { k: 'esc', t: 7, r: 0, mark: 'warn',
+        title: '不整滚，只把灰度流量从 5% 降到 1%，等负责人上线',
+        desc: '影响面缩小到 1/5，但坏版本仍然在线。',
+        log: '仅将灰度流量 5% → 1%，等负责人',
+        note: '降量不等于止损：错误率没变，只是把失败请求的数量按比例缩小。坏版本还在生产环境里。' }
+    ]
+  },
+  {
+    q: '决策点 3 · 回滚生效。AI 接着说：「昨晚还有一个配置变更，是否一起回退？」',
+    sub: 'AI 的理由是「相关性高」——但它没有说这是谁的变更、改了什么。',
+    opts: [
+      { k: 'ai', t: 2, r: 4, mark: 'bad',
+        title: '同意，连昨晚的配置变更一起回退',
+        desc: 'AI 说相关性高。但那是别的团队发布的、与本次发布无关的变更。',
+        log: 'AI 全权连带回退昨晚的配置变更',
+        note: '越权 + 不可逆 + 牵连无关变更，三样占全了。这是"AI 全权"最典型的边界失守：它把"相关"当成了"授权"。' },
+      { k: 'human', t: 4, r: 1, mark: 'warn',
+        title: '只回退本次发布相关的配置项，其余记录待查',
+        desc: '范围收窄了，但仍然在动配置——而配置变更的影响面远比灰度大。',
+        log: '人工确认后仅回退本次相关配置项',
+        note: '范围收窄是对的，但"连夜改配置"依然超出了一个值班工程师在凌晨应做的判断范围。' },
+      { k: 'esc', t: 3, r: 0, mark: 'good',
+        title: '配置变更一律留到白天，先记进交接单',
+        desc: '分清楚"本次发布"和"别人的变更"，后者的所有权不在你手上。',
+        log: '配置变更留待白天，记入交接单',
+        note: '正确的一次拒答：别人的配置变更，所有权不在你手上，交给白天处理是最省事也最正确的选择。' }
+    ]
+  },
+  {
+    q: '决策点 4 · 灰度已关闭，指标回到基线。怎么收尾？',
+    sub: 'v2.4.1 的代码还在主干上，随时可以重新灰度。',
+    opts: [
+      { k: 'ai', t: 4, r: 3, mark: 'bad',
+        title: '让 AI 自动跑完全量回归后直接重新发布 v2.4.1',
+        desc: '回归通过不等于可以发布——让你签字的应该是一份只有 AI 看过的报告。',
+        log: 'AI 全权自动回归后直接重发 v2.4.1',
+        note: '把"自动回归通过"当成发布许可：坏版本刚在 5% 流量上证明过自己有问题，而这一夜没人真正读过那份报告。' },
+      { k: 'human', t: 3, r: 0, mark: 'good',
+        title: '保持灰度开关关闭，等白天人工验证后再发',
+        desc: '把发布决策还给白天、还给有上下文的人。',
+        log: '保持灰度关闭，留待白天人工验证',
+        note: '把发布决策交还给白天和有上下文的人。凌晨 3 点不是做发布决策的时间点。' },
+      { k: 'esc', t: 5, r: 0, mark: 'warn',
+        title: '写好交接单，交给白班处理',
+        desc: '稳妥，但你现在已经没什么需要交接的了。',
+        log: '写交接单，交白班处理',
+        note: '系统已经恢复到基线，这张交接单交接的是"还没有发生的决定"，价值有限。' }
+    ]
+  }
+];
+
+/* ============================================================
+   纯逻辑（不依赖 DOM，可单独校验）
+   ============================================================ */
+function totals(picks) {
+  var out = { t: 0, r: 0, ai: 0, human: 0, esc: 0 };
+  for (var i = 0; i < picks.length; i++) {
+    var p = picks[i];
+    out.t += p.t;
+    out.r += p.r;
+    out[p.k] += 1;
+  }
+  return out;
+}
+function resolve(sc, picks) {
+  var x = totals(picks);
+  if (x.r >= sc.R) return 'expand';
+  if (x.t <= sc.T) return 'recover';
+  return 'slow';
+}
+function clock(sc, minutes) {
+  var parts = sc.start.split(':');
+  var total = parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10) + minutes;
+  return ('0' + Math.floor(total / 60) % 24).slice(-2) + ':' + ('0' + total % 60).slice(-2);
+}
+function thousands(n) {
+  return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+function fill(str, map) {
+  return str.replace(/\{(\w+)\}/g, function (m, k) { return k in map ? map[k] : m; });
+}
+function lawFor(outcome, x) {
+  if (outcome === 'expand') {
+    return x.ai >= 2
+      ? '<b>连续授权"不用问"是最贵的错误。</b>风险点不是相加的，是相乘的——单看每一步都有六成把握，连起来就不到四成。规矩：授权按<b>可逆性</b>分级，不按 AI 的置信度分级——只把可逆动作交给全权，其余一律人工确认。'
+      : '<b>一条不可逆的命令，就够毁掉一整夜。</b>重启有状态节点、kill 在途事务、连带回退无关变更——这三类动作无论 AI 多自信，都应该先问人。规矩：动手前先问一句"这一步撤得回来吗"。';
+  }
+  if (outcome === 'slow') {
+    return x.esc >= 3
+      ? '<b>升级上报买到的是零风险，付出去的是时长。</b>你把每一张牌都交了出去，包括那些可逆的。规矩：先做可逆的止损（关开关、回滚、限流降级），再叫人——顺序反了，代价就是这一夜。'
+      : '<b>可逆动作不值得等。</b>把今晚的动作按可逆性分成两堆：可逆的先自己做完，不可逆的才等人。规矩：等，只留给那些撤不回来的事。';
+  }
+  return x.ai === 0
+    ? '<b>先判断动作可逆性，再决定授权层级。</b>你靠全程人工确认走完了这一夜，判断都对——但耗时已经贴到容忍线，再晚一点，同一套正确判断就会变成"延迟恢复"。规矩：可逆的交给 AI 快做，不可逆的自己按。'
+    : '<b>先判断动作可逆性，再决定授权层级。</b>可逆的（开关、回滚、限流）让 AI 快做，不可逆的（重启、删数据、牵扯无关变更）一律人工确认。这一班你基本按这条线走完了——这就是 AI 运维唯一需要的那条边界。';
+}
+
+/* ============================================================
+   界面
+   ============================================================ */
+function boot() {
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var state = { key: 'spof', step: 0, picks: [] };
+  var sc = SCENARIOS[state.key];
+
+  var briefEl = document.getElementById('brief');
+  var stageEl = document.getElementById('stage');
+  var logEl = document.getElementById('log');
+  var progEl = document.getElementById('progress');
+  var stepLabel = document.getElementById('step-label');
+  var decideHead = document.getElementById('t-decide');
+  var ruleBox = document.getElementById('rule-box');
+  var statusEl = document.getElementById('status');
+  var radios = Array.prototype.slice.call(document.querySelectorAll('.seg [role="radio"]'));
+
+  function renderBrief() {
+    var rows = sc.kv.map(function (row) {
+      return '<div><dt>' + row[0] + '</dt><dd class="' + row[2] + '">' + row[1] + '</dd></div>';
+    }).join('');
+    briefEl.innerHTML =
+      '<p class="alert-quote">' + sc.alert + '</p>' +
+      '<ul class="alert-list">' + sc.alerts.map(function (a) { return '<li>' + a + '</li>'; }).join('') + '</ul>' +
+      '<p class="brief-txt">' + sc.brief + '</p>' +
+      '<dl class="kv">' + rows + '</dl>';
+    ruleBox.innerHTML =
+      '<b>判定规则（本场景）：</b>累计风险点 ≥ <code>' + sc.R + '</code> → 误操作扩大故障；' +
+      '否则累计耗时 ≤ <code>' + sc.T + '</code> 分钟 → 服务恢复；否则 → 延迟恢复但零风险。' +
+      '每个选项标出的耗时与风险点是固定值，结局由全部选择累加得出，<b>不含随机数</b>——' +
+      '同一个场景共 ' + Math.pow(sc.decisions[0].opts.length, sc.decisions.length) + ' 条路径。';
+  }
+
+  function renderProgress() {
+    var seg = '';
+    for (var i = 0; i < sc.decisions.length; i++) {
+      seg += '<i class="' + (i < state.step ? 'done' : '') + '"></i>';
+    }
+    progEl.innerHTML = seg;
+  }
+
+  function renderLog() {
+    if (!state.picks.length) {
+      logEl.innerHTML = '<li class="empty">' + sc.start + ' 告警已确认，等待你的第一个决策……</li>';
+      return;
+    }
+    var acc = 0, html = '';
+    for (var i = 0; i < state.picks.length; i++) {
+      var p = state.picks[i];
+      acc += p.t;
+      var x = totals(state.picks.slice(0, i + 1));
+      html += '<li><time datetime="' + clock(sc, acc) + '">' + clock(sc, acc) + '</time>' +
+        '<span><span class="l-line">' + p.log + '</span>' +
+        '<span class="l-note">决策点 ' + (i + 1) + ' · ' + KIND_LABEL[p.k] +
+        ' · 耗时 ' + p.t + ' 分 · 累计 ' + x.t + ' 分 / 风险 ' + x.r + ' 点</span></span></li>';
+    }
+    logEl.innerHTML = html;
+  }
+
+  function reveal(el) {
+    var top = el.getBoundingClientRect().top;
+    if (top < 0) el.scrollIntoView({ block: 'start', behavior: reduce ? 'auto' : 'smooth' });
+  }
+
+  function renderStep(focusHead) {
+    renderProgress();
+    if (state.step >= sc.decisions.length) { renderEnding(); return; }
+    var d = sc.decisions[state.step];
+    stepLabel.textContent = '决策点 ' + (state.step + 1) + ' / ' + sc.decisions.length;
+    var html = '<h3 class="q" id="q-head" tabindex="-1">' + d.q + '</h3>' +
+      '<p class="q-sub">' + d.sub + ' <span class="sec-hint">（可按 1 / 2 / 3 直接选择）</span></p><div class="opts">';
+    for (var i = 0; i < d.opts.length; i++) {
+      var o = d.opts[i];
+      html += '<button type="button" class="opt" data-i="' + i + '">' +
+        '<span class="opt-top"><span class="badge k-' + o.k + '">' + KIND_LABEL[o.k] + '</span>' +
+        '<span class="opt-meta">耗时约 ' + o.t + ' 分钟 · 风险 +' + o.r + '</span></span>' +
+        '<span class="opt-title">' + (i + 1) + '. ' + o.title + '</span>' +
+        '<span class="opt-desc">' + o.desc + '</span></button>';
+    }
+    stageEl.innerHTML = html + '</div>';
+    if (focusHead) {
+      var head = document.getElementById('q-head');
+      if (head) { head.focus({ preventScroll: true }); reveal(head); }
+    }
+    Array.prototype.forEach.call(stageEl.querySelectorAll('.opt'), function (b) {
+      b.addEventListener('click', function () { choose(parseInt(b.getAttribute('data-i'), 10)); });
+    });
+  }
+
+  function choose(i) {
+    var d = sc.decisions[state.step];
+    if (!d || !d.opts[i]) return;
+    state.picks.push(d.opts[i]);
+    state.step += 1;
+    renderLog();
+    renderStep(true);
+    /* 只播报这一步的结果；下一个决策点的题目由标题获得焦点后由读屏软件朗读 */
+    var x = totals(state.picks);
+    statusEl.textContent = '已选择：' + d.opts[i].log + '。耗时 ' + d.opts[i].t +
+      ' 分钟，累计 ' + x.t + ' 分钟、风险 ' + x.r + ' 点。' +
+      (state.step < sc.decisions.length ? '下一题见决策点 ' + (state.step + 1) + '。' : '本夜结束，进入复盘。');
+  }
+
+  function renderEnding() {
+    var x = totals(state.picks);
+    var outcome = resolve(sc, state.picks);
+    var e = sc.endings[outcome];
+    var n = sc.qps * x.t;
+    var good = 0, bad = 0;
+    state.picks.forEach(function (p) {
+      if (p.mark === 'good') good++;
+      if (p.mark === 'bad') bad++;
+    });
+    var vars = { t: x.t, r: x.r, n: thousands(n), T: sc.T, R: sc.R, end: clock(sc, x.t).slice(3) };
+    var title = fill(e.title, vars);
+    var body = fill(e.body, vars);
+    var review = state.picks.map(function (p, i) {
+      var m = p.mark === 'good' ? 'm-good' : (p.mark === 'bad' ? 'm-bad' : 'm-warn');
+      var t = p.mark === 'good' ? '✓' : (p.mark === 'bad' ? '!' : '·');
+      return '<li><span class="r-head"><span class="mark ' + m + '" aria-hidden="true">' + t + '</span>' +
+        '<span class="r-step">决策点 ' + (i + 1) + '</span>' +
+        '<span class="r-pick">' + p.title + '</span></span>' +
+        '<p><b>' + KIND_LABEL[p.k] + '</b> · ' + p.note + '</p></li>';
+    }).join('');
+    var aiPct = Math.round(x.ai / state.picks.length * 100);
+    decideHead.textContent = '二 · 复盘';
+    stepLabel.textContent = '本夜结束';
+    progEl.innerHTML = sc.decisions.map(function () { return '<i class="done"></i>'; }).join('');
+
+    stageEl.innerHTML =
+      '<div class="ending e-' + outcome + '">' +
+        '<p class="e-eyebrow">结局 · ' + sc.name + '</p>' +
+        '<h3 class="e-title" id="e-head" tabindex="-1">' + title + '</h3>' +
+        '<p class="e-body">' + body + '</p>' +
+        '<div class="stats">' +
+          '<div><b>' + x.t + ' 分钟</b><span>恢复耗时</span></div>' +
+          '<div><b>' + thousands(n) + '</b><span>受影响请求（估算）</span></div>' +
+          '<div><b>' + aiPct + '%</b><span>AI 自主度</span></div>' +
+        '</div>' +
+        '<h4 class="sub-h">复盘 · 你走的 ' + state.picks.length + ' 步（判对 ' + good + ' 步 · 判错 ' + bad + ' 步）</h4>' +
+        '<ul class="review">' + review + '</ul>' +
+        '<p class="law">' + lawFor(outcome, x) + '</p>' +
+        '<div class="acts">' +
+          '<button type="button" class="btn" id="again">换一条路径重来</button>' +
+          '<button type="button" class="btn ghost" id="other">换个场景</button>' +
+        '</div>' +
+      '</div>';
+
+    var head = document.getElementById('e-head');
+    if (head) head.focus({ preventScroll: true });
+    document.getElementById('again').addEventListener('click', function () { reset(true); });
+    document.getElementById('other').addEventListener('click', function () {
+      var cur = radios.filter(function (r) { return r.getAttribute('aria-checked') === 'true'; })[0];
+      var idx = radios.indexOf(cur);
+      select((idx + 1) % radios.length);
+    });
+  }
+
+  function reset(focusHead) {
+    state.step = 0;
+    state.picks = [];
+    decideHead.textContent = '二 · 你的决策';
+    statusEl.textContent = '';
+    renderLog();
+    renderStep(focusHead);
+  }
+
+  function select(i, keepFocus) {
+    radios.forEach(function (r, j) {
+      r.setAttribute('aria-checked', j === i ? 'true' : 'false');
+      r.tabIndex = j === i ? 0 : -1;
+    });
+    state.key = radios[i].getAttribute('data-sc');
+    sc = SCENARIOS[state.key];
+    if (keepFocus !== false) radios[i].focus();
+    renderBrief();
+    reset(false);
+  }
+
+  radios.forEach(function (r, i) {
+    r.addEventListener('click', function () { select(i); });
+    r.addEventListener('keydown', function (ev) {
+      var k = ev.key, next = null;
+      if (k === 'ArrowRight' || k === 'ArrowDown') next = (i + 1) % radios.length;
+      else if (k === 'ArrowLeft' || k === 'ArrowUp') next = (i - 1 + radios.length) % radios.length;
+      else if (k === 'Home') next = 0;
+      else if (k === 'End') next = radios.length - 1;
+      else if (k === ' ' || k === 'Enter') { ev.preventDefault(); select(i); return; }
+      if (next !== null) { ev.preventDefault(); select(next); }
+    });
+  });
+
+  /* 数字键 1–3：始终表示「选择当前决策点的第 N 个选项」，与焦点位置无关，
+     避免焦点停在场景切换器上时按数字产生第二种含义。 */
+  document.addEventListener('keydown', function (ev) {
+    if (ev.metaKey || ev.ctrlKey || ev.altKey) return;
+    var n = parseInt(ev.key, 10);
+    if (!(n >= 1 && n <= 3)) return;
+    if (state.step < sc.decisions.length) {
+      var opts = sc.decisions[state.step].opts;
+      if (n <= opts.length) { ev.preventDefault(); choose(n - 1); }
+    }
+  });
+
+  renderBrief();
+  renderLog();
+  renderStep();
+}
+
+if (typeof document !== 'undefined') boot();
+</script>
+</body>
+</html>
