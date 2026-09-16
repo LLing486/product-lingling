@@ -205,8 +205,11 @@ def _call_deepseek(system_prompt: str, user_prompt: str) -> list[dict]:
 
     client = OpenAI(api_key=api_key, base_url="https://api.deepseek.com/v1")
 
+    # 模型名可由 LING_MODEL 覆盖（默认 deepseek-flash）；留空或只填空格时回退到默认值
+    model = (os.environ.get("LING_MODEL") or "").strip() or "deepseek-flash"
+
     response = client.chat.completions.create(
-        model="deepseek-flash",
+        model=model,
         messages=[
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt},
