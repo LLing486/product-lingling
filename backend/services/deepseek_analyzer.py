@@ -206,7 +206,7 @@ def _call_deepseek(system_prompt: str, user_prompt: str) -> list[dict]:
     client = OpenAI(api_key=api_key, base_url="https://api.deepseek.com/v1")
 
     response = client.chat.completions.create(
-        model="deepseek-chat",
+        model="deepseek-flash",
         messages=[
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt},
