@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>灵灵 · 全部机会卡</title>
+<meta name="description" content="灵灵全部机会卡清单：按日期倒序浏览，可按方向筛选、按标题搜索，点开看完整卡片。">
+<style>
+:root {
+  --paper: #FAF8F3;
+  --paper-2: #F3EFE6;
+  --ink: #2C2A26;
+  --ink-2: #6B6558;
+  --ink-3: #9C958A;
+  --amber: #B8860B;
+  --amber-soft: #E8D9B0;
+  --amber-bg: #F5EEDC;
+  --terra: #C4572E;
+  --terra-soft: #EDCDBF;
+  --terra-bg: #F7E9E2;
+  --hairline: rgba(44,42,38,.14);
+  --card-r: 16px;
+  --ctl-r: 10px;
+  --serif: Georgia, 'Times New Roman', 'Songti SC', 'SimSun', serif;
+  --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.65;
+  min-height: 100vh;
+}
+button { font-family: inherit; cursor: pointer; }
+a { color: var(--amber); text-decoration: none; }
+a:hover { text-decoration: underline; }
+[hidden] { display: none !important; }
+:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; border-radius: 4px; }
+.wrap { max-width: 1080px; margin: 0 auto; padding: 0 16px 72px; }
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+/* ── 页头 ── */
+.head { padding: 22px 0 14px; border-bottom: 2px solid var(--ink); }
+.head h1 { font-family: var(--serif); font-size: 27px; font-weight: 700; letter-spacing: .03em; line-height: 1.25; }
+.head-sub { font-size: 13px; color: var(--ink-2); margin-top: 4px; }
+.head-sub b { font-variant-numeric: tabular-nums; color: var(--ink); }
+
+/* ── 降级提示 ── */
+.fallback {
+  margin-top: 12px; font-size: 12.5px; color: var(--terra);
+  background: var(--terra-bg); border: 1px solid var(--terra-soft);
+  border-radius: var(--ctl-r); padding: 8px 12px;
+}
+
+/* ── 工具条 ── */
+.tools { margin: 16px 0 0; }
+.search-row { position: relative; }
+#q {
+  width: 100%; min-height: 44px; font-family: inherit; font-size: 15px; color: var(--ink);
+  background: #fff; border: 1px solid var(--hairline); border-radius: var(--ctl-r);
+  padding: 0 14px; appearance: none;
+}
+#q::placeholder { color: var(--ink-2); opacity: .82; }
+#q:focus { outline: 2px solid var(--amber); outline-offset: 1px; border-color: var(--amber-soft); }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.tag {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 12px;
+  font-size: 13px; line-height: 1.2; color: var(--ink-2); background: var(--paper-2);
+  border: 1px solid var(--hairline); border-radius: 999px; white-space: nowrap;
+}
+.tag:hover { border-color: var(--amber-soft); color: var(--ink); }
+.tag .n { font-size: 11.5px; color: var(--ink-2); opacity: .78; font-variant-numeric: tabular-nums; }
+.tag[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--paper); font-weight: 600; }
+.tag[aria-pressed="true"] .n { color: var(--paper); opacity: .75; }
+
+/* ── 结果计数 ── */
+.result { font-size: 12.5px; color: var(--ink-2); margin: 14px 0 0; font-variant-numeric: tabular-nums; }
+
+/* ── 列表 ── */
+.list { list-style: none; margin-top: 8px; }
+.row + .row { border-top: 1px solid var(--hairline); }
+.row-a {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 3px 10px;
+  min-height: 44px; padding: 11px 4px; color: inherit;
+  border-radius: var(--ctl-r); overflow-wrap: break-word; word-break: break-word;
+}
+.row-a:hover { background: var(--paper-2); text-decoration: none; }
+.row-a:hover .r-title { color: var(--amber); }
+.r-date { grid-area: 1 / 1; font-size: 12.5px; color: var(--ink-2); font-variant-numeric: tabular-nums; letter-spacing: .01em; }
+.r-title { grid-area: 2 / 1 / 3 / 3; font-size: 15px; font-weight: 600; color: var(--ink); line-height: 1.5; }
+.r-dir { grid-area: 3 / 1; min-width: 0; font-size: 12.5px; color: var(--ink-2); }
+.r-score { grid-area: 3 / 2; justify-self: end; font-size: 12.5px; color: var(--ink-2); white-space: nowrap; }
+.r-score b { color: var(--ink); font-variant-numeric: tabular-nums; }
+.ctype {
+  grid-area: 1 / 2; justify-self: end; align-self: center;
+  display: inline-flex; align-items: center; border-radius: 999px; padding: 2px 9px;
+  font-size: 11.5px; line-height: 1.5; white-space: nowrap;
+}
+.ctype.cross { background: var(--terra-bg); color: var(--terra); border: 1px solid var(--terra-soft); }
+.ctype.rel { background: var(--amber-bg); color: var(--ink-2); border: 1px solid var(--amber-soft); }
+
+/* ── 加载更多 / 空态 ── */
+.more-wrap { margin-top: 20px; text-align: center; }
+.more {
+  min-height: 44px; padding: 0 22px; font-size: 14px; color: var(--ink);
+  background: #fff; border: 1px solid var(--hairline); border-radius: 999px;
+}
+.more:hover { border-color: var(--amber-soft); background: var(--amber-bg); }
+.more[disabled] { opacity: .6; cursor: default; }
+.all-done { font-size: 12.5px; color: var(--ink-2); padding: 6px 0; }
+.empty {
+  margin-top: 26px; padding: 28px 16px; text-align: center; font-size: 14px; color: var(--ink-2);
+  background: var(--paper-2); border: 1px dashed var(--hairline); border-radius: var(--card-r);
+}
+.loading { font-size: 12.5px; color: var(--ink-2); padding: 10px 0; }
+
+/* ── 桌面端：一行排开（日期 · 标题 · direction · 评分 · 类型） ── */
+@media (min-width: 768px) {
+  .head h1 { font-size: 30px; }
+  .row-a {
+    grid-template-columns: 94px minmax(0, 1fr) auto auto auto;
+    grid-template-areas: none; align-items: center; gap: 4px 14px; padding: 12px 6px;
+  }
+  .r-date { grid-area: 1 / 1; }
+  .r-title { grid-area: 1 / 2; }
+  .r-dir { grid-area: 1 / 3; max-width: 290px; text-align: right; }
+  .r-score { grid-area: 1 / 4; }
+  .ctype { grid-area: 1 / 5; min-width: 52px; justify-content: center; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition-duration: .001ms !important; animation-duration: .001ms !important; scroll-behavior: auto !important; }
+}
+
+/* ═══════════════════════════════════════════════
+   统一顶栏（跨页逐字一致，勿改类名/配色）
+   ═══════════════════════════════════════════════ */
+.lnav{position:sticky;top:0;z-index:9999;display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+  padding:6px 14px;background:#12141c;border-bottom:1px solid rgba(255,255,255,.14);
+  font-family:inherit;font-size:13px;line-height:1}
+.lnav a{color:rgba(255,255,255,.74);text-decoration:none;display:inline-flex;align-items:center;
+  min-height:44px;padding:0 2px}
+.lnav a:hover{color:#fff;text-decoration:underline}
+.lnav a:focus-visible{color:#fff;outline:2px solid #7cc4ff;outline-offset:2px;border-radius:3px}
+.lnav-brand{font-weight:700;color:#fff!important;letter-spacing:.04em}
+.lnav-sep{width:1px;height:16px;background:rgba(255,255,255,.22)}
+.lnav-i[aria-current="page"]{color:#fff;font-weight:600}
+</style>
+</head>
+<body>
+
+<nav class="lnav" aria-label="站点导航">
+  <a class="lnav-brand" href="index.html">灵灵</a>
+  <span class="lnav-sep" aria-hidden="true"></span>
+  <a class="lnav-i" href="index.html">全部实验</a>
+  <a class="lnav-i" href="cards.html">机会卡</a>
+  <a class="lnav-i" href="cards-all.html" aria-current="page">全部卡片</a>
+</nav>
+
+<main class="wrap">
+  <header class="head">
+    <h1>全部机会卡</h1>
+    <p class="head-sub" id="head-sub">共 <b>—</b> 张 · <span id="head-since">2026-06-12</span> 起</p>
+  </header>
+
+  <p class="fallback" id="fallback" hidden>接口不可用，以下为示例数据</p>
+
+  <div class="tools">
+    <div class="search-row">
+      <label class="sr-only" for="q">按标题关键词搜索</label>
+      <input id="q" type="search" placeholder="搜索标题关键词，如「语音」" autocomplete="off" autocapitalize="off" spellcheck="false">
+    </div>
+    <div class="tags" id="tags" role="group" aria-label="按方向筛选"></div>
+  </div>
+
+  <p class="result" id="result" aria-live="polite"></p>
+  <ol class="list" id="list"></ol>
+  <p class="empty" id="empty" hidden>没有匹配的卡片</p>
+  <div class="more-wrap" id="more-wrap">
+    <button class="more" id="more" type="button" hidden>加载更多</button>
+    <p class="all-done" id="all-done" hidden>已显示全部</p>
+  </div>
+</main>
+
+<script>
+(function () {
+  'use strict';
+
+  const PAGE_SIZE = 100;   // 单次请求条数（接口上限 100）
+  const CHUNK = 30;        // 首次渲染 / 每次「加载更多」的条数
+  const TAG_MAX = 8;       // 方向标签最多取几项（按频次）
+  const DEBOUNCE = 150;    // ≤200ms
+
+  const $ = id => document.getElementById(id);
+  const listEl = $('list'), emptyEl = $('empty'), moreEl = $('more'), allDoneEl = $('all-done');
+  const wrapEl = $('more-wrap'), resultEl = $('result'), tagsEl = $('tags');
+
+  let ALL = [];        // 全量（created_at 倒序）
+  let VIEW = [];       // 当前筛选结果
+  let shown = 0;       // 已渲染条数
+  let keyword = '';
+  let direction = '';
+  let isMock = false;
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c => (
+      { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+    ));
+  }
+  function dateOf(c) {
+    const d = String((c && c.created_at) || '').slice(0, 10);
+    return /^\d{4}-\d{2}-\d{2}$/.test(d) ? d : '';
+  }
+  function scoreOf(c) {
+    const s = c && c.score;
+    if (typeof s === 'number' && isFinite(s)) return s.toFixed(1);
+    if (s && typeof s === 'object' && typeof s.total === 'number' && isFinite(s.total)) return s.total.toFixed(1);
+    return '';
+  }
+  const isCross = c => String(c && c.card_type) === 'crossdomain';
+
+  /* ── 数据获取：循环取全量（接口只读，不加任何查询参数） ── */
+  async function fetchAll() {
+    const out = [];
+    let total = null;
+    for (let page = 1; page <= 20; page++) {
+      const res = await fetch('/api/cards?page=' + page + '&page_size=' + PAGE_SIZE, { signal: AbortSignal.timeout(10000) });
+      if (!res.ok) throw new Error('api ' + res.status);
+      const data = await res.json();
+      const batch = Array.isArray(data.cards) ? data.cards : [];
+      if (typeof data.total === 'number') total = data.total;
+      out.push(...batch);
+      if (!batch.length) break;
+      if (total != null && out.length >= total) break;
+      if (batch.length < PAGE_SIZE) break;
+    }
+    if (!out.length) throw new Error('empty');
+    return { cards: out, total: total == null ? out.length : total };
+  }
+
+  /* ── 降级示例数据（与 cards.html 同一做法：接口不可用时用内置数据） ── */
+  const todayISO = new Date(Date.now() - new Date().getTimezoneOffset() * 6e4).toISOString().slice(0, 10);
+  function off(d) { return new Date(Date.now() + d * 864e5).toISOString().slice(0, 10); }
+  const MOCK = [
+    { id: 9001, title: '用实时语音智能体替代运维值班工程师，让 AI 语音助手自主完成故障排查', direction: 'AI 语音智能体 × 基础设施运维', card_type: 'crossdomain', score: 8.5, created_at: todayISO },
+    { id: 9002, title: '面向企业的 LLM 失准行为监测与合规披露平台', direction: 'AI 安全', card_type: 'related', score: 8.1, created_at: todayISO },
+    { id: 9003, title: '手术室语音复盘 × 具身机器人训练数据工厂', direction: 'AI 医疗', card_type: 'crossdomain', score: 7.9, created_at: off(-1) },
+    { id: 9004, title: '本地化小语种客服模型微调服务', direction: '大模型', card_type: 'related', score: 7.7, created_at: off(-2) },
+    { id: 9005, title: '会议纪要自动转 OKR 追踪器', direction: 'AI 办公', card_type: 'related', score: 7.4, created_at: off(-3) },
+    { id: 9006, title: '把「模型对齐审计」嫁接进「赞助型 AI 智能体」的第三方信任背书层', direction: 'AI 安全对齐 × AI 广告/商业代理', card_type: 'crossdomain', score: 7.3, created_at: off(-4) },
+    { id: 9007, title: '宠物异常行为视觉预警 × 保险定价', direction: 'AI 创意', card_type: 'crossdomain', score: 7.2, created_at: off(-6) },
+    { id: 9008, title: '工地安全巡检 × AR 眼镜语音工单', direction: '硬件', card_type: 'crossdomain', score: 6.9, created_at: off(-9) },
+    { id: 9009, title: '企业内部代码考古的可对话知识库', direction: 'AI 编程', card_type: 'related', score: 7.0, created_at: off(-14) },
+    { id: 9010, title: '会议语音转写数据的结构化治理工具', direction: 'AI 数据', card_type: 'related', score: 6.6, created_at: off(-21) },
+    { id: 9011, title: 'AI 教学助手的课堂提问质量评估', direction: 'AI 教育', card_type: 'related', score: 6.4, created_at: off(-33) },
+    { id: 9012, title: '面向开发者的日志异常归因助手', direction: 'AI 开发工具', card_type: 'related', score: 6.2, created_at: off(-48) },
+  ];
+
+  /* ── 排序 / 筛选 ── */
+  function sortAll(cards) {
+    return cards.slice().sort((a, b) => {
+      const da = dateOf(a), db = dateOf(b);
+      if (da !== db) return da < db ? 1 : -1;
+      return (Number(b.id) || 0) - (Number(a.id) || 0);
+    });
+  }
+  function applyFilter() {
+    const q = keyword.trim().toLowerCase();
+    VIEW = ALL.filter(c => {
+      if (direction && String(c.direction || '') !== direction) return false;
+      if (q && String(c.title || '').toLowerCase().indexOf(q) === -1) return false;
+      return true;
+    });
+    shown = 0;
+    listEl.innerHTML = '';
+    renderChunk();
+    paintResult();
+  }
+  function paintResult() {
+    resultEl.textContent = (keyword.trim() || direction)
+      ? '筛出 ' + VIEW.length + ' 张 / 共 ' + ALL.length + ' 张'
+      : '共 ' + ALL.length + ' 张';
+    const none = VIEW.length === 0;
+    emptyEl.hidden = !none;
+    wrapEl.hidden = none;
+  }
+
+  /* ── 渲染 ── */
+  function rowHTML(c) {
+    const d = dateOf(c), sc = scoreOf(c), cross = isCross(c);
+    return '<li class="row"><a class="row-a" href="cards.html?id=' + encodeURIComponent(c.id) + '">' +
+      '<span class="r-date">' + esc(d) + '</span>' +
+      '<span class="r-title">' + esc(c.title) + '</span>' +
+      '<span class="r-dir">' + esc(c.direction || '未标方向') + '</span>' +
+      '<span class="r-score">评分 <b>' + esc(sc || '—') + '</b></span>' +
+      '<span class="ctype ' + (cross ? 'cross' : 'rel') + '">' + (cross ? '跨界' : '单域') + '</span>' +
+      '</a></li>';
+  }
+  function renderChunk() {
+    if (shown >= VIEW.length) { paintMore(); return; }
+    const next = VIEW.slice(shown, shown + CHUNK);
+    listEl.insertAdjacentHTML('beforeend', next.map(rowHTML).join(''));
+    shown += next.length;
+    paintMore();
+  }
+  function paintMore() {
+    const has = shown < VIEW.length;
+    moreEl.hidden = !has;
+    allDoneEl.hidden = has || VIEW.length === 0;
+    allDoneEl.textContent = '已显示全部 ' + VIEW.length + ' 张';
+  }
+
+  /* ── 方向标签：从全量数据里汇总高频 direction ── */
+  function paintTags() {
+    const counts = new Map();
+    ALL.forEach(c => {
+      const d = String(c.direction || '').trim();
+      if (d) counts.set(d, (counts.get(d) || 0) + 1);
+    });
+    const top = [...counts.entries()]
+      .sort((a, b) => (b[1] - a[1]) || a[0].localeCompare(b[0], 'zh'))
+      .slice(0, TAG_MAX);
+    const mk = (label, value, n) =>
+      '<button class="tag" type="button" data-dir="' + esc(value) + '" aria-pressed="' +
+      (direction === value ? 'true' : 'false') + '">' + esc(label) +
+      (n == null ? '' : '<span class="n">' + n + '</span>') + '</button>';
+    tagsEl.innerHTML = mk('全部', '', null) + top.map(([d, n]) => mk(d, d, n)).join('');
+  }
+
+  /* ── 事件 ── */
+  tagsEl.addEventListener('click', e => {
+    const btn = e.target.closest('.tag');
+    if (!btn) return;
+    direction = btn.getAttribute('data-dir') || '';
+    tagsEl.querySelectorAll('.tag').forEach(b =>
+      b.setAttribute('aria-pressed', b.getAttribute('data-dir') === direction ? 'true' : 'false'));
+    applyFilter();
+  });
+
+  let timer = null;
+  $('q').addEventListener('input', e => {
+    const v = e.target.value;
+    clearTimeout(timer);
+    timer = setTimeout(() => { keyword = v; applyFilter(); }, DEBOUNCE);
+  });
+
+  moreEl.addEventListener('click', renderChunk);
+
+  // 滚到底自动加载（回调式，IntersectionObserver 不可用时按钮仍可点）
+  if ('IntersectionObserver' in window) {
+    new IntersectionObserver(es => {
+      if (es.some(en => en.isIntersecting) && shown < VIEW.length) renderChunk();
+    }, { rootMargin: '300px 0px' }).observe(wrapEl);
+  }
+
+  /* ── 启动 ── */
+  let booted = false;
+  async function boot() {
+    if (booted) return;
+    booted = true;
+    let total;
+    try {
+      const r = await fetchAll();
+      ALL = sortAll(r.cards);
+      total = r.total;
+    } catch (err) {
+      isMock = true;
+      ALL = sortAll(MOCK);
+      total = ALL.length;
+      $('fallback').hidden = false;
+    }
+    // ALL 已按 created_at 倒序，末条即最早日期
+    const since = ALL.length ? (dateOf(ALL[ALL.length - 1]) || '2026-06-12') : '2026-06-12';
+    $('head-sub').innerHTML = '共 <b>' + total + '</b> 张 · <span id="head-since">' + esc(since) + '</span> 起';
+    paintTags();
+    applyFilter();
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+})();
+</script>
+</body>
+</html>

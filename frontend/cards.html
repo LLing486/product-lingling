@@ -282,10 +282,48 @@ a:hover { text-decoration: underline; }
   .card3d.play .clash-w.l, .card3d.play .clash-w.r, .card3d.play .clash-x,
   .card3d.play .spark, .card3d.rare .face-front { animation: none !important; opacity: 1; transform: none; }
 }
+
+/* ── 统一顶栏（全站统一标识，不随本页浅色刊物风改色） ── */
+.lnav{position:sticky;top:0;z-index:9999;display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+  padding:6px 14px;background:#12141c;border-bottom:1px solid rgba(255,255,255,.14);
+  font-family:inherit;font-size:13px;line-height:1}
+.lnav a{color:rgba(255,255,255,.74);text-decoration:none;display:inline-flex;align-items:center;
+  min-height:44px;padding:0 2px}
+.lnav a:hover{color:#fff;text-decoration:underline}
+.lnav a:focus-visible{color:#fff;outline:2px solid #7cc4ff;outline-offset:2px;border-radius:3px}
+.lnav-brand{font-weight:700;color:#fff!important;letter-spacing:.04em}
+.lnav-sep{width:1px;height:16px;background:rgba(255,255,255,.22)}
+.lnav-i[aria-current="page"]{color:#fff;font-weight:600}
+
+/* ── 深链定位（cards.html?id=…）── */
+.deep-note {
+  margin: 18px 0 0; padding: 11px 14px; border-radius: var(--ctl-r);
+  border: 1px solid var(--amber-soft); border-left: 3px solid var(--amber);
+  background: var(--amber-bg); color: var(--ink-2); font-size: 13px; line-height: 1.6;
+}
+/* 库入口：不动同排既有按钮尺寸，用伪元素把触控高度补到 44px */
+.sec-actions a.pill { position: relative; }
+.sec-actions a.pill::after { content: ''; position: absolute; left: 0; right: 0; top: -4px; bottom: -4px; }
+.lib-card.deep-hl { border-color: var(--amber); animation: deeppulse 1.4s ease-out 2; }
+@keyframes deeppulse {
+  0%, 100% { box-shadow: 0 0 0 2px var(--amber-soft), 0 0 0 1px var(--amber); }
+  50% { box-shadow: 0 0 0 8px rgba(184,134,11,.20), 0 0 0 1px var(--amber); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lib-card.deep-hl { animation: none; box-shadow: 0 0 0 2px var(--amber-soft), 0 0 0 1px var(--amber); }
+}
 </style>
 </head>
 <body>
+<nav class="lnav" aria-label="站点导航">
+  <a class="lnav-brand" href="index.html">灵灵</a>
+  <span class="lnav-sep" aria-hidden="true"></span>
+  <a class="lnav-i" href="index.html">全部实验</a>
+  <a class="lnav-i" href="cards.html" aria-current="page">机会卡</a>
+  <a class="lnav-i" href="cards-all.html">全部卡片</a>
+</nav>
 <div class="wrap">
+  <div class="deep-note" id="deep-note" role="status" hidden></div>
 
   <header class="masthead">
     <div class="mast-top">
@@ -319,6 +357,7 @@ a:hover { text-decoration: underline; }
     <div class="sec-head">
       <h2 class="sec-title" id="sec-lib">机会库<span class="en">ARCHIVE</span></h2>
       <div class="sec-actions">
+        <a class="pill accent" href="cards-all.html">查看全部卡片清单 ›</a>
         <button class="pill accent" id="btn-match" type="button">✦ 适合我</button>
         <button class="pill accent" id="btn-weekly" type="button">▲ 本周 TOP</button>
       </div>
@@ -1197,6 +1236,64 @@ function wrapText(ctx, text, x, y, maxW, lineH, maxLines) {
   if (line) ctx.fillText(line, x, y);
 }
 
+/* ============ deep link：cards.html?id=<card_id> ============ */
+const DEEP_ID = (() => {
+  try {
+    const v = (new URLSearchParams(location.search).get('id') || '').trim();
+    return /^\d+$/.test(v) ? v : '';
+  } catch { return ''; }
+})();
+
+function noteDeepMiss() {
+  const el = $('deep-note');
+  el.textContent = `没有找到 id 为 ${DEEP_ID} 的机会卡，链接可能已失效或卡片已下线。下面是今日开卡与机会库 ›`;
+  el.hidden = false;
+}
+
+/* 高亮描边：列表「加载更多 / 筛选」会重建卡片节点，用观察器维持这次强调 */
+function highlightDeepCard(node) {
+  const grid = $('lib-grid');
+  const until = Date.now() + 2800;
+  node.classList.add('deep-hl');
+  const obs = new MutationObserver(() => {
+    if (Date.now() > until) { obs.disconnect(); return; }
+    const el = grid.querySelector(`.lib-card[data-id="${DEEP_ID}"]`);
+    if (el) el.classList.add('deep-hl');
+  });
+  obs.observe(grid, { childList: true });
+  setTimeout(() => {
+    obs.disconnect();
+    const el = grid.querySelector(`.lib-card[data-id="${DEEP_ID}"]`);
+    if (el) el.classList.remove('deep-hl');
+  }, 2800);
+}
+
+async function locateDeepLink() {
+  if (!DEEP_ID) return; /* 无 id 参数：行为与改动前完全一致 */
+  const inList = library.find(c => String(c.id) === DEEP_ID);
+  const node = document.querySelector(`#lib-grid .lib-card[data-id="${DEEP_ID}"]`);
+  if (inList && node) {
+    /* 已在已加载列表里：滚过去 + 短暂强调，再展开（等同于点开该卡） */
+    node.scrollIntoView({ block: 'center' });
+    highlightDeepCard(node);
+    setTimeout(() => openDetail(inList), RM ? 0 : 500);
+  } else {
+    /* 不在已加载列表：直接取回这张卡 */
+    try {
+      const res = await fetch(`/api/cards/${DEEP_ID}`, { signal: AbortSignal.timeout(8000) });
+      if (!res.ok) throw new Error('http ' + res.status);
+      const data = await res.json();
+      if (!data || data.id === undefined || data.id === null) throw new Error('empty');
+      openDetail(mapCard(data));
+    } catch {
+      noteDeepMiss(); /* 兜底：不白屏，页面其余部分照常可用 */
+      return;
+    }
+  }
+  /* 保留 ?id=，便于分享与刷新 */
+  try { history.replaceState(null, '', location.pathname + '?id=' + DEEP_ID + location.hash); } catch {}
+}
+
 /* ============ init ============ */
 (async function init() {
   await loadData();
@@ -1205,6 +1302,7 @@ function wrapText(ctx, text, x, y, maxW, lineH, maxLines) {
   renderLibrary();
   renderSignals();
   window.addEventListener('resize', () => drawBand($('seed-band'), 'mast'));
+  await locateDeepLink();
 })();
 </script>
 </body>

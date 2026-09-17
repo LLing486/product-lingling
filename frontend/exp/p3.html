@@ -230,9 +230,82 @@ ol, ul { list-style: none; }
   html { scroll-behavior: auto; }
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+/* ══════════════════════════════════════════════════════════════
+   以下为「信息架构重整」新增的壳层样式（契约 §3 / §5.1 / §5.3）。
+   只在原型自身样式之后追加，不改动上方任何既有规则。
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── 统一顶栏（契约 §3，逐字照抄） ── */
+.lnav{position:sticky;top:0;z-index:9999;display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+  padding:6px 14px;background:#12141c;border-bottom:1px solid rgba(255,255,255,.14);
+  font-family:inherit;font-size:13px;line-height:1}
+.lnav a{color:rgba(255,255,255,.74);text-decoration:none;display:inline-flex;align-items:center;
+  min-height:44px;padding:0 2px}
+.lnav a:hover{color:#fff;text-decoration:underline}
+.lnav a:focus-visible{color:#fff;outline:2px solid #7cc4ff;outline-offset:2px;border-radius:3px}
+.lnav-brand{font-weight:700;color:#fff!important;letter-spacing:.04em}
+.lnav-sep{width:1px;height:16px;background:rgba(255,255,255,.22)}
+.lnav-i[aria-current="page"]{color:#fff;font-weight:600}
+
+/* ── 期号切换条（契约 §5.1，逐字照抄） ── */
+.pnav{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+  padding:10px 14px;border-bottom:1px solid rgba(0,0,0,.08);font-size:14px}
+.pnav a,.pnav span{display:inline-flex;align-items:center;min-height:44px}
+.pnav-prev,.pnav-next{font-weight:600;text-decoration:none}
+.pnav-prev.is-off,.pnav-next.is-off{opacity:.38}
+.pnav-list{display:inline-flex;gap:6px}
+.pnav-list a{min-width:44px;justify-content:center;text-decoration:none;border-radius:8px;padding:0 6px}
+.pnav-list a[aria-current="page"]{font-weight:700;background:rgba(0,0,0,.07);text-decoration:none}
+
+/* ── 底部灵感来源区（契约 §5.3 的结构 + 本页主题配色） ── */
+.psrc {
+  max-width: 780px; margin: 0 auto; padding: 26px 16px 56px;
+  font-size: 13.5px; color: var(--ink);
+}
+.psrc-h {
+  font-family: var(--serif); font-size: 17px; letter-spacing: .08em;
+  padding-bottom: 7px; border-bottom: 1px solid var(--hairline); margin-bottom: 12px;
+}
+.psrc-meta { font-size: 12.5px; color: var(--ink-2); margin-bottom: 12px; }
+.psrc-line { margin-bottom: 9px; }
+.psrc-line b { color: var(--ink); }
+.psrc-note { font-size: 12.5px; color: var(--ink-2); margin-bottom: 12px; }
+.psrc-links { display: flex; gap: 10px; flex-wrap: wrap; margin: 14px 0 14px; }
+.psrc-links a {
+  display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px;
+  border: 1px solid var(--hairline); border-radius: var(--ctl-r);
+  color: var(--amber-ink); font-weight: 600; text-decoration: none;
+}
+.psrc-links a:hover { border-color: var(--amber); background: var(--amber-bg); }
+.psrc-data {
+  font-size: 11.5px; color: var(--ink-2); background: var(--paper-2);
+  border-radius: var(--ctl-r); padding: 10px 12px;
+}
+
+/* 壳的补偿：顶栏是 sticky 且 z-index 最高，会把「跳到决策区」的固定定位遮住、
+   并让锚点目标落在条下。只追加位置补偿，不修改上方的 .skip / html 规则本身。 */
+.lnav ~ .skip:focus { top: 57px; }
+html { scroll-padding-top: 57px; }
 </style>
 </head>
 <body>
+<nav class="lnav" aria-label="站点导航">
+  <a class="lnav-brand" href="../index.html">灵灵</a>
+  <span class="lnav-sep" aria-hidden="true"></span>
+  <a class="lnav-i" href="../index.html" aria-current="page">全部实验</a>
+  <a class="lnav-i" href="../cards.html">机会卡</a>
+  <a class="lnav-i" href="../cards-all.html">全部卡片</a>
+</nav>
+
+<div class="pnav" role="navigation" aria-label="期号切换">
+  <a class="pnav-prev" href="p2.html">← 上一期</a>
+  <span class="pnav-list">
+    <a href="p1.html">01</a><a href="p2.html">02</a><a href="p3.html" aria-current="page">03</a>
+  </span>
+  <span class="pnav-next is-off" aria-disabled="true">下一期 →</span>
+</div>
+
 <a class="skip" href="#decide">跳到决策区</a>
 <div class="wrap">
 
@@ -294,6 +367,29 @@ ol, ul { list-style: none; }
   </footer>
 
 </div>
+
+<div class="pnav" role="navigation" aria-label="期号切换">
+  <a class="pnav-prev" href="p2.html">← 上一期</a>
+  <span class="pnav-list">
+    <a href="p1.html">01</a><a href="p2.html">02</a><a href="p3.html" aria-current="page">03</a>
+  </span>
+  <span class="pnav-next is-off" aria-disabled="true">下一期 →</span>
+</div>
+
+<section class="psrc" aria-label="这一期的灵感来源">
+  <h2 class="psrc-h">这一期的灵感来源</h2>
+  <p class="psrc-meta">2026-09-16 · 机会卡《用实时语音智能体替代运维值班工程师，让 AI 语音助手自主完成基础设施运维》</p>
+  <p class="psrc-line"><b>原始信号：</b>Google DeepMind 发布 Gemini 3.8 Live 和 3.8 Live Extended Thinking。</p>
+  <p class="psrc-note">以上是机会卡与行业信号的真实记录，未作改写、未加演绎。</p>
+  <p class="psrc-line"><b>灵灵据此延伸的设想：</b>把「实时语音智能体」推到它最容易被授权的那个岗位上。这类能力最先引发争议的落地场景未必是客服，而是凌晨的值班岗 —— 那里人最困、授权最松、后果最直接。灵灵把它做成一棵 4 步决策树：每一步都逼你在「AI 全权接管 / 人工确认后执行 / 升级上报」之间选一次，然后让你亲自走进某个结局，再回头看你是在哪一步把风险放大的。</p>
+  <p class="psrc-note">这一段是灵灵的二次创作，不是原文内容。决策点、结局与复盘文本均为本实验编写的示例分支，不代表任何真实系统的行为，也不是对 Gemini 3.8 Live 的能力评测。</p>
+  <p class="psrc-links">
+    <a href="https://aihot.news/items/cmu2xqfxz02zhroc1hxuzi6jm" target="_blank" rel="noopener noreferrer">阅读原文 ↗</a>
+    <a href="../cards.html?id=208">看这张机会卡 ›</a>
+    <a href="../cards-all.html">全部机会卡 ›</a>
+  </p>
+  <p class="psrc-data">示例数据 · 规则模拟 —— 本期的题面、参数关系与分支结局都由页面本地规则算出，未接入真实模型，无后端调用、无 API key、无外部请求。</p>
+</section>
 
 <script>
 /* ============================================================

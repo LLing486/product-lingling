@@ -338,9 +338,79 @@ body.is-dragging .drop-dock { display: flex; }
     scroll-behavior: auto !important;
   }
 }
+
+/* ══════════════════════════════════════════════════════════
+   统一壳层（本轮「信息架构重整」新增）
+   顶栏 / 期号切换条 / 底部灵感来源 —— 结构与类名按需求契约，
+   不改动原型自身的任何 id、class 与脚本。
+   ══════════════════════════════════════════════════════════ */
+
+/* ── 统一顶栏 ───────────────────────────────────────── */
+.lnav{position:sticky;top:0;z-index:9999;display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+  padding:6px 14px;background:#12141c;border-bottom:1px solid rgba(255,255,255,.14);
+  font-family:inherit;font-size:13px;line-height:1}
+.lnav a{color:rgba(255,255,255,.74);text-decoration:none;display:inline-flex;align-items:center;
+  min-height:44px;padding:0 2px}
+.lnav a:hover{color:#fff;text-decoration:underline}
+.lnav a:focus-visible{color:#fff;outline:2px solid #7cc4ff;outline-offset:2px;border-radius:3px}
+.lnav-brand{font-weight:700;color:#fff!important;letter-spacing:.04em}
+.lnav-sep{width:1px;height:16px;background:rgba(255,255,255,.22)}
+.lnav-i[aria-current="page"]{color:#fff;font-weight:600}
+
+/* ── 期号切换条（顶部 / 底部各一条）──────────────────── */
+.pnav{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+  padding:10px 14px;border-bottom:1px solid rgba(0,0,0,.08);font-size:14px}
+.pnav a,.pnav span{display:inline-flex;align-items:center;min-height:44px}
+.pnav-prev,.pnav-next{font-weight:600;text-decoration:none}
+.pnav-prev.is-off,.pnav-next.is-off{opacity:.38}
+.pnav-list{display:inline-flex;gap:6px}
+.pnav-list a{min-width:44px;justify-content:center;text-decoration:none;border-radius:8px;padding:0 6px}
+.pnav-list a[aria-current="page"]{font-weight:700;background:rgba(0,0,0,.07);text-decoration:none}
+
+/* ── 底部灵感来源（正文沿用本页深色墨水，对比度 ≥ 4.5:1）── */
+.psrc{max-width:1120px;margin:0 auto;padding:6px 16px 40px}
+.psrc-h{font-family:var(--serif);font-size:17px;font-weight:700;letter-spacing:.06em;margin-bottom:9px}
+.psrc-meta{font-size:12.5px;color:var(--ink-2);margin-bottom:12px;overflow-wrap:anywhere}
+.psrc-line{font-size:13.5px;line-height:1.78;margin:10px 0;overflow-wrap:anywhere}
+.psrc-line b{font-weight:700}
+.psrc-note{
+  font-size:12px;line-height:1.72;color:var(--ink-2);margin:8px 0;
+  padding-left:11px;border-left:2px solid var(--amber-soft);
+}
+.psrc-links{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0 12px}
+.psrc-links a{
+  display:inline-flex;align-items:center;min-height:44px;padding:0 13px;
+  border:1px solid var(--hairline);border-radius:var(--ctl-r);background:#fff;
+  color:var(--ink);font-size:12.5px;font-weight:600;text-decoration:none;
+}
+.psrc-links a:hover{border-color:var(--amber);background:var(--amber-bg);color:var(--ink)}
+.psrc-links a:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+.psrc-data{
+  font-size:11.5px;line-height:1.66;color:var(--ink-2);margin-top:12px;
+  padding-top:12px;border-top:1px solid var(--hairline);
+}
 </style>
 </head>
 <body>
+
+<!-- ⓪ 统一顶栏（站点导航） -->
+<nav class="lnav" aria-label="站点导航">
+  <a class="lnav-brand" href="../index.html">灵灵</a>
+  <span class="lnav-sep" aria-hidden="true"></span>
+  <a class="lnav-i" href="../index.html" aria-current="page">全部实验</a>
+  <a class="lnav-i" href="../cards.html">机会卡</a>
+  <a class="lnav-i" href="../cards-all.html">全部卡片</a>
+</nav>
+
+<!-- ⓪ 期号切换条（顶部）—— 首期无上一期，渲染成不可点的 span -->
+<div class="pnav" role="navigation" aria-label="期号切换">
+  <span class="pnav-prev is-off" aria-disabled="true">← 上一期</span>
+  <span class="pnav-list">
+    <a href="p1.html" aria-current="page">01</a><a href="p2.html">02</a><a href="p3.html">03</a>
+  </span>
+  <a class="pnav-next" href="p2.html">下一期 →</a>
+</div>
+
 <div class="wrap">
 
   <!-- ① 刊头 -->
@@ -432,6 +502,31 @@ body.is-dragging .drop-dock { display: flex; }
     <span>零依赖单文件 · 可离线双击打开 · 无外部请求 · 无密钥</span>
   </footer>
 </div>
+
+<!-- ⓪ 期号切换条（底部）—— 与顶部结构完全相同 -->
+<div class="pnav" role="navigation" aria-label="期号切换">
+  <span class="pnav-prev is-off" aria-disabled="true">← 上一期</span>
+  <span class="pnav-list">
+    <a href="p1.html" aria-current="page">01</a><a href="p2.html">02</a><a href="p3.html">03</a>
+  </span>
+  <a class="pnav-next" href="p2.html">下一期 →</a>
+</div>
+
+<!-- ⓪ 这一期的灵感来源（原壳页文案，原文照抄） -->
+<section class="psrc" aria-label="这一期的灵感来源">
+  <h2 class="psrc-h">这一期的灵感来源</h2>
+  <p class="psrc-meta">2026-09-14 · 机会卡《面向 AI 编程助手的军事/双用途滥用检测与合规审计平台》</p>
+  <p class="psrc-line"><b>原始信号：</b>Anthropic 报告称胡塞组织用 Claude Code 开发导弹制导软件。</p>
+  <p class="psrc-note">以上是机会卡与行业信号的真实记录，未作改写、未加演绎。</p>
+  <p class="psrc-line"><b>灵灵据此延伸的设想：</b>把一份宏观的安全报告，折成你桌面上的一次签字。灵灵换了提问的角度：与其问「平台该不该拦」，不如问「这条申请就摆在你面前、而标准答案并不显然时，你会怎么判」。于是有了 8 条使用申请、三个桶，和三条被刻意写得简洁的规则 —— 规则越简洁，和直觉冲撞的地方越好看。</p>
+  <p class="psrc-note">这一段是灵灵的二次创作，不是原文内容，也不代表 Anthropic 或任何机构的合规口径。8 条申请、三个桶与三条判定规则均为本实验编写的示例。</p>
+  <p class="psrc-links">
+    <a href="https://aihot.news/items/cmu01iavi08reroymepsxnar2" target="_blank" rel="noopener noreferrer">阅读原文 ↗</a>
+    <a href="../cards.html?id=203">看这张机会卡 ›</a>
+    <a href="../cards-all.html">全部机会卡 ›</a>
+  </p>
+  <p class="psrc-data">示例数据 · 规则模拟 —— 本期的题面、参数关系与分支结局都由页面本地规则算出，未接入真实模型，无后端调用、无 API key、无外部请求。</p>
+</section>
 
 <div class="drag-ghost" id="ghost" aria-hidden="true"></div>
 <div class="drop-dock" id="dropDock" aria-hidden="true"><span class="dd-label">放到</span><div class="dd-list" id="ddList"></div></div>

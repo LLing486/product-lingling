@@ -3,19 +3,21 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>灵灵 · 今日灵感实验</title>
-<meta name="description" content="灵灵「今日灵感实验」三期样刊：每天一个值得玩、也能改成自己版本的 AI 小作品。示例数据 · 规则模拟，本轮未接入真实模型。">
+<title>灵灵 · 每天一个能上手玩的小实验</title>
+<meta name="description" content="灵灵：每天从 AI 行业的真实信号里，挑一个做成你能上手玩的小实验。三期可玩原型 + 每日机会卡。实验性内容 · 示例数据与规则模拟 · 本轮未接入真实模型。">
 <style>
 /* ═══════════════════════════════════════════════
    设计令牌 —— 沿用现有浅色刊物风，不另起一套
+   文字色均已按 WCAG AA（4.5:1）核对（底色 #FAF8F3）
    ═══════════════════════════════════════════════ */
 :root {
   --paper: #FAF8F3;
   --paper-2: #F3EFE6;
   --ink: #2C2A26;
-  --ink-2: #6B6558;
-  --ink-3: #9C958A;
-  --amber: #B8860B;
+  --ink-2: #5F5A4E;      /* 6.4:1 */
+  --ink-3: #736D60;      /* 4.8:1 —— 仅用于小字，不用作装饰以外的大面积 */
+  --amber: #B8860B;      /* 描边 / 装饰 */
+  --amber-ink: #8A6508;  /* 5.0:1 —— 正文链接用 */
   --amber-soft: #E8D9B0;
   --amber-bg: #F5EEDC;
   --terra: #C4572E;
@@ -36,196 +38,112 @@ body {
   font-size: 15px;
   line-height: 1.65;
   min-height: 100vh;
+  overflow-wrap: break-word;
 }
-button { font-family: inherit; cursor: pointer; }
-a { color: var(--amber); text-decoration: none; }
+a { color: var(--amber-ink); text-decoration: none; }
 a:hover { text-decoration: underline; }
-[hidden] { display: none !important; }
 :focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; border-radius: 4px; }
-.wrap { max-width: 1080px; margin: 0 auto; padding: 0 18px 72px; }
 
-/* 跳转到本期实验（仅键盘聚焦时出现） */
-.skip {
-  position: absolute; left: -9999px; top: 0; z-index: 20;
-  background: var(--ink); color: var(--paper); padding: 12px 16px;
-  border-radius: 0 0 var(--ctl-r) 0; font-size: 13px;
-}
-.skip:focus { left: 0; text-decoration: none; }
+.wrap { max-width: 1080px; margin: 0 auto; padding: 0 18px 56px; }
 
-/* ── ① 刊头 ── */
-.masthead { padding: 26px 0 16px; border-bottom: 2px solid var(--ink); }
-.mast-top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
-.brand { font-family: var(--serif); font-size: 28px; font-weight: 700; letter-spacing: .04em; }
-.brand small { font-size: 11.5px; font-weight: 400; color: var(--ink-2); letter-spacing: .12em; margin-left: 8px; }
-.mast-meta { display: flex; gap: 12px; align-items: center; font-size: 12.5px; color: var(--ink-2); flex-wrap: wrap; }
-.issue-no { font-family: var(--serif); font-size: 15px; font-weight: 700; color: var(--ink); letter-spacing: .04em; }
-.exp-tag {
-  border: 1px solid var(--terra-soft); background: var(--terra-bg); color: var(--terra);
-  border-radius: 999px; padding: 4px 11px; font-size: 11px; font-weight: 700; letter-spacing: .14em;
+/* ── ① 灵灵是什么 ── */
+.hero { padding: 26px 0 4px; }
+.hero-title {
+  font-family: var(--serif); font-size: 40px; font-weight: 700;
+  letter-spacing: .06em; line-height: 1.1;
 }
-.mast-theme { font-family: var(--serif); font-size: 23px; font-weight: 700; line-height: 1.38; margin-top: 14px; }
-.mast-sub { font-size: 12.5px; color: var(--ink-3); letter-spacing: .06em; margin-top: 8px; }
+.hero-sub {
+  font-family: var(--serif); font-size: 17px; line-height: 1.6;
+  color: var(--ink); margin-top: 10px; max-width: 34em;
+}
+.hero-note { font-size: 12.5px; line-height: 1.6; color: var(--ink-3); margin-top: 10px; }
+
+/* ── ② 最新一期大按钮 ── */
+.cta {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
+  width: 100%; min-height: 62px; margin-top: 22px; padding: 12px 18px;
+  border: 1px solid var(--ink); border-radius: 14px;
+  background: var(--ink); color: var(--paper);
+}
+.cta:hover { background: #1D1C19; color: var(--paper); text-decoration: none; }
+.cta-k { font-family: var(--serif); font-size: 19px; font-weight: 700; letter-spacing: .04em; line-height: 1.3; }
+.cta-v { font-size: 13.5px; line-height: 1.5; opacity: .78; }
+.cta-tip { font-size: 12.5px; color: var(--ink-3); margin-top: 9px; }
 @media (min-width: 760px) {
-  .mast-theme { font-size: 30px; }
-  .brand { font-size: 30px; }
+  .hero { padding-top: 40px; }
+  .hero-title { font-size: 52px; }
+  .hero-sub { font-size: 19px; }
+  .cta { width: auto; min-width: 420px; align-self: flex-start; }
 }
 
 /* ── 栏目标题 ── */
 .sec-head {
-  display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
-  margin: 34px 0 14px; padding-bottom: 8px; border-bottom: 1px solid var(--hairline);
-  flex-wrap: wrap;
+  display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
+  margin: 40px 0 14px; padding-bottom: 8px; border-bottom: 1px solid var(--hairline);
 }
 .sec-title { font-family: var(--serif); font-size: 18px; font-weight: 700; letter-spacing: .06em; }
 .sec-title .en {
   font-family: var(--sans); font-size: 10.5px; font-weight: 600; color: var(--ink-3);
-  letter-spacing: .18em; margin-left: 10px;
-}
-.sec-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-
-/* ── 通用胶囊 / 按钮（触控目标 ≥44px） ── */
-.chip {
-  border: 1px solid var(--hairline); border-radius: 999px; padding: 5px 12px;
-  font-size: 11.5px; color: var(--ink-2); letter-spacing: .06em; white-space: nowrap;
-  display: inline-flex; align-items: center; min-height: 28px;
-}
-.chip.amber { border-color: var(--amber-soft); background: var(--amber-bg); color: var(--amber); font-weight: 600; }
-.link-btn {
-  display: inline-flex; align-items: center; justify-content: center;
-  min-height: 44px; padding: 0 16px; border-radius: 999px;
-  border: 1px solid var(--amber); background: #fff; color: var(--amber);
-  font-size: 13px; font-weight: 600; letter-spacing: .02em;
-}
-.link-btn:hover { background: var(--amber-bg); text-decoration: none; }
-
-/* ── ② 一句话场景 ── */
-.lede { font-family: var(--serif); font-size: 17px; line-height: 1.82; }
-@media (min-width: 760px) { .lede { font-size: 19px; } }
-.howto { list-style: none; counter-reset: step; margin-top: 16px; display: flex; flex-direction: column; gap: 9px; }
-.howto li { counter-increment: step; display: flex; gap: 10px; font-size: 13.5px; color: var(--ink-2); }
-.howto li::before {
-  content: counter(step); flex: 0 0 auto; width: 20px; height: 20px; margin-top: 2px;
-  border: 1px solid var(--amber-soft); border-radius: 50%; color: var(--amber);
-  font-family: var(--serif); font-size: 11.5px; font-weight: 700;
-  display: flex; align-items: center; justify-content: center;
+  letter-spacing: .18em; margin-left: 8px;
 }
 
-/* ── ③ 直接开玩 ── */
-.frame-box {
-  height: 560px;              /* 移动端 ≥560px 的固定高度容器 */
-  border: 1px solid var(--hairline); border-radius: var(--card-r);
-  background: #fff; overflow: hidden;
+/* ── ③ 三期目录 ── */
+.ilist { display: grid; grid-template-columns: 1fr; gap: 12px; list-style: none; }
+@media (min-width: 760px) { .ilist { grid-template-columns: repeat(3, 1fr); gap: 14px; } }
+.ilist > li { display: flex; }          /* 让同一行的三张卡等高 */
+.icard {
+  display: flex; flex-direction: column; gap: 4px; width: 100%;
+  min-height: 148px; padding: 15px 17px;
+  border: 1px solid var(--hairline); border-left: 3px solid var(--amber-soft);
+  border-radius: var(--card-r); background: #fff; color: var(--ink);
+  transition: border-color .15s, background .15s, transform .15s;
 }
-@media (min-width: 760px) { .frame-box { height: 700px; } }
-.frame { display: block; width: 100%; height: 100%; border: 0; background: #fff; }
-.frame-tip {
-  margin-top: 10px; padding: 10px 12px; font-size: 12.5px; line-height: 1.75;
-  background: var(--paper-2); border: 1px solid var(--hairline);
-  border-radius: var(--ctl-r); color: var(--ink-2);
+.icard:hover {
+  text-decoration: none; border-color: var(--amber);
+  border-left-color: var(--amber); background: var(--amber-bg);
 }
-.frame-tip code {
-  font-family: var(--serif); font-size: 12px; color: var(--ink);
-  background: #fff; border: 1px solid var(--hairline); border-radius: 4px; padding: 0 4px;
+.icard-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.icard-no { font-family: var(--serif); font-size: 15px; font-weight: 700; letter-spacing: .04em; }
+.icard-date { font-size: 12px; color: var(--ink-3); letter-spacing: .02em; }
+.icard-tag {
+  align-self: flex-start; margin-top: 2px;
+  border: 1px solid var(--terra-soft); background: var(--terra-bg); color: var(--terra);
+  border-radius: 999px; padding: 2px 10px; font-size: 11px; font-weight: 700; letter-spacing: .1em;
 }
-.frame-tip .frame-fallback { word-break: break-all; }
+.icard-title { font-family: var(--serif); font-size: 15.5px; font-weight: 700; line-height: 1.5; margin-top: 6px; }
+.icard-go {
+  margin-top: auto; padding-top: 10px;
+  font-size: 13px; font-weight: 700; color: var(--amber-ink);
+}
+.icard:hover .icard-go { text-decoration: underline; }
 
-.frame-fallback {
-  display: inline-flex; align-items: center; min-height: 44px;
-  margin-top: 4px; font-size: 13px; font-weight: 700; text-decoration: underline;
+/* ── ④ 去卡片区 ── */
+.entries { display: flex; gap: 10px; }
+@media (min-width: 760px) { .entries { max-width: 720px; } }
+.entry {
+  flex: 1 1 0; min-width: 0; min-height: 52px; padding: 8px 12px;
+  display: flex; align-items: center; justify-content: center; text-align: center;
+  border: 1px solid var(--amber); border-radius: var(--ctl-r);
+  background: #fff; color: var(--amber-ink);
+  font-size: 13px; font-weight: 600; line-height: 1.4;
 }
+.entry:hover { background: var(--amber-bg); text-decoration: none; }
 
-/* ── ④ 灵感来源 ── */
-.src-grid { display: grid; grid-template-columns: 1fr; gap: 14px; }
-@media (min-width: 820px) { .src-grid { grid-template-columns: 1fr 1fr; gap: 18px; } }
-.src-card { border: 1px solid var(--hairline); border-radius: var(--card-r); padding: 16px 18px; background: #fff; }
-.src-card.real { border-left: 3px solid var(--amber); }
-.src-card.vision { border-left: 3px solid var(--terra); }
-.src-lbl {
-  display: flex; align-items: center; gap: 7px;
-  font-size: 11px; font-weight: 700; letter-spacing: .16em; color: var(--ink-3);
-}
-.dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; flex: 0 0 auto; }
-.dot-amber { background: var(--amber); }
-.dot-terra { background: var(--terra); }
-.src-title { font-family: var(--serif); font-size: 16px; font-weight: 700; line-height: 1.55; margin-top: 10px; }
-.src-line { font-size: 13.5px; color: var(--ink-2); margin-top: 10px; }
-.src-body { font-size: 13.5px; color: var(--ink-2); line-height: 1.78; margin-top: 10px; }
-.src-body strong { color: var(--ink); }
-.src-note {
-  margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--hairline);
-  font-size: 11.5px; line-height: 1.72; color: var(--ink-3);
-}
-.src-link { display: inline-flex; align-items: center; min-height: 44px; margin-top: 6px; font-size: 13px; font-weight: 600; }
-.src-link .url { font-family: var(--serif); word-break: break-all; }
-
-/* ── ⑤ 数据说明 ── */
-.notice {
-  display: flex; flex-direction: column; gap: 12px; margin-top: 40px;
-  padding: 16px 18px; border: 1px solid var(--amber-soft);
-  border-radius: var(--card-r); background: var(--amber-bg);
-}
-@media (min-width: 760px) { .notice { flex-direction: row; gap: 18px; align-items: flex-start; } }
-.notice-badge {
-  align-self: flex-start; flex: 0 0 auto; white-space: nowrap;
-  background: var(--terra); color: #fff; border-radius: 999px;
-  padding: 6px 14px; font-size: 12px; font-weight: 700; letter-spacing: .08em;
-}
-.notice-body { min-width: 0; }
-.notice-title { font-family: var(--serif); font-size: 15px; font-weight: 700; letter-spacing: .06em; }
-.notice-body p { font-size: 13.5px; color: var(--ink-2); margin-top: 8px; line-height: 1.75; }
-.notice-body b { color: var(--ink); }
-
-/* ── ⑥ 翻页 ── */
-.pager { margin-top: 44px; padding-top: 20px; border-top: 2px solid var(--ink); }
-.pager-row { display: flex; gap: 10px; }
-.nav-btn {
-  flex: 1 1 0; min-width: 0; min-height: 48px; padding: 0 12px;
-  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-  border: 1px solid var(--hairline); border-radius: var(--ctl-r);
-  background: #fff; color: var(--ink); font-size: 13.5px;
-  transition: border-color .15s, color .15s, background .15s;
-}
-.nav-btn:hover { border-color: var(--amber); color: var(--amber); background: var(--amber-bg); }
-.nav-btn .tgt { font-family: var(--serif); font-weight: 700; }
-.tabs { display: flex; gap: 8px; margin-top: 10px; }
-.tab {
-  flex: 1 1 0; min-width: 0; min-height: 58px; padding: 6px 4px;
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
-  border: 1px solid var(--hairline); border-radius: var(--ctl-r);
-  background: #fff; color: var(--ink-2); text-align: center;
-  transition: border-color .15s, color .15s, background .15s;
-}
-.tab:hover { border-color: var(--amber); color: var(--amber); text-decoration: none; }
-.tab[aria-current="page"] { border-color: var(--ink); background: var(--ink); color: var(--paper); }
-.tab b { font-family: var(--serif); font-size: 15px; font-weight: 700; line-height: 1.15; }
-.tab span { font-size: 11px; letter-spacing: .02em; }
-.tab em { font-style: normal; font-size: 10.5px; opacity: .82; }
-.tab[aria-current="page"] em { opacity: 1; }
-.pager-hint { margin-top: 10px; font-size: 12px; color: var(--ink-3); line-height: 1.7; }
-
-/* ── ⑦ 页脚 ── */
+/* ── ⑤ 页脚 ── */
 .foot {
-  display: flex; flex-direction: column; gap: 8px;
-  margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--hairline);
+  margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--hairline);
+  display: flex; flex-direction: column; gap: 2px;
 }
-@media (min-width: 760px) { .foot { flex-direction: row; justify-content: space-between; align-items: center; gap: 16px; } }
-.foot-lbl { font-size: 11px; font-weight: 700; letter-spacing: .16em; color: var(--ink-3); }
-.foot-link {
-  display: inline-flex; align-items: center; min-height: 44px;
-  font-family: var(--serif); font-size: 14.5px; font-weight: 700;
-}
-.foot-meta { font-size: 11.5px; color: var(--ink-3); line-height: 1.7; }
-
-/* ── 无 JS 提示 ── */
-.nojs {
-  display: block; margin-top: 16px; padding: 10px 12px; font-size: 12.5px;
-  background: var(--paper-2); border: 1px solid var(--hairline);
-  border-radius: var(--ctl-r); color: var(--ink-2);
+.foot-l1 { font-family: var(--serif); font-size: 14px; font-weight: 700; letter-spacing: .02em; }
+.foot-line { font-size: 12.5px; color: var(--ink-3); display: flex; align-items: center; flex-wrap: wrap; gap: 2px; }
+.foot-line a {
+  display: inline-flex; align-items: center; min-height: 44px; padding: 0 3px;
+  font-size: 13px; font-weight: 600;
 }
 
 /* ── 动效 ── */
-@keyframes issuein { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
-.issue { animation: issuein .3s ease-out 1; }
+@keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.hero, .ilist, .entries { animation: rise .32s ease-out 1; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: .001ms !important;
@@ -234,368 +152,148 @@ a:hover { text-decoration: underline; }
     scroll-behavior: auto !important;
   }
 }
+
+/* ── 统一顶栏（契约第三节，逐字） ── */
+.lnav{position:sticky;top:0;z-index:9999;display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+  padding:6px 14px;background:#12141c;border-bottom:1px solid rgba(255,255,255,.14);
+  font-family:inherit;font-size:13px;line-height:1}
+.lnav a{color:rgba(255,255,255,.74);text-decoration:none;display:inline-flex;align-items:center;
+  min-height:44px;padding:0 2px}
+.lnav a:hover{color:#fff;text-decoration:underline}
+.lnav a:focus-visible{color:#fff;outline:2px solid #7cc4ff;outline-offset:2px;border-radius:3px}
+.lnav-brand{font-weight:700;color:#fff!important;letter-spacing:.04em}
+.lnav-sep{width:1px;height:16px;background:rgba(255,255,255,.22)}
+.lnav-i[aria-current="page"]{color:#fff;font-weight:600}
 </style>
-<noscript>
-  <style>
-    /* 无 JS 降级：三期全部展开，翻页条隐藏（每期的「在新窗口打开本期」仍可用） */
-    .issue[hidden] { display: block !important; }
-    .pager, .pager-hint { display: none !important; }
-  </style>
-</noscript>
 </head>
 <body>
-<a class="skip" id="skip-link" href="#exp-stage-03">跳到本期实验</a>
-<div class="wrap">
+<nav class="lnav" aria-label="站点导航">
+  <a class="lnav-brand" href="index.html">灵灵</a>
+  <span class="lnav-sep" aria-hidden="true"></span>
+  <a class="lnav-i" href="index.html" aria-current="page">全部实验</a>
+  <a class="lnav-i" href="cards.html">机会卡</a>
+  <a class="lnav-i" href="cards-all.html">全部卡片</a>
+</nav>
 
-  <!-- ══════════ ① 刊头：期号 · 日期 · 主题一句话 · 「本期实验」标记 ══════════ -->
-  <header class="masthead">
-    <div class="mast-top">
-      <div class="brand">灵灵<small>PRODUCT LINGLING · 今日灵感实验</small></div>
-      <div class="mast-meta">
-        <span class="issue-no" id="m-issue">第 03 期</span>
-        <span id="m-date">2026-09-16</span>
-        <span class="exp-tag">本期实验</span>
-      </div>
-    </div>
-    <h1 class="mast-theme" id="m-theme">用实时语音智能体替代运维值班工程师，凌晨的告警交给 AI 吗？</h1>
-    <p class="mast-sub" id="m-mode">本轮实验形式：分支选择 · 单页原型，无需登录</p>
+<main class="wrap">
+
+  <!-- ══════════ ① 灵灵是什么 ══════════ -->
+  <header class="hero">
+    <h1 class="hero-title">灵灵</h1>
+    <p class="hero-sub">每天从 AI 行业的真实信号里，挑一个做成你能上手玩的小实验。</p>
+    <p class="hero-note">实验性内容 · 示例数据与规则模拟 · 本轮未接入真实模型</p>
+
+    <!-- ② 最新一期 -->
+    <a class="cta" href="exp/p3.html">
+      <span class="cta-k">直接开玩 →</span>
+      <span class="cta-v">第 03 期 · 凌晨 2:33 的告警</span>
+    </a>
+    <p class="cta-tip">全屏打开，约 1 分钟走完</p>
   </header>
 
-  <noscript><span class="nojs">未启用 JavaScript：下面三期样刊已全部展开，翻页导航不可用 —— 用每期的「在新窗口打开本期」链接可以直接进入原型。</span></noscript>
+  <!-- ══════════ ③ 三期目录 ══════════ -->
+  <section aria-labelledby="sec-issues">
+    <h2 class="sec-head" id="sec-issues">
+      <span class="sec-title">三期实验<span class="en" aria-hidden="true">EXPERIMENTS</span></span>
+    </h2>
+    <ul class="ilist">
+      <li>
+        <a class="icard" href="exp/p1.html">
+          <span class="icard-top"><b class="icard-no">第 01 期</b><span class="icard-date">2026-09-14</span></span>
+          <span class="icard-tag">拖拽分类</span>
+          <span class="icard-title">你是 AI 工具合规官，8 条使用申请该不该放行</span>
+          <span class="icard-go">进入 →</span>
+        </a>
+      </li>
+      <li>
+        <a class="icard" href="exp/p2.html">
+          <span class="icard-top"><b class="icard-no">第 02 期</b><span class="icard-date">2026-09-15</span></span>
+          <span class="icard-tag">参数调整</span>
+          <span class="icard-title">接手 2011 年的老系统，三个旋钮决定它能答什么</span>
+          <span class="icard-go">进入 →</span>
+        </a>
+      </li>
+      <li>
+        <a class="icard" href="exp/p3.html">
+          <span class="icard-top"><b class="icard-no">第 03 期</b><span class="icard-date">2026-09-16</span></span>
+          <span class="icard-tag">分支选择</span>
+          <span class="icard-title">凌晨 2:33 的告警，AI 能接管到哪一步</span>
+          <span class="icard-go">进入 →</span>
+        </a>
+      </li>
+    </ul>
+  </section>
 
-  <!-- ══════════════════ 第 01 期 ══════════════════ -->
-  <article class="issue" data-issue="01" hidden>
-
-    <!-- ② 一句话场景 -->
-    <section aria-labelledby="s01-scene">
-      <div class="sec-head">
-        <h2 class="sec-title scene-h" id="s01-scene" tabindex="-1">一句话场景<span class="en" aria-hidden="true">WHAT YOU DO</span></h2>
-        <div class="sec-actions"><span class="chip">角色 · AI 工具合规官</span><span class="chip amber">拖拽分类</span></div>
-      </div>
-      <p class="lede">你是某公司的 AI 工具合规官。桌上压着 8 条「想用 AI 编程助手」的使用申请，你得把它们分别拖进「放行 / 需人工复核 / 拦截」三个桶。提交之后，页面会拿出「双用途 / 致命性 / 可逆性」三条规则逐条对照，告诉你哪几条你和规则想得不一样、以及为什么。</p>
-      <ol class="howto">
-        <li>读 8 条使用申请，判断它们该去哪一桶。</li>
-        <li>把每条拖进桶里（不习惯拖拽也没关系，列表本身可以键盘操作）。</li>
-        <li>点提交，看你的直觉和规则在哪几条上分了岔。</li>
-      </ol>
-    </section>
-
-    <!-- ③ 直接开玩 -->
-    <section class="stage" id="exp-stage-01" tabindex="-1" aria-labelledby="s01-play">
-      <div class="sec-head">
-        <h2 class="sec-title" id="s01-play">直接开玩<span class="en" aria-hidden="true">PLAY NOW</span></h2>
-        <div class="sec-actions">
-          <a class="link-btn" href="exp/p1.html" target="_blank" rel="noopener">在新窗口打开本期 ↗</a>
-        </div>
-      </div>
-      <div class="frame-box">
-        <iframe class="frame" src="exp/p1.html" sandbox="allow-scripts" loading="lazy"
-                title="第 01 期原型 · 拖拽分类：AI 工具使用申请的合规判定"></iframe>
-      </div>
-      <div class="frame-tip">
-        <p>原型跑在与本页隔离的沙箱帧里（<code>sandbox="allow-scripts"</code>），拿不到本页的任何数据、也不会向外部发请求。若上方画面空白、一直转圈或显示残缺 —— 个别浏览器会拦住本地 <code>file://</code> 的页面嵌入 —— 用下面的备用入口照样能玩。</p>
-        <a class="frame-fallback" href="exp/p1.html" target="_blank" rel="noopener">在新窗口打开第 01 期 ↗</a>
-      </div>
-    </section>
-
-    <!-- ④ 灵感来源 -->
-    <section aria-labelledby="s01-src">
-      <div class="sec-head">
-        <h2 class="sec-title" id="s01-src">灵感来源<span class="en" aria-hidden="true">SOURCE</span></h2>
-        <div class="sec-actions"><span class="chip">2026-09-14</span></div>
-      </div>
-      <div class="src-grid">
-        <div class="src-card real">
-          <div class="src-lbl"><span class="dot dot-amber"></span>原始信号，实际是什么</div>
-          <h3 class="src-title">机会卡《面向 AI 编程助手的军事/双用途滥用检测与合规审计平台》</h3>
-          <p class="src-line"><b>原始信号：</b>Anthropic 报告称胡塞组织用 Claude Code 开发导弹制导软件。</p>
-          <p class="src-note">以上是机会卡与行业信号的真实记录，未作改写、未加演绎。</p>
-          <a class="src-link" href="https://aihot.news/items/cmu01iavi08reroymepsxnar2" target="_blank" rel="noopener noreferrer">阅读原文 ↗ <span class="url">aihot.news/items/cmu01iavi08reroymepsxnar2</span></a>
-        </div>
-        <div class="src-card vision">
-          <div class="src-lbl"><span class="dot dot-terra"></span>灵灵据此延伸的设想</div>
-          <p class="src-body">把一份宏观的安全报告，折成你桌面上的一次签字。灵灵换了提问的角度：与其问「平台该不该拦」，不如问「这条申请就摆在你面前、而标准答案并不显然时，你会怎么判」。于是有了 8 条使用申请、三个桶，和三条被刻意写得简洁的规则 —— <strong>规则越简洁，和直觉冲撞的地方越好看</strong>。</p>
-          <p class="src-note">这一段是灵灵的二次创作，不是原文内容，也不代表 Anthropic 或任何机构的合规口径。8 条申请、三个桶与三条判定规则均为本实验编写的示例。</p>
-        </div>
-      </div>
-    </section>
-  </article>
-
-  <!-- ══════════════════ 第 02 期 ══════════════════ -->
-  <article class="issue" data-issue="02" hidden>
-
-    <section aria-labelledby="s02-scene">
-      <div class="sec-head">
-        <h2 class="sec-title scene-h" id="s02-scene" tabindex="-1">一句话场景<span class="en" aria-hidden="true">WHAT YOU DO</span></h2>
-        <div class="sec-actions"><span class="chip">角色 · 接手老系统的工程师</span><span class="chip amber">参数调整</span></div>
-      </div>
-      <p class="lede">你是刚接手一套 2011 年老系统的工程师：代码没人敢动、文档早就丢了、原班人马一个都不在。你要拧三个旋钮 —— 上下文预算、代码年代跨度、提问粒度 —— 看看这套「考古方案」到底能回答什么、答不了什么，以及要花掉多少钱。</p>
-      <ol class="howto">
-        <li>先选这套遗留系统长什么样（单体 Java / 存储过程 / 前端老框架）。</li>
-        <li>拧三个参数，每动一下都能看到输出跟着变。</li>
-        <li>对着「能答 / 遗漏 / 成本」三块结果，找一个你敢签字交差的组合。</li>
-      </ol>
-    </section>
-
-    <section class="stage" id="exp-stage-02" tabindex="-1" aria-labelledby="s02-play">
-      <div class="sec-head">
-        <h2 class="sec-title" id="s02-play">直接开玩<span class="en" aria-hidden="true">PLAY NOW</span></h2>
-        <div class="sec-actions">
-          <a class="link-btn" href="exp/p2.html" target="_blank" rel="noopener">在新窗口打开本期 ↗</a>
-        </div>
-      </div>
-      <div class="frame-box">
-        <iframe class="frame" src="exp/p2.html" sandbox="allow-scripts" loading="lazy"
-                title="第 02 期原型 · 参数调整：企业遗留代码考古方案"></iframe>
-      </div>
-      <div class="frame-tip">
-        <p>原型跑在与本页隔离的沙箱帧里（<code>sandbox="allow-scripts"</code>），拿不到本页的任何数据、也不会向外部发请求。若上方画面空白、一直转圈或显示残缺 —— 个别浏览器会拦住本地 <code>file://</code> 的页面嵌入 —— 用下面的备用入口照样能玩。</p>
-        <a class="frame-fallback" href="exp/p2.html" target="_blank" rel="noopener">在新窗口打开第 02 期 ↗</a>
-      </div>
-    </section>
-
-    <section aria-labelledby="s02-src">
-      <div class="sec-head">
-        <h2 class="sec-title" id="s02-src">灵感来源<span class="en" aria-hidden="true">SOURCE</span></h2>
-        <div class="sec-actions"><span class="chip">2026-09-15</span></div>
-      </div>
-      <div class="src-grid">
-        <div class="src-card real">
-          <div class="src-lbl"><span class="dot dot-amber"></span>原始信号，实际是什么</div>
-          <h3 class="src-title">机会卡《用 1M 上下文大模型把「企业遗留代码考古」变成可对话的活体知识库》</h3>
-          <p class="src-line"><b>原始信号：</b>硅基流动上线开源模型 Hy4 preview（770B 总参数、1M 上下文）；DeepSeek-V4.1-Flash（Max）进入 Agent Arena 开源模型第 3 名。</p>
-          <p class="src-note">以上是机会卡与行业信号的真实记录，未作改写、未加演绎。</p>
-          <a class="src-link" href="https://aihot.news/items/cmu1gt8gn097trocnxxvdhxli" target="_blank" rel="noopener noreferrer">阅读原文 ↗ <span class="url">aihot.news/items/cmu1gt8gn097trocnxxvdhxli</span></a>
-        </div>
-        <div class="src-card vision">
-          <div class="src-lbl"><span class="dot dot-terra"></span>灵灵据此延伸的设想</div>
-          <p class="src-body">把「1M 上下文」从参数表上的宣传数字，翻译成一张要签字的账单。抽象的能力指标一旦放进具体工位就变得可感：一个要在 2011 年的代码堆里考古的工程师。三个旋钮互相牵制 —— 预算开大，能答的问题变多，但成本和捞回来的无关代码也一起涨；年代跨度拉宽，就会撞上「那个年代根本不存在的依赖」。<strong>取舍是真的，代价也能看见。</strong></p>
-          <p class="src-note">这一段是灵灵的二次创作，不是原文内容。参数之间的对应关系是按工程常识编写的规则模拟，不是任何模型的实测结果；成本数字仅为量级示意。</p>
-        </div>
-      </div>
-    </section>
-  </article>
-
-  <!-- ══════════════════ 第 03 期（默认） ══════════════════ -->
-  <article class="issue" data-issue="03">
-
-    <section aria-labelledby="s03-scene">
-      <div class="sec-head">
-        <h2 class="sec-title scene-h" id="s03-scene" tabindex="-1">一句话场景<span class="en" aria-hidden="true">WHAT YOU DO</span></h2>
-        <div class="sec-actions"><span class="chip">角色 · 凌晨值班工程师</span><span class="chip amber">分支选择</span></div>
-      </div>
-      <p class="lede">凌晨 2:33，告警响了。你是当班工程师，面前有 4 个决策点，每一步都得选一次：让 AI 全权接管、人工确认后执行、还是升级上报。不同选法通向不同结局 —— 服务恢复、误操作把故障扩大、或者延迟恢复但零风险 —— 走完会给你一份属于这条路径的复盘。</p>
-      <ol class="howto">
-        <li>先选今晚的开局（单点故障 / 连锁告警 / 灰度发布中）。</li>
-        <li>每个决策点三选一，选完立刻看见后果。</li>
-        <li>走到结局，读复盘：看看你是在哪一步把风险放大的。</li>
-      </ol>
-    </section>
-
-    <section class="stage" id="exp-stage-03" tabindex="-1" aria-labelledby="s03-play">
-      <div class="sec-head">
-        <h2 class="sec-title" id="s03-play">直接开玩<span class="en" aria-hidden="true">PLAY NOW</span></h2>
-        <div class="sec-actions">
-          <a class="link-btn" href="exp/p3.html" target="_blank" rel="noopener">在新窗口打开本期 ↗</a>
-        </div>
-      </div>
-      <div class="frame-box">
-        <iframe class="frame" src="exp/p3.html" sandbox="allow-scripts" loading="lazy"
-                title="第 03 期原型 · 分支选择：凌晨告警的值班决策"></iframe>
-      </div>
-      <div class="frame-tip">
-        <p>原型跑在与本页隔离的沙箱帧里（<code>sandbox="allow-scripts"</code>），拿不到本页的任何数据、也不会向外部发请求。若上方画面空白、一直转圈或显示残缺 —— 个别浏览器会拦住本地 <code>file://</code> 的页面嵌入 —— 用下面的备用入口照样能玩。</p>
-        <a class="frame-fallback" href="exp/p3.html" target="_blank" rel="noopener">在新窗口打开第 03 期 ↗</a>
-      </div>
-    </section>
-
-    <section aria-labelledby="s03-src">
-      <div class="sec-head">
-        <h2 class="sec-title" id="s03-src">灵感来源<span class="en" aria-hidden="true">SOURCE</span></h2>
-        <div class="sec-actions"><span class="chip">2026-09-16</span></div>
-      </div>
-      <div class="src-grid">
-        <div class="src-card real">
-          <div class="src-lbl"><span class="dot dot-amber"></span>原始信号，实际是什么</div>
-          <h3 class="src-title">机会卡《用实时语音智能体替代运维值班工程师，让 AI 语音助手自主完成基础设施运维》</h3>
-          <p class="src-line"><b>原始信号：</b>Google DeepMind 发布 Gemini 3.8 Live 和 3.8 Live Extended Thinking。</p>
-          <p class="src-note">以上是机会卡与行业信号的真实记录，未作改写、未加演绎。</p>
-          <a class="src-link" href="https://aihot.news/items/cmu2xqfxz02zhroc1hxuzi6jm" target="_blank" rel="noopener noreferrer">阅读原文 ↗ <span class="url">aihot.news/items/cmu2xqfxz02zhroc1hxuzi6jm</span></a>
-        </div>
-        <div class="src-card vision">
-          <div class="src-lbl"><span class="dot dot-terra"></span>灵灵据此延伸的设想</div>
-          <p class="src-body">把「实时语音智能体」推到它最容易被授权的那个岗位上。这类能力最先引发争议的落地场景未必是客服，而是凌晨的值班岗 —— 那里人最困、授权最松、后果最直接。灵灵把它做成一棵 4 步决策树：每一步都逼你在「AI 全权接管 / 人工确认后执行 / 升级上报」之间选一次，然后让你亲自走进某个结局，再回头看你是在哪一步把风险放大的。<strong>选错的代价是看得见的。</strong></p>
-          <p class="src-note">这一段是灵灵的二次创作，不是原文内容。决策点、结局与复盘文本均为本实验编写的示例分支，不代表任何真实系统的行为，也不是对 Gemini 3.8 Live 的能力评测。</p>
-        </div>
-      </div>
-    </section>
-  </article>
-
-  <!-- ══════════ ⑤ 数据说明 ══════════ -->
-  <section class="notice" aria-labelledby="sec-note">
-    <div class="notice-badge">示例数据 · 规则模拟</div>
-    <div class="notice-body">
-      <h2 class="notice-title" id="sec-note">数据说明</h2>
-      <p>本页三期实验全部按 <b>示例数据 · 规则模拟</b> 标注：题面里的申请条目、参数之间的对应关系、决策分支与结局，都由原型页里的本地规则算出来，<b>本轮未接入真实模型</b>，也没有任何后端接口调用、没有 API key、没有外部请求。</p>
-      <p>所以请把每一期当成「想法能不能被玩起来」的手感测试，而不是任何结论或评测结果。三期的灵感来源是真实机会卡，延伸部分是灵灵的二次创作，两者已在上一栏分开标注。</p>
+  <!-- ══════════ ④ 去卡片区 ══════════ -->
+  <section aria-labelledby="sec-cards">
+    <h2 class="sec-head" id="sec-cards">
+      <span class="sec-title">机会卡<span class="en" aria-hidden="true">OPPORTUNITY CARDS</span></span>
+    </h2>
+    <div class="entries">
+      <a class="entry" href="cards.html" id="entry-today">看今天的机会卡 →</a>
+      <a class="entry" href="cards-all.html" id="entry-all">浏览全部卡片 →</a>
     </div>
   </section>
 
-  <!-- ══════════ ⑥ 翻页 ══════════ -->
-  <nav class="pager" aria-label="期次翻页">
-    <div class="pager-row">
-      <button class="nav-btn" id="pg-prev" type="button" aria-label="上一期">← 上一期 <span class="tgt" id="pg-prev-no">02</span></button>
-      <button class="nav-btn" id="pg-next" type="button" aria-label="下一期">下一期 <span class="tgt" id="pg-next-no">01</span> →</button>
-    </div>
-    <div class="tabs">
-      <a class="tab" href="#01" data-issue="01"><b>01</b><span>09-14</span><em>拖拽分类</em></a>
-      <a class="tab" href="#02" data-issue="02"><b>02</b><span>09-15</span><em>参数调整</em></a>
-      <a class="tab" href="#03" data-issue="03"><b>03</b><span>09-16</span><em>分支选择</em></a>
-    </div>
-    <p class="pager-hint">地址栏 <code>#01</code> / <code>#02</code> / <code>#03</code> 表示当前期，可直接分享这个链接（默认落在最新一期 <code>#03</code>）。键盘按 <b>←</b> / <b>→</b> 也能翻页；光标在原型内部时方向键归原型使用，先点页面空白处即可交还。</p>
-  </nav>
-
-  <!-- ══════════ ⑦ 页脚 ══════════ -->
+  <!-- ══════════ ⑤ 页脚 ══════════ -->
   <footer class="foot">
-    <div>
-      <div class="foot-lbl">旧版入口</div>
-      <a class="foot-link" href="cards.html">灵灵 · 每日机会开卡（V3 机会卡页）↗</a>
-    </div>
-    <div class="foot-meta">
-      今日灵感实验 · 第 1 轮三期样刊 · 2026-09-14 ～ 2026-09-16<br>
-      单文件 · 零依赖 · 无外部请求 · 可离线打开
-    </div>
+    <p class="foot-l1">灵灵 · 每日机会卡 + 每日灵感实验</p>
+    <p class="foot-line">
+      旧版界面：<a href="archive/prototype.html">v1</a> /
+      <a href="archive/v2.html">v2</a> /
+      <a href="archive/v3.html">v3</a>
+    </p>
+    <p class="foot-line">
+      源码与说明：<a href="https://github.com/LLing486/product-lingling" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
+    </p>
   </footer>
 
-</div>
+</main>
 
 <script>
 'use strict';
 (function () {
-  /* ── 期次数据（期号 / 日期 / 形式，与各期区块一一对应） ── */
-  var ORDER = ['01', '02', '03'];
-  var LATEST = '03';
-  var META = {
-    '01': { date: '2026-09-14', mode: '拖拽分类', theme: 'AI 编程助手的滥用与合规边界，谁来划？' },
-    '02': { date: '2026-09-15', mode: '参数调整', theme: '用超长上下文把「企业遗留代码考古」变成可对话的活体知识库' },
-    '03': { date: '2026-09-16', mode: '分支选择', theme: '用实时语音智能体替代运维值班工程师，凌晨的告警交给 AI 吗？' }
-  };
+  var elToday = document.getElementById('entry-today');
+  var elAll = document.getElementById('entry-all');
+  if (!elToday || !elAll) return;
 
-  var RMQ = window.matchMedia('(prefers-reduced-motion: reduce)');
-  var RM = RMQ.matches;
-  if (RMQ.addEventListener) {
-    RMQ.addEventListener('change', function (e) { RM = e.matches; });
-  }
-
-  var issues = Array.prototype.slice.call(document.querySelectorAll('.issue'));
-  var tabs = Array.prototype.slice.call(document.querySelectorAll('.tab'));
-  var elIssue = document.getElementById('m-issue');
-  var elDate = document.getElementById('m-date');
-  var elTheme = document.getElementById('m-theme');
-  var elMode = document.getElementById('m-mode');
-  var btnPrev = document.getElementById('pg-prev');
-  var btnNext = document.getElementById('pg-next');
-  var noPrev = document.getElementById('pg-prev-no');
-  var noNext = document.getElementById('pg-next-no');
-  var skipLink = document.getElementById('skip-link');
-
-  var current = null;   // 当前期号
-  var booted = false;   // 首屏归位期间忽略 hashchange
-
-  /* 从 location.hash 读期号；非法或缺失时返回最新一期 */
-  function readHash() {
-    var raw = decodeURIComponent(location.hash || '').replace(/^#/, '');
-    return ORDER.indexOf(raw) >= 0 ? raw : null;
-  }
-
-  /* 只改地址栏、不新增历史记录；极少数环境禁用 replaceState 时退回直接赋值 */
-  function setHashSilently(id) {
-    try { history.replaceState(null, '', '#' + id); }
-    catch (err) { location.hash = '#' + id; }
-  }
-
-  /* 渲染某一期：①刊头字段 + ②③④ 区块 + ⑥翻页态 */
-  function show(id, opts) {
-    opts = opts || {};
-    if (ORDER.indexOf(id) < 0) id = LATEST;
-    var changed = current !== id;
-    current = id;
-
-    issues.forEach(function (sec) {
-      if (sec.dataset.issue === id) sec.removeAttribute('hidden');
-      else sec.setAttribute('hidden', '');
-    });
-
-    var m = META[id];
-    elIssue.textContent = '第 ' + id + ' 期';
-    elDate.textContent = m.date;
-    elTheme.textContent = m.theme;
-    elMode.textContent = '本轮实验形式：' + m.mode + ' · 单页原型，无需登录';
-    document.title = '灵灵 · 今日灵感实验 第 ' + id + ' 期 · ' + m.mode;
-
-    tabs.forEach(function (a) {
-      if (a.dataset.issue === id) a.setAttribute('aria-current', 'page');
-      else a.removeAttribute('aria-current');
-    });
-
-    var i = ORDER.indexOf(id);
-    var prev = ORDER[(i - 1 + ORDER.length) % ORDER.length];
-    var next = ORDER[(i + 1) % ORDER.length];
-    noPrev.textContent = prev;
-    noNext.textContent = next;
-    btnPrev.setAttribute('aria-label', '上一期，第 ' + prev + ' 期 · ' + META[prev].mode);
-    btnNext.setAttribute('aria-label', '下一期，第 ' + next + ' 期 · ' + META[next].mode);
-
-    if (changed && !opts.silent) {
-      if (opts.focus) {
-        var h = document.querySelector('.issue[data-issue="' + id + '"] .scene-h');
-        if (h) h.focus({ preventScroll: true });
+  /* 同源相对路径，不写死后端地址；file:// 下必然失败 → 退回不带数字的文案 */
+  function api(path, ms) {
+    var opts = { headers: { 'Accept': 'application/json' } };
+    try {
+      if (typeof AbortSignal !== 'undefined' && AbortSignal.timeout) {
+        opts.signal = AbortSignal.timeout(ms);
       }
-      window.scrollTo({ top: 0, behavior: RM ? 'auto' : 'smooth' });
+    } catch (err) { /* 老浏览器不支持 AbortSignal.timeout：不做超时控制 */ }
+    try {
+      return fetch(path, opts).then(function (r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      });
+    } catch (err) {
+      return Promise.reject(err);
     }
   }
 
-  /* 翻页 = 改 hash，渲染交给 hashchange，单一数据源 */
-  function go(step) {
-    var i = ORDER.indexOf(current || LATEST);
-    var nid = ORDER[(i + step + ORDER.length) % ORDER.length];
-    if (readHash() === nid) show(nid, { focus: true });
-    else location.hash = '#' + nid;
+  /* 永不 reject 的包装，便于两路各自降级 */
+  function settle(p) {
+    return p.then(function (v) { return { ok: true, v: v }; },
+                  function () { return { ok: false }; });
   }
 
-  /* 跳转到当前期的实验区：只聚焦+滚动，不改 hash（hash 专职表示期号） */
-  skipLink.addEventListener('click', function (e) {
-    var sec = document.querySelector('.issue:not([hidden]) .stage');
-    if (!sec) return;
-    e.preventDefault();
-    sec.focus({ preventScroll: true });
-    sec.scrollIntoView({ behavior: RM ? 'auto' : 'smooth', block: 'start' });
+  Promise.all([
+    settle(api('/api/cards?page=1&page_size=1', 6000)),
+    settle(api('/api/cards/today', 6000))
+  ]).then(function (res) {
+    var total = res[0].ok && res[0].v ? Number(res[0].v.total) : NaN;
+    if (isFinite(total) && total > 0) {
+      elAll.textContent = '浏览全部 ' + total + ' 张卡片 →';
+    }
+    var n = res[1].ok && res[1].v && Array.isArray(res[1].v.cards) ? res[1].v.cards.length : NaN;
+    if (isFinite(n) && n > 0) {
+      elToday.textContent = '看今天的 ' + n + ' 张机会卡 →';
+    }
   });
-
-  btnPrev.addEventListener('click', function () { go(-1); });
-  btnNext.addEventListener('click', function () { go(1); });
-
-  window.addEventListener('hashchange', function () {
-    var id = readHash();
-    if (!id || !booted) return;   // 非期号锚点（如跳转锚点）不触发翻页
-    show(id, { focus: true });
-  });
-
-  /* ← / → 翻页；输入控件与原型内部不抢键 */
-  document.addEventListener('keydown', function (e) {
-    if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return;
-    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
-    var t = e.target;
-    if (t && t.closest && t.closest('input, textarea, select, [contenteditable="true"]')) return;
-    e.preventDefault();
-    go(e.key === 'ArrowLeft' ? -1 : 1);
-  });
-
-  /* 首屏：hash 合法就用它，否则落在最新一期并静默归位地址栏 */
-  var boot = readHash();
-  show(boot || LATEST, { silent: true });
-  if (!boot) setHashSilently(LATEST);   // 地址栏无期号 → 静默补上最新一期
-  booted = true;
 })();
 </script>
 </body>
