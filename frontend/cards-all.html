@@ -244,6 +244,20 @@ a:hover { text-decoration: underline; }
     return { cards: out, total: total == null ? out.length : total };
   }
 
+  /* ── 快照兜底：静态托管（Cloudflare Pages 等）没有后端时，读全量导出快照 ── */
+  async function fetchSnapshot() {
+    const res = await fetch('data/cards-index.json', { signal: AbortSignal.timeout(15000) });
+    if (!res.ok) throw new Error('snapshot ' + res.status);
+    const data = await res.json();
+    const cards = Array.isArray(data.cards) ? data.cards : [];
+    if (!cards.length) throw new Error('snapshot empty');
+    return {
+      cards,
+      total: typeof data.total === 'number' ? data.total : cards.length,
+      updatedAt: data.updated_at || '',
+    };
+  }
+
   /* ── 降级示例数据（与 cards.html 同一做法：接口不可用时用内置数据） ── */
   const todayISO = new Date(Date.now() - new Date().getTimezoneOffset() * 6e4).toISOString().slice(0, 10);
   function off(d) { return new Date(Date.now() + d * 864e5).toISOString().slice(0, 10); }
@@ -370,10 +384,21 @@ a:hover { text-decoration: underline; }
       ALL = sortAll(r.cards);
       total = r.total;
     } catch (err) {
-      isMock = true;
-      ALL = sortAll(MOCK);
-      total = ALL.length;
-      $('fallback').hidden = false;
+      try {
+        const s = await fetchSnapshot();
+        ALL = sortAll(s.cards);
+        total = s.total;
+        const fb = $('fallback');
+        fb.textContent = '当前为静态快照' + (s.updatedAt ? '（更新于 ' + s.updatedAt + '）' : '') + '，与线上接口可能有数小时延迟';
+        fb.hidden = false;
+      } catch (err2) {
+        isMock = true;
+        ALL = sortAll(MOCK);
+        total = ALL.length;
+        const fb = $('fallback');
+        fb.textContent = '接口与快照都不可用，以下为示例数据';
+        fb.hidden = false;
+      }
     }
     // ALL 已按 created_at 倒序，末条即最早日期
     const since = ALL.length ? (dateOf(ALL[ALL.length - 1]) || '2026-06-12') : '2026-06-12';

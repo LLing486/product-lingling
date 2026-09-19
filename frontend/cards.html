@@ -530,6 +530,38 @@ const MOCK = {
 };
 function offsetDate(d) { return new Date(Date.now() + d * 864e5).toISOString().slice(0, 10); }
 
+/* ============ 静态快照兜底（无后端的静态托管，如 Cloudflare Pages） ============ */
+let snapAt = '';        // 快照更新时间
+let snapAll = null;     // 快照全量列表（快照模式下的客户端分页源）
+let snapMode = false;
+async function jget(p) {
+  const r = await fetch(p, { signal: AbortSignal.timeout(15000) });
+  if (!r.ok) throw new Error(p + ' ' + r.status);
+  return r.json();
+}
+async function loadSnapshot() {
+  const [idx, td, sd] = await Promise.all([
+    jget('data/cards-index.json'),
+    jget('data/today.json').catch(() => ({})),
+    jget('data/sources.json').catch(() => ({})),
+  ]);
+  const all = (idx.cards || []).map(mapCard);
+  if (!all.length) throw new Error('snapshot empty');
+  snapAt = idx.updated_at || '';
+  snapAll = all;
+  const todayRaw = (td.cards || []).length ? td.cards : (idx.cards || []).slice(0, 2);
+  const srcArr = Array.isArray(sd) ? sd : (sd.items || []);
+  return {
+    todayCards: todayRaw.map(mapCard),
+    library: all,
+    total: all.length,
+    sources: srcArr.map(it => ({
+      title: it.title || '', url: it.url || '#',
+      date: it.published_date || (it.published_at || '').slice(0, 10) || '',
+    })),
+  };
+}
+
 /* ============ data loading ============ */
 async function loadData() {
   try {
@@ -550,14 +582,25 @@ async function loadData() {
     }));
     if (!todayCards.length) throw new Error('empty');
   } catch {
-    isMock = true;
-    todayCards = MOCK.today.map(mapCard);
-    library = [...MOCK.today, ...MOCK.library].map(mapCard);
-    libTotal = library.length;
-    sources = MOCK.sources.map(it => ({ title: it.title, url: it.url, date: it.published_at }));
+    let snap = null;
+    try { snap = await loadSnapshot(); } catch (e) { snap = null; }
+    if (snap) {
+      snapMode = true;
+      todayCards = snap.todayCards;
+      library = snap.library.slice(0, 20);
+      libTotal = snap.total;
+      libPage = 1;
+      sources = snap.sources;
+    } else {
+      isMock = true;
+      todayCards = MOCK.today.map(mapCard);
+      library = [...MOCK.today, ...MOCK.library].map(mapCard);
+      libTotal = library.length;
+      sources = MOCK.sources.map(it => ({ title: it.title, url: it.url, date: it.published_at }));
+    }
   }
-  $('status-pill').textContent = isMock ? '⚡ 演示模式' : `${sources.length} 条信号`;
-  if (isMock) $('status-pill').classList.add('mock');
+  $('status-pill').textContent = isMock ? '⚡ 演示模式' : (snapMode ? '🗂 快照模式' : `${sources.length} 条信号`);
+  if (isMock || snapMode) $('status-pill').classList.add('mock');
 }
 
 /* ============ seed visuals ============ */
@@ -801,6 +844,18 @@ function renderLibrary() {
 
 async function loadMoreLibrary() {
   if (libLoading) return;
+  if (snapAll) {
+    // 快照模式：全量已在内存，客户端分页，永远能查到最后一张
+    if (libPage * 20 >= libTotal) {
+      const end = document.getElementById('lib-end');
+      if (end) end.textContent = '已加载全部机会卡';
+      return;
+    }
+    libPage++;
+    library = snapAll.slice(0, libPage * 20);
+    renderLibrary();
+    return;
+  }
   if (isMock || libPage * 20 >= libTotal) {
     const end = document.getElementById('lib-end');
     if (end) end.textContent = '已加载全部机会卡';
@@ -1032,9 +1087,14 @@ async function openDetail(card) {
   let full = card;
   if (card && card.user === undefined) {
     try {
-      const res = await fetch(`/api/cards/${card.id}`);
-      if (!res.ok) return;
-      full = mapCard(await res.json());
+      let data = null;
+      try {
+        const res = await fetch(`/api/cards/${card.id}`);
+        if (res.ok) data = await res.json();
+      } catch (e) { data = null; }
+      if (!data) data = await jget(`data/cards/${card.id}.json`);   // 静态快照兜底
+      if (!data) return;
+      full = mapCard(data);
     } catch(e) { return; }
   }
   if (!full) return;
@@ -1280,9 +1340,12 @@ async function locateDeepLink() {
   } else {
     /* 不在已加载列表：直接取回这张卡 */
     try {
-      const res = await fetch(`/api/cards/${DEEP_ID}`, { signal: AbortSignal.timeout(8000) });
-      if (!res.ok) throw new Error('http ' + res.status);
-      const data = await res.json();
+      let data = null;
+      try {
+        const res = await fetch(`/api/cards/${DEEP_ID}`, { signal: AbortSignal.timeout(8000) });
+        if (res.ok) data = await res.json();
+      } catch (e) { data = null; }
+      if (!data) data = await jget(`data/cards/${DEEP_ID}.json`);   // 静态快照兜底
       if (!data || data.id === undefined || data.id === null) throw new Error('empty');
       openDetail(mapCard(data));
     } catch {
