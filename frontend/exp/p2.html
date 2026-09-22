@@ -356,13 +356,7 @@ details.rules summary:focus-visible { outline: 2px solid var(--amber); outline-o
 </nav>
 
 <!-- ══════════ 顶部期号切换条（契约 5.1） ══════════ -->
-<div class="pnav" role="navigation" aria-label="期号切换">
-  <a class="pnav-prev" href="p1.html">← 上一期</a>
-  <span class="pnav-list">
-    <a href="p1.html">01</a><a href="p2.html" aria-current="page">02</a><a href="p3.html">03</a>
-  </span>
-  <a class="pnav-next" href="p3.html">下一期 →</a>
-</div>
+<div class="pnav" role="navigation" aria-label="期号切换" data-shell="pnav" data-no="2" data-base="p" data-pos="top"></div>
 
 <a class="skip" href="#results">跳到结果</a>
 <div class="wrap">
@@ -563,13 +557,7 @@ details.rules summary:focus-visible { outline: 2px solid var(--amber); outline-o
 </div>
 
 <!-- ══════════ 底部期号切换条（与顶部同结构，玩完接着翻） ══════════ -->
-<div class="pnav" role="navigation" aria-label="期号切换">
-  <a class="pnav-prev" href="p1.html">← 上一期</a>
-  <span class="pnav-list">
-    <a href="p1.html">01</a><a href="p2.html" aria-current="page">02</a><a href="p3.html">03</a>
-  </span>
-  <a class="pnav-next" href="p3.html">下一期 →</a>
-</div>
+<div class="pnav" role="navigation" aria-label="期号切换" data-shell="pnav" data-no="2" data-base="p" data-pos="bottom"></div>
 
 <!-- ══════════ 这一期的灵感来源（契约 5.3） ══════════ -->
 <div class="wrap">
@@ -587,6 +575,9 @@ details.rules summary:focus-visible { outline: 2px solid var(--amber); outline-o
     </p>
     <p class="psrc-data">示例数据 · 规则模拟 —— 本期的题面、参数关系与分支结局都由页面本地规则算出，未接入真实模型，无后端调用、无 API key、无外部请求。</p>
   </section>
+
+  <!-- 本期判断 / 上期回看 —— 由 exp-shell.js 渲染；01–03 无内容时整体移除 -->
+  <section class="psrc" data-shell="judgment" data-no="2"></section>
 </div>
 
 <noscript><span class="nojs">本原型需要 JavaScript 才能计算规则模拟结果。请启用 JavaScript 后刷新（页面完全离线，不联网）。</span></noscript>
@@ -1400,5 +1391,7 @@ function fmtHours(h) {
   render();
 })();
 </script>
+<script src="episodes.js"></script>
+<script src="../exp-shell.js"></script>
 </body>
 </html>

@@ -298,13 +298,7 @@ html { scroll-padding-top: 57px; }
   <a class="lnav-i" href="../cards-all.html">全部卡片</a>
 </nav>
 
-<div class="pnav" role="navigation" aria-label="期号切换">
-  <a class="pnav-prev" href="p2.html">← 上一期</a>
-  <span class="pnav-list">
-    <a href="p1.html">01</a><a href="p2.html">02</a><a href="p3.html" aria-current="page">03</a>
-  </span>
-  <span class="pnav-next is-off" aria-disabled="true">下一期 →</span>
-</div>
+<div class="pnav" role="navigation" aria-label="期号切换" data-shell="pnav" data-no="3" data-base="p" data-pos="top"></div>
 
 <a class="skip" href="#decide">跳到决策区</a>
 <div class="wrap">
@@ -368,13 +362,7 @@ html { scroll-padding-top: 57px; }
 
 </div>
 
-<div class="pnav" role="navigation" aria-label="期号切换">
-  <a class="pnav-prev" href="p2.html">← 上一期</a>
-  <span class="pnav-list">
-    <a href="p1.html">01</a><a href="p2.html">02</a><a href="p3.html" aria-current="page">03</a>
-  </span>
-  <span class="pnav-next is-off" aria-disabled="true">下一期 →</span>
-</div>
+<div class="pnav" role="navigation" aria-label="期号切换" data-shell="pnav" data-no="3" data-base="p" data-pos="bottom"></div>
 
 <section class="psrc" aria-label="这一期的灵感来源">
   <h2 class="psrc-h">这一期的灵感来源</h2>
@@ -390,6 +378,8 @@ html { scroll-padding-top: 57px; }
   </p>
   <p class="psrc-data">示例数据 · 规则模拟 —— 本期的题面、参数关系与分支结局都由页面本地规则算出，未接入真实模型，无后端调用、无 API key、无外部请求。</p>
 </section>
+
+<section class="psrc" data-shell="judgment" data-no="3"></section>
 
 <script>
 /* ============================================================
@@ -1039,5 +1029,7 @@ function boot() {
 
 if (typeof document !== 'undefined') boot();
 </script>
+<script src="episodes.js"></script>
+<script src="../exp-shell.js"></script>
 </body>
 </html>

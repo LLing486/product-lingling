@@ -184,44 +184,16 @@ a:hover { text-decoration: underline; }
     <p class="hero-note">实验性内容 · 示例数据与规则模拟 · 本轮未接入真实模型</p>
 
     <!-- ② 最新一期 -->
-    <a class="cta" href="exp/p3.html">
-      <span class="cta-k">直接开玩 →</span>
-      <span class="cta-v">第 03 期 · 凌晨 2:33 的告警</span>
-    </a>
+    <a class="cta" data-shell="cta" data-base="exp/p"></a>
     <p class="cta-tip">全屏打开，约 1 分钟走完</p>
   </header>
 
   <!-- ══════════ ③ 三期目录 ══════════ -->
   <section aria-labelledby="sec-issues">
     <h2 class="sec-head" id="sec-issues">
-      <span class="sec-title">三期实验<span class="en" aria-hidden="true">EXPERIMENTS</span></span>
+      <span class="sec-title">往期实验<span class="en" aria-hidden="true">EXPERIMENTS</span></span>
     </h2>
-    <ul class="ilist">
-      <li>
-        <a class="icard" href="exp/p1.html">
-          <span class="icard-top"><b class="icard-no">第 01 期</b><span class="icard-date">2026-09-14</span></span>
-          <span class="icard-tag">拖拽分类</span>
-          <span class="icard-title">你是 AI 工具合规官，8 条使用申请该不该放行</span>
-          <span class="icard-go">进入 →</span>
-        </a>
-      </li>
-      <li>
-        <a class="icard" href="exp/p2.html">
-          <span class="icard-top"><b class="icard-no">第 02 期</b><span class="icard-date">2026-09-15</span></span>
-          <span class="icard-tag">参数调整</span>
-          <span class="icard-title">接手 2011 年的老系统，三个旋钮决定它能答什么</span>
-          <span class="icard-go">进入 →</span>
-        </a>
-      </li>
-      <li>
-        <a class="icard" href="exp/p3.html">
-          <span class="icard-top"><b class="icard-no">第 03 期</b><span class="icard-date">2026-09-16</span></span>
-          <span class="icard-tag">分支选择</span>
-          <span class="icard-title">凌晨 2:33 的告警，AI 能接管到哪一步</span>
-          <span class="icard-go">进入 →</span>
-        </a>
-      </li>
-    </ul>
+    <ul class="ilist" data-shell="ilist" data-base="exp/p"></ul>
   </section>
 
   <!-- ══════════ ④ 去卡片区 ══════════ -->
@@ -296,5 +268,7 @@ a:hover { text-decoration: underline; }
   });
 })();
 </script>
+<script src="exp/episodes.js"></script>
+<script src="exp-shell.js"></script>
 </body>
 </html>

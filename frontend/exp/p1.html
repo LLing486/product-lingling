@@ -402,14 +402,8 @@ body.is-dragging .drop-dock { display: flex; }
   <a class="lnav-i" href="../cards-all.html">全部卡片</a>
 </nav>
 
-<!-- ⓪ 期号切换条（顶部）—— 首期无上一期，渲染成不可点的 span -->
-<div class="pnav" role="navigation" aria-label="期号切换">
-  <span class="pnav-prev is-off" aria-disabled="true">← 上一期</span>
-  <span class="pnav-list">
-    <a href="p1.html" aria-current="page">01</a><a href="p2.html">02</a><a href="p3.html">03</a>
-  </span>
-  <a class="pnav-next" href="p2.html">下一期 →</a>
-</div>
+<!-- ⓪ 期号切换条（顶部）—— 由 exp-shell.js 按 episodes.js 渲染 -->
+<div class="pnav" role="navigation" aria-label="期号切换" data-shell="pnav" data-no="1" data-base="p" data-pos="top"></div>
 
 <div class="wrap">
 
@@ -503,14 +497,8 @@ body.is-dragging .drop-dock { display: flex; }
   </footer>
 </div>
 
-<!-- ⓪ 期号切换条（底部）—— 与顶部结构完全相同 -->
-<div class="pnav" role="navigation" aria-label="期号切换">
-  <span class="pnav-prev is-off" aria-disabled="true">← 上一期</span>
-  <span class="pnav-list">
-    <a href="p1.html" aria-current="page">01</a><a href="p2.html">02</a><a href="p3.html">03</a>
-  </span>
-  <a class="pnav-next" href="p2.html">下一期 →</a>
-</div>
+<!-- ⓪ 期号切换条（底部）—— 由 exp-shell.js 按 episodes.js 渲染 -->
+<div class="pnav" role="navigation" aria-label="期号切换" data-shell="pnav" data-no="1" data-base="p" data-pos="bottom"></div>
 
 <!-- ⓪ 这一期的灵感来源（原壳页文案，原文照抄） -->
 <section class="psrc" aria-label="这一期的灵感来源">
@@ -527,6 +515,9 @@ body.is-dragging .drop-dock { display: flex; }
   </p>
   <p class="psrc-data">示例数据 · 规则模拟 —— 本期的题面、参数关系与分支结局都由页面本地规则算出，未接入真实模型，无后端调用、无 API key、无外部请求。</p>
 </section>
+
+<!-- ⓪ 本期判断 / 上期回看 —— 由 exp-shell.js 渲染；01–03 无内容时整体移除 -->
+<section class="psrc" data-shell="judgment" data-no="1"></section>
 
 <div class="drag-ghost" id="ghost" aria-hidden="true"></div>
 <div class="drop-dock" id="dropDock" aria-hidden="true"><span class="dd-label">放到</span><div class="dd-list" id="ddList"></div></div>
@@ -1411,5 +1402,9 @@ body.is-dragging .drop-dock { display: flex; }
   };
 })();
 </script>
+
+<!-- 期数据 + 共享壳脚本（顺序不能反：shell 依赖 LING_EPISODES） -->
+<script src="episodes.js"></script>
+<script src="../exp-shell.js"></script>
 </body>
 </html>
