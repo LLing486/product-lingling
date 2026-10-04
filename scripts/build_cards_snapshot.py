@@ -8,12 +8,19 @@
   frontend/data/today.json         今日卡（含完整详情）
   frontend/data/sources.json       信号源列表（供信号带）
 
-用法：python3 scripts/build_cards_snapshot.py [API_BASE]
-默认 API_BASE = http://YOUR_SERVER_HOST
+用法：python3 scripts/build_cards_snapshot.py <API_BASE>
+     API_BASE 也可以由环境变量 LING_API_BASE 提供
+
+     ⚠ 必须是能返回 JSON 的源站后端地址。静态托管域名的 /api
+       返回的是 HTML 而不是数据——用它生成的快照是错的。
+
+     例：LING_API_BASE=https://你的域名 python3 scripts/build_cards_snapshot.py
 """
 import json, os, sys, time, urllib.request, urllib.error
 
-API = (sys.argv[1] if len(sys.argv) > 1 else 'http://YOUR_SERVER_HOST').rstrip('/')
+API = (sys.argv[1] if len(sys.argv) > 1 else os.environ.get('LING_API_BASE', '')).rstrip('/')
+if not API:
+    sys.exit('缺少 API_BASE：请用参数或环境变量 LING_API_BASE 指定源站后端地址')
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, 'frontend', 'data')
 DETAIL_DIR = os.path.join(OUT, 'cards')
