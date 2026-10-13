@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>灵灵 · 每天一个能上手玩的小实验</title>
-<meta name="description" content="灵灵：每天从 AI 行业的真实信号里，挑一个做成你能上手玩的小实验。三期可玩原型 + 每日机会卡。实验性内容 · 示例数据与规则模拟 · 本轮未接入真实模型。">
+<title>灵灵 · 每周一个能上手玩的小实验</title>
+<meta name="description" content="灵灵：每周从 AI 行业的真实信号里，挑一个做成你能上手玩的小实验。信号每天进箱，每周出一件成品。每日机会卡 + 每周一期可玩原型。实验性内容 · 示例数据与规则模拟 · 本轮未接入真实模型。">
 <style>
 /* ═══════════════════════════════════════════════
    设计令牌 —— 沿用现有浅色刊物风，不另起一套
@@ -180,7 +180,7 @@ a:hover { text-decoration: underline; }
   <!-- ══════════ ① 灵灵是什么 ══════════ -->
   <header class="hero">
     <h1 class="hero-title">灵灵</h1>
-    <p class="hero-sub">每天从 AI 行业的真实信号里，挑一个做成你能上手玩的小实验。</p>
+    <p class="hero-sub">每周从 AI 行业的真实信号里，挑一个做成你能上手玩的小实验。信号每天进箱，每周出一件成品。</p>
     <p class="hero-note">实验性内容 · 示例数据与规则模拟 · 本轮未接入真实模型</p>
 
     <!-- ② 最新一期 -->
@@ -209,7 +209,7 @@ a:hover { text-decoration: underline; }
 
   <!-- ══════════ ⑤ 页脚 ══════════ -->
   <footer class="foot">
-    <p class="foot-l1">灵灵 · 每日机会卡 + 每日灵感实验</p>
+    <p class="foot-l1">灵灵 · 每日机会卡（原料）+ 每周实验（成品）</p>
     <p class="foot-line">
       旧版界面：<a href="archive/prototype.html">v1</a> /
       <a href="archive/v2.html">v2</a> /
@@ -263,7 +263,7 @@ a:hover { text-decoration: underline; }
     }
     var n = res[1].ok && res[1].v && Array.isArray(res[1].v.cards) ? res[1].v.cards.length : NaN;
     if (isFinite(n) && n > 0) {
-      elToday.textContent = '看今天的 ' + n + ' 张机会卡 →';
+      elToday.textContent = '今天新进的 ' + n + ' 张机会卡 →';
     }
   });
 })();
