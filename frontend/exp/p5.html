@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>第 05 期 · 谁先看 · 灵灵 · 每周实验</title>
+<style>
+/* ══════════════════════════════════════════════════════════
+   设计令牌 · 沿用 frontend/index.html（浅色刊物风）
+   ══════════════════════════════════════════════════════════ */
+:root {
+  --paper: #FAF8F3;
+  --paper-2: #F3EFE6;
+  --ink: #2C2A26;
+  --ink-2: #6B6558;
+  --ink-3: #9C958A;
+  --amber: #B8860B;
+  --amber-soft: #E8D9B0;
+  --amber-bg: #F5EEDC;
+  --terra: #C4572E;
+  --terra-soft: #EDCDBF;
+  --terra-bg: #F7E9E2;
+  --hairline: rgba(44,42,38,.14);
+  --card-r: 16px;
+  --ctl-r: 10px;
+  --serif: Georgia, 'Times New Roman', 'Songti SC', 'SimSun', serif;
+  --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  background: var(--paper); color: var(--ink); font-family: var(--sans);
+  font-size: 15px; line-height: 1.65; min-height: 100vh; overflow-x: hidden;
+}
+button { font-family: inherit; cursor: pointer; }
+a { color: var(--ink-2); text-decoration: underline; text-underline-offset: 2px; }
+a:hover { color: var(--amber); }
+[hidden] { display: none !important; }
+strong { font-weight: 700; }
+.wrap { max-width: 1120px; margin: 0 auto; padding: 0 16px 34px; }
+
+.masthead { padding: 22px 0 14px; border-bottom: 2px solid var(--ink); }
+.mast-top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.brand { font-family: var(--serif); font-size: 26px; font-weight: 700; letter-spacing: .04em; }
+.brand small { font-size: 12px; font-weight: 400; color: var(--ink-2); letter-spacing: .16em; margin-left: 8px; }
+.mast-meta { display: flex; gap: 10px; align-items: baseline; font-size: 12px; color: var(--ink-2); flex-wrap: wrap; }
+.issue-no { font-family: var(--serif); font-weight: 700; color: var(--ink); letter-spacing: .08em; }
+.mock-pill { color: var(--ink); border: 1px solid var(--terra-soft); background: var(--terra-bg);
+  border-radius: 999px; padding: 2px 10px; font-size: 11.5px; white-space: nowrap; }
+
+.lede { padding: 18px 0 4px; }
+.lede-title { font-family: var(--serif); font-size: 25px; line-height: 1.34; font-weight: 700; }
+.lede-sub { font-size: 14.5px; color: var(--ink-2); margin-top: 8px; max-width: 41em; }
+.lede-sub b { color: var(--ink); }
+
+/* ── 计分板 ── */
+.board {
+  position: sticky; top: 50px; z-index: 20; margin-top: 16px; padding: 10px 12px;
+  border: 1px solid var(--hairline); border-radius: 12px; background: rgba(250,248,243,.96);
+  backdrop-filter: blur(6px);
+}
+.board-row { display: flex; gap: 14px; flex-wrap: wrap; align-items: baseline; }
+.b-k { font-size: 11px; color: var(--ink-2); letter-spacing: .02em; }
+.b-v { font-family: var(--serif); font-size: 19px; font-weight: 700; line-height: 1.2; }
+.b-v.is-bad { color: var(--terra); }
+.bar { display: flex; height: 5px; margin-top: 8px; border-radius: 999px; overflow: hidden; background: var(--paper-2); }
+.bar i { display: block; height: 100%; }
+.bar .seg-ai { background: var(--ink); }
+.bar .seg-hu { background: var(--amber); }
+
+/* ── PR 卡 ── */
+.prs { list-style: none; margin-top: 14px; display: grid; gap: 12px; }
+.pr { border: 1px solid var(--hairline); border-radius: var(--card-r); background: #fff; overflow: hidden; }
+.pr-head { padding: 12px 14px 10px; }
+.pr-top { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.pr-no { font-family: var(--serif); font-size: 12px; font-weight: 700; letter-spacing: .08em; color: var(--ink-2); }
+.pr-tag { font-size: 10.5px; font-weight: 700; letter-spacing: .06em; padding: 1px 8px; border-radius: 999px;
+  border: 1px solid var(--amber-soft); background: var(--amber-bg); color: #7A5A05; }
+.pr-title { font-family: var(--serif); font-size: 16.5px; font-weight: 700; line-height: 1.45; margin-top: 5px; }
+.pr-meta { font-size: 11.5px; color: var(--ink-2); margin-top: 3px; }
+
+.choices { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 0 14px 12px; }
+.choice {
+  min-height: 52px; padding: 7px 10px; border-radius: var(--ctl-r); text-align: left;
+  border: 1px solid var(--hairline); background: var(--paper); color: var(--ink);
+  display: flex; flex-direction: column; justify-content: center; gap: 1px;
+}
+.choice b { font-size: 13.5px; font-weight: 700; }
+.choice span { font-size: 11px; color: var(--ink-2); }
+.choice:hover { border-color: var(--amber); background: var(--amber-bg); }
+.choice:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+.choice[disabled] { cursor: default; opacity: .45; }
+.choice.is-picked { border-color: var(--ink); background: var(--paper-2); opacity: 1; }
+.choice.is-picked b::after { content: ' · 你选的'; font-weight: 400; font-size: 11px; color: var(--ink-2); }
+
+.result { padding: 0 14px 14px; }
+.res-line {
+  font-size: 13px; line-height: 1.7; padding: 9px 11px; border-radius: 10px;
+  border-left: 3px solid var(--hairline); background: var(--paper);
+}
+.res-line b { font-weight: 700; }
+.res-line.is-cost { border-left-color: var(--amber); background: var(--amber-bg); }
+.res-line.is-risk { border-left-color: var(--terra); background: var(--terra-bg); }
+.res-stats { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 6px; font-size: 11.5px; color: var(--ink-2); }
+
+/* ── 结尾判词 ── */
+.final { margin-top: 16px; padding: 16px; border-radius: var(--card-r);
+  border: 1px solid var(--hairline); background: #fff; }
+.final-h { font-family: var(--serif); font-size: 17px; font-weight: 700; }
+.final-body { font-size: 13.5px; line-height: 1.78; margin-top: 6px; }
+.final-body b { font-weight: 700; }
+.reset {
+  margin-top: 12px; min-height: 44px; padding: 0 16px; border-radius: var(--ctl-r);
+  border: 1px solid var(--ink); background: var(--ink); color: var(--paper);
+  font-size: 13px; font-weight: 700;
+}
+.reset:hover { background: #1D1C19; }
+.reset:focus-visible { outline: 2px solid var(--amber); outline-offset: 3px; }
+
+.foot { margin-top: 30px; padding-top: 14px; border-top: 1px solid var(--hairline); font-size: 11.5px; color: var(--ink-2); display: flex; flex-direction: column; gap: 5px; }
+.foot .mock-line { color: var(--ink); }
+.foot-link-row { display: flex; }
+.foot-link { display: inline-flex; align-items: center; min-height: 44px; padding: 0 12px;
+  border: 1px solid var(--hairline); border-radius: var(--ctl-r); background: #fff;
+  font-size: 12.5px; font-weight: 600; text-decoration: none; color: var(--ink); }
+.foot-link:hover { border-color: var(--amber); background: var(--amber-bg); color: var(--ink); }
+.foot-link:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .001ms !important; animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important; scroll-behavior: auto !important;
+  }
+}
+
+.lnav{position:sticky;top:0;z-index:9999;display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+  padding:6px 14px;background:#12141c;border-bottom:1px solid rgba(255,255,255,.14);
+  font-family:inherit;font-size:13px;line-height:1}
+.lnav a{color:rgba(255,255,255,.74);text-decoration:none;display:inline-flex;align-items:center;min-height:44px;padding:0 2px}
+.lnav a:hover{color:#fff;text-decoration:underline}
+.lnav a:focus-visible{color:#fff;outline:2px solid #7cc4ff;outline-offset:2px;border-radius:3px}
+.lnav-brand{font-weight:700;color:#fff!important;letter-spacing:.04em}
+.lnav-sep{width:1px;height:16px;background:rgba(255,255,255,.22)}
+.lnav-i[aria-current="page"]{color:#fff;font-weight:600}
+
+.pnav{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+  padding:10px 14px;border-bottom:1px solid rgba(0,0,0,.08);font-size:14px}
+.pnav a,.pnav span{display:inline-flex;align-items:center;min-height:44px}
+.pnav-prev,.pnav-next{font-weight:600;text-decoration:none}
+.pnav-prev.is-off,.pnav-next.is-off{opacity:.38}
+.pnav-list{display:inline-flex;gap:6px}
+.pnav-list a{min-width:44px;justify-content:center;text-decoration:none;border-radius:8px;padding:0 6px}
+.pnav-list a[aria-current="page"]{font-weight:700;background:rgba(0,0,0,.07);text-decoration:none}
+
+.psrc{max-width:1120px;margin:0 auto;padding:6px 16px 40px}
+.psrc-h{font-family:var(--serif);font-size:17px;font-weight:700;letter-spacing:.06em;margin-bottom:9px}
+.psrc-meta{font-size:12.5px;color:var(--ink-2);margin-bottom:12px;overflow-wrap:anywhere}
+.psrc-line{font-size:13.5px;line-height:1.78;margin:10px 0;overflow-wrap:anywhere}
+.psrc-line b{font-weight:700}
+.psrc-note{font-size:12px;line-height:1.72;color:var(--ink-2);margin:8px 0;padding-left:11px;border-left:2px solid var(--amber-soft);}
+.psrc-links{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0 12px}
+.psrc-links a{display:inline-flex;align-items:center;min-height:44px;padding:0 13px;
+  border:1px solid var(--hairline);border-radius:var(--ctl-r);background:#fff;
+  color:var(--ink);font-size:12.5px;font-weight:600;text-decoration:none;}
+.psrc-links a:hover{border-color:var(--amber);background:var(--amber-bg);color:var(--ink)}
+.psrc-links a:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+.psrc-data{font-size:11.5px;line-height:1.66;color:var(--ink-2);margin-top:12px;padding-top:12px;border-top:1px solid var(--hairline);}
+
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+
+@media (min-width: 760px) {
+  .lede-title { font-size: 31px; }
+  .prs { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .pr { display: flex; flex-direction: column; }
+  .result { margin-top: auto; }
+}
+</style>
+</head>
+<body>
+
+<nav class="lnav" aria-label="站点导航">
+  <a class="lnav-brand" href="../index.html">灵灵</a>
+  <span class="lnav-sep" aria-hidden="true"></span>
+  <a class="lnav-i" href="../index.html" aria-current="page">全部实验</a>
+  <a class="lnav-i" href="../cards.html">机会卡</a>
+  <a class="lnav-i" href="../cards-all.html">全部卡片</a>
+</nav>
+
+<div class="pnav" role="navigation" aria-label="期号切换" data-shell="pnav" data-no="5" data-base="p" data-pos="top"></div>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="mast-top">
+      <div class="brand">灵灵<small>每周实验</small></div>
+      <div class="mast-meta">
+        <span class="issue-no">第 05 期</span>
+        <span>2026-10-18</span>
+        <span class="mock-pill">示例数据 · 规则模拟</span>
+      </div>
+    </div>
+  </header>
+
+  <section class="lede">
+    <h1 class="lede-title">AI 写了 90% 的代码，该由谁先看</h1>
+    <p class="lede-sub">四个 PR 摆在你面前。每个都只能选一次：<b>先给 AI 审，还是先给人审。</b>选完你会看到这一单的代价——它们不在同一个账本上。</p>
+  </section>
+
+  <div class="board" aria-live="polite">
+    <div class="board-row">
+      <div><div class="b-k">累计交付</div><div class="b-v" id="mTime">0 分钟</div></div>
+      <div><div class="b-k">漏到线上的问题</div><div class="b-v" id="mRisk">0</div></div>
+      <div><div class="b-k">新人长出来的判断</div><div class="b-v" id="mGrow">0 / 4</div></div>
+      <div><div class="b-k">剩下的</div><div class="b-v" id="mLeft">4 单</div></div>
+    </div>
+    <div class="bar" aria-hidden="true"><i class="seg-ai" id="barAi" style="width:0"></i><i class="seg-hu" id="barHu" style="width:0"></i></div>
+  </div>
+
+  <ul class="prs" id="prs"></ul>
+
+  <section class="final" id="final" hidden>
+    <div class="final-h" id="finalH"></div>
+    <div class="final-body" id="finalB"></div>
+    <button class="reset" id="reset" type="button">再来一遍</button>
+  </section>
+
+  <footer class="foot">
+    <span class="mock-line">本页为 <strong>示例数据 · 规则模拟</strong>：四个 PR、耗时与后果都是按真实评审形态改写的示例，判定由页面内写死的规则算出，本轮<strong>没有</strong>接入任何真实模型。</span>
+    <span>灵感来源（真实机会卡）：《为 AI 写的代码做「风险分级评审与合并前检查」》</span>
+    <span class="foot-link-row">
+      <a class="foot-link" href="https://aihot.news/items/p4mq9t7wyzlxritu15i6d8dtv" target="_blank" rel="noopener noreferrer">原文链接 ↗</a>
+    </span>
+    <span>零依赖单文件 · 可离线双击打开 · 无外部请求 · 无密钥</span>
+  </footer>
+</div>
+
+<div class="pnav" role="navigation" aria-label="期号切换" data-shell="pnav" data-no="5" data-base="p" data-pos="bottom"></div>
+
+<section class="psrc" aria-label="这一期的灵感来源">
+  <h2 class="psrc-h">这一期的灵感来源</h2>
+  <p class="psrc-meta">2026-10-18 · 机会卡《为 AI 写的代码做「风险分级评审与合并前检查」：自动识别 AI 生成 PR 中可能被 revert 的变更》</p>
+  <p class="psrc-line"><b>原始信号：</b>Anthropic 如何在 Claude 写下 Claude Code 约 90% 代码后重新设计代码评审。</p>
+  <p class="psrc-note">以上是机会卡与行业信号的真实记录，未作改写、未加演绎。</p>
+  <p class="psrc-line"><b>灵灵据此延伸的设想：</b>这本来是一个「AI 帮你审代码」的产品机会，灵灵把它反过来问：<b>当评审也交给 AI，那「会审」这件事还存在谁身上？</b>于是把四种真实 PR 摊开，每单只让你选一次由谁先看 —— 有趣的是，快到极致的那个选择，和留住判断力的那个选择，从来不在同一个账本上。</p>
+  <p class="psrc-note">这一段是灵灵的二次创作，不是原文内容。四个 PR、耗时与后果均为本实验编写的示例，不代表 Anthropic 或任何机构的口径。</p>
+  <p class="psrc-links">
+    <a href="https://aihot.news/items/p4mq9t7wyzlxritu15i6d8dtv" target="_blank" rel="noopener noreferrer">阅读原文 ↗</a>
+    <a href="../cards.html?id=272">看这张机会卡 ›</a>
+    <a href="../cards-all.html">全部机会卡 ›</a>
+  </p>
+  <p class="psrc-data">示例数据 · 规则模拟 —— 本期的 PR、耗时、问题与角色成长都由页面本地规则算出，未接入真实模型，无后端调用、无 API key、无外部请求。</p>
+</section>
+
+<section class="psrc" data-shell="judgment" data-no="5"></section>
+
+<script src="episodes.js"></script>
+<script src="../exp-shell.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  var PRS = [
+    {
+      no: '01', tag: '重构', title: '订单导出从 CSV 改成流式', lines: '1200 行改动 · 新增 1 个依赖，删掉 3 个旧函数',
+      ai:    { min: 12, verdict: '两周后有人发现，它删掉的那个旧函数还有一个调用方。整单 revert。', level: 'risk' },
+      human: { min: 95, verdict: '人先看时发现「已经有现成的导出服务」，这单根本不该写。退回重写。', level: 'cost' }
+    },
+    {
+      no: '02', tag: '修 bug', title: '修一个并发写入的竞态', lines: '340 行改动 · 补了两个测试',
+      ai:    { min: 8,  verdict: '对，而且测试是真的能失败的。这一单 AI 比人快，也比人稳。', level: 'ok' },
+      human: { min: 70, verdict: '你花了 70 分钟确认它是对的 —— 确认本身没有产出。', level: 'cost' }
+    },
+    {
+      no: '03', tag: '权限', title: '改后台权限判断：谁能看报表', lines: '60 行改动 · 只动了三个 if',
+      ai:    { min: 6,  verdict: '它把 admin 判断放宽了一格。普通账号现在能看到全公司报表。', level: 'risk' },
+      human: { min: 40, verdict: '你扫一眼就抓到这个越权，改了 3 行。60 行的改动，最贵的是那一眼。', level: 'ok' }
+    },
+    {
+      no: '04', tag: '批量', title: '批量重命名 + 补测试', lines: '2000 行改动 · 测试覆盖率 92%',
+      ai:    { min: 15, verdict: '测试全绿。但测试是照着实现写的 —— 假绿灯，改坏也不会红。', level: 'risk' },
+      human: { min: 60, verdict: '你重写了两个测试，它们现在真的会失败。覆盖率掉到 78%，可信度上去了。', level: 'ok' }
+    }
+  ];
+
+  var picked = {};   // no -> 'ai' | 'human'
+  var elPrs = document.getElementById('prs');
+  var elTime = document.getElementById('mTime');
+  var elRisk = document.getElementById('mRisk');
+  var elGrow = document.getElementById('mGrow');
+  var elLeft = document.getElementById('mLeft');
+  var elBarAi = document.getElementById('barAi');
+  var elBarHu = document.getElementById('barHu');
+  var elFinal = document.getElementById('final');
+  var elFinalH = document.getElementById('finalH');
+  var elFinalB = document.getElementById('finalB');
+  var elReset = document.getElementById('reset');
+
+  function fmt(min) {
+    if (min < 60) return min + ' 分钟';
+    var h = Math.floor(min / 60), m = min % 60;
+    return h + ' 小时' + (m ? ' ' + m + ' 分' : '');
+  }
+  function count() { var n = 0; for (var k in picked) if (picked.hasOwnProperty(k)) n++; return n; }
+
+  function renderCards() {
+    var html = '';
+    for (var i = 0; i < PRS.length; i++) {
+      var p = PRS[i];
+      var got = picked[p.no];
+      html += '<li class="pr" data-no="' + p.no + '">' +
+        '<div class="pr-head">' +
+          '<div class="pr-top"><span class="pr-no">PR ' + p.no + '</span><span class="pr-tag">' + p.tag + '</span></div>' +
+          '<div class="pr-title">' + p.title + '</div>' +
+          '<div class="pr-meta">' + p.lines + '</div>' +
+        '</div>' +
+        '<div class="choices">' +
+          '<button class="choice' + (got === 'ai' ? ' is-picked' : '') + '" type="button" data-pick="ai" data-no="' + p.no + '"' + (got ? ' disabled' : '') + '>' +
+            '<b>AI 先看</b><span>' + fmt(p.ai.min) + '</span>' +
+          '</button>' +
+          '<button class="choice' + (got === 'human' ? ' is-picked' : '') + '" type="button" data-pick="human" data-no="' + p.no + '"' + (got ? ' disabled' : '') + '>' +
+            '<b>人先看</b><span>' + fmt(p.human.min) + '</span>' +
+          '</button>' +
+        '</div>' +
+        '<div class="result">' + (got ? resultHtml(p, got) : '') + '</div>' +
+      '</li>';
+    }
+    elPrs.innerHTML = html;
+  }
+
+  function resultHtml(p, who) {
+    var o = p[who];
+    var cls = o.level === 'risk' ? 'is-risk' : (o.level === 'cost' ? 'is-cost' : '');
+    return '<div class="res-line ' + cls + '"><b>' + (who === 'ai' ? 'AI 先看 → ' : '人先看 → ') + '</b>' + o.verdict + '</div>' +
+      '<div class="res-stats"><span>这单用时 ' + fmt(o.min) + '</span><span>' +
+      (o.level === 'risk' ? '漏到线上' : '线上无问题') + '</span><span>' +
+      (who === 'human' ? '新人 +1' : '新人 +0') + '</span></div>';
+  }
+
+  function renderBoard() {
+    var min = 0, risk = 0, grow = 0, ai = 0, hu = 0;
+    for (var i = 0; i < PRS.length; i++) {
+      var p = PRS[i], got = picked[p.no];
+      if (!got) continue;
+      var o = p[got];
+      min += o.min;
+      if (o.level === 'risk') risk++;
+      if (got === 'human') { grow++; hu++; } else { ai++; }
+    }
+    elTime.textContent = min ? fmt(min) : '0 分钟';
+    elRisk.textContent = risk;
+    elRisk.className = 'b-v' + (risk > 0 ? ' is-bad' : '');
+    elGrow.textContent = grow + ' / 4';
+    var done = count();
+    elLeft.textContent = (4 - done) + ' 单';
+    elBarAi.style.width = (ai / 4 * 100) + '%';
+    elBarHu.style.width = (hu / 4 * 100) + '%';
+    return { min: min, risk: risk, grow: grow, done: done };
+  }
+
+  function renderFinal(s) {
+    if (s.done < 4) { elFinal.hidden = true; return; }
+    elFinal.hidden = false;
+    var h, b;
+    if (s.grow === 0) {
+      h = '今天最快，三个月后没人能审';
+      b = '四单全交给 AI 先看：交付 <b>' + fmt(s.min) + '</b>，线上留下 <b>' + s.risk + ' 个</b>问题，新人长了 <b>0</b> 点判断。' +
+          '这条路的账面上全是赢的——直到下一次「为什么没人看得出这段代码有问题」。';
+    } else if (s.grow === 1) {
+      h = '你只留了一道口子';
+      b = '交付 <b>' + fmt(s.min) + '</b>，线上 <b>' + s.risk + ' 个</b>问题，新人 +<b>1</b>。' +
+          '你恰好把「会越权的那一单」留给了人——但如果那一单是随机的呢？';
+    } else if (s.grow >= 2 && s.grow <= 3) {
+      h = '你在两个账本之间走钢丝';
+      b = '交付 <b>' + fmt(s.min) + '</b>，线上 <b>' + s.risk + ' 个</b>问题，新人 +<b>' + s.grow + '</b>。' +
+          '你既没有全放手，也没有全自己扛。现实里大多数人最后会停在这个位置——然后慢慢往左边滑。';
+    } else {
+      h = '慢了六倍多，但你留下了一个能审的人';
+      b = '交付 <b>' + fmt(s.min) + '</b>，线上 <b>0</b> 个问题，新人 +<b>4</b>。' +
+          '代价是这四单本该今天发出去。收益写在三个月后：团队里还有一个人，能在 AI 说「没问题」的时候说「等一下」。';
+    }
+    b += '<br><br>这不是效率题。是<b>你把判断力存在哪</b>的题——存在模型里，取的时候要重新买；存在人身上，取的时候要等。';
+    elFinalH.textContent = h;
+    elFinalB.innerHTML = b;
+  }
+
+  function render() { renderCards(); renderFinal(renderBoard()); }
+
+  /* 只更新被点的那张卡：不整页重渲染，避免按钮节点被换掉、焦点丢失、连点落空 */
+  function updateCard(no) {
+    var card = elPrs.querySelector('.pr[data-no="' + no + '"]');
+    if (!card) return;
+    var p = null;
+    for (var i = 0; i < PRS.length; i++) { if (PRS[i].no === no) { p = PRS[i]; break; } }
+    var who = picked[no];
+    var btns = card.querySelectorAll('button[data-pick]');
+    for (var j = 0; j < btns.length; j++) {
+      btns[j].disabled = true;
+      if (btns[j].getAttribute('data-pick') === who) btns[j].classList.add('is-picked');
+    }
+    card.querySelector('.result').innerHTML = resultHtml(p, who);
+  }
+
+  elPrs.addEventListener('click', function (e) {
+    var btn = e.target.closest ? e.target.closest('button[data-pick]') : null;
+    if (!btn) return;
+    var no = btn.getAttribute('data-no');
+    if (picked[no]) return;
+    picked[no] = btn.getAttribute('data-pick');
+    updateCard(no);
+    renderFinal(renderBoard());
+  });
+
+  elReset.addEventListener('click', function () { picked = {}; render(); });
+
+  render();
+})();
+</script>
+</body>
+</html>

@@ -11,7 +11,7 @@
  * 字段说明见 docs/episode-contract.md
  */
 window.LING_EPISODES = {
-  updated: "2026-09-22",
+  updated: "2026-10-20",
   episodes: [
     {
       no: 1,
@@ -55,6 +55,51 @@ window.LING_EPISODES = {
       signal: "Google DeepMind 发布 Gemini 3.8 Live 和 3.8 Live Extended Thinking。",
       sourceTitle: "阅读原文 ↗",
       sourceUrl: "https://aihot.news/items/cmu2xqfxz02zhroc1hxuzi6jm",
+      judgmentCurrent: "",
+      reviewPrev: ""
+    },
+    {
+      no: 4,
+      date: "2026-10-08",
+      file: "p4.html",
+      tag: "阈值滑块",
+      title: "让 0.8B 的小模型，替你批准大模型的每一个动作",
+      short: "让 0.8B 替你签字",
+      motif: "取舍类",
+      card: { id: 246, title: "给 Windows PC 上的 AI Agent 装上「本地决策概率大脑」：0.8B 决策模型当行动选择的守门人" },
+      signal: "Unsloth 开源教程：本地训练 Qwen3.5 0.8B 决策模型，准确率从 20.7% 提升至 74.3%。",
+      sourceTitle: "阅读原文 ↗",
+      sourceUrl: "https://aihot.news/items/y7db2ly158hip5dw1evmjw5kv",
+      judgmentCurrent: "",
+      reviewPrev: ""
+    },
+    {
+      no: 5,
+      date: "2026-10-18",
+      file: "p5.html",
+      tag: "选边",
+      title: "AI 写了 90% 的代码，该由谁先看",
+      short: "该由谁先看",
+      motif: "对比类",
+      card: { id: 272, title: "为 AI 写的代码做「风险分级评审与合并前检查」：自动识别 AI 生成 PR 中可能被 revert 的变更" },
+      signal: "Anthropic 如何在 Claude 写下 Claude Code 约 90% 代码后重新设计代码评审。",
+      sourceTitle: "阅读原文 ↗",
+      sourceUrl: "https://aihot.news/items/p4mq9t7wyzlxritu15i6d8dtv",
+      judgmentCurrent: "",
+      reviewPrev: ""
+    },
+    {
+      no: 6,
+      date: "2026-10-20",
+      file: "p6.html",
+      tag: "技能改写",
+      title: "被 Agent 挤出去的人，怎么变成 Agent 的必需品",
+      short: "被挤出去的人",
+      motif: "改写类",
+      card: { id: 275, title: "「AI 学徒制」平台：让被 Agent 挤出初级岗位的开发者，成为中小企业 AI 交付项目的技术监理" },
+      signal: "DeepSeek-V4.1-Flash-20261017 登顶 Code Arena: WebDev 开源模型榜首。",
+      sourceTitle: "阅读原文 ↗",
+      sourceUrl: "https://aihot.news/items/bm95oliei5mcgy2tau7e22d59",
       judgmentCurrent: "",
       reviewPrev: ""
     }
