@@ -94,26 +94,27 @@ a:hover { text-decoration: underline; }
 .icard {
   display: flex; flex-direction: column; gap: 4px; width: 100%;
   min-height: 148px; padding: 15px 17px;
-  border: 1px solid var(--hairline); border-left: 3px solid var(--amber-soft);
-  border-radius: var(--card-r); background: #fff; color: var(--ink);
+  border: 1px solid var(--hairline); border-left: 4px solid var(--c-accent, var(--amber-soft));
+  border-radius: var(--card-r); background: var(--c-bg, #fff); color: var(--c-ink, var(--ink));
   transition: border-color .15s, background .15s, transform .15s;
 }
 .icard:hover {
-  text-decoration: none; border-color: var(--amber);
-  border-left-color: var(--amber); background: var(--amber-bg);
+  text-decoration: none; border-color: var(--c-accent, var(--amber)); border-left-color: var(--c-accent, var(--amber));
+  background: var(--c-soft, var(--amber-bg)); transform: translateY(-1px);
 }
 .icard-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
 .icard-no { font-family: var(--serif); font-size: 15px; font-weight: 700; letter-spacing: .04em; }
 .icard-date { font-size: 12px; color: var(--ink-3); letter-spacing: .02em; }
 .icard-tag {
   align-self: flex-start; margin-top: 2px;
-  border: 1px solid var(--terra-soft); background: var(--terra-bg); color: var(--terra);
+  border: 1px solid var(--c-accent, var(--terra-soft)); background: var(--c-soft, var(--terra-bg));
+  color: var(--c-accent-ink, var(--terra));
   border-radius: 999px; padding: 2px 10px; font-size: 11px; font-weight: 700; letter-spacing: .1em;
 }
 .icard-title { font-family: var(--serif); font-size: 15.5px; font-weight: 700; line-height: 1.5; margin-top: 6px; }
 .icard-go {
   margin-top: auto; padding-top: 10px;
-  font-size: 13px; font-weight: 700; color: var(--amber-ink);
+  font-size: 13px; font-weight: 700; color: var(--c-accent-ink, var(--amber-ink));
 }
 .icard:hover .icard-go { text-decoration: underline; }
 

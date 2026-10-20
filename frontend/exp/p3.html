@@ -288,6 +288,38 @@ ol, ul { list-style: none; }
 .lnav ~ .skip:focus { top: 57px; }
 html { scroll-padding-top: 57px; }
 </style>
+
+<style>
+/* ══ 主题覆盖 · 03 凌晨告警台 ══ */
+:root{
+  --paper:#0F1318; --paper-2:#171E26; --ink:#DCE3EA; --ink-2:#94A1AF; --ink-3:#5F6B79;
+  --amber:#D9A441; --amber-soft:#4E3F1F; --amber-bg:#241F14;
+  --terra:#E05C4B; --terra-soft:#4E2A25; --terra-bg:#221513;
+  --hairline:rgba(255,255,255,.16);
+  --mono:'SF Mono','JetBrains Mono',Menlo,Consolas,monospace;
+}
+body{background:var(--paper);color:var(--ink);}
+.masthead{border-bottom-color:rgba(255,255,255,.20);}
+.dek,.sec-hint,.brand small{color:var(--ink-2);}
+.panel{background:#141A21;border:1px solid rgba(255,255,255,.14);
+  border-top:3px solid #46D08A;border-radius:4px;}
+.alert-list li{border-left:2px solid var(--terra);}
+.kv dd.bad{color:#FF8A7A;}
+.kv dd.ok{color:#5FD3A6;}
+.progress{background:#1B222B;border:1px solid rgba(255,255,255,.14);}
+.progress i{background:#46D08A;}
+.opt{background:#1B222B;border:1px solid rgba(255,255,255,.16);border-radius:4px;
+  box-shadow:0 2px 0 rgba(0,0,0,.45);}
+.opt:hover{border-color:#46D08A;background:#1F2832;}
+.opt:active{transform:translateY(2px);box-shadow:none;}
+.log li{border-left:1px solid rgba(255,255,255,.14);}
+.log time{color:#46D08A;font-family:var(--mono);}
+.stats > div{background:#141A21;border:1px solid rgba(255,255,255,.14);}
+.btn{border-color:rgba(255,255,255,.30);background:#1B222B;color:var(--ink);}
+.btn:hover{background:#222B36;}
+.btn.ghost{background:transparent;}
+.psrc{border-top:1px solid rgba(255,255,255,.10);}
+</style>
 </head>
 <body>
 <nav class="lnav" aria-label="站点导航">

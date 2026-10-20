@@ -390,6 +390,35 @@ body.is-dragging .drop-dock { display: flex; }
   padding-top:12px;border-top:1px solid var(--hairline);
 }
 </style>
+
+<style>
+/* ══ 主题覆盖 · 01 档案台 ══ */
+:root{
+  --paper:#EFE7D6; --paper-2:#E4D8C2; --ink:#22201B; --ink-2:#5B5445; --ink-3:#8B8372;
+  --amber:#8E2F22; --amber-soft:#D7BDB2; --amber-bg:#F1E0D9;
+  --terra:#6B4A2F; --terra-soft:#D8C6B2; --terra-bg:#EFE5D6;
+  --hairline:rgba(34,32,27,.22);
+  --mono:'SF Mono','JetBrains Mono',Menlo,Consolas,monospace;
+}
+body{background:var(--paper);
+  background-image:linear-gradient(rgba(34,32,27,.035) 1px,transparent 1px);
+  background-size:100% 28px;}
+.app-card{position:relative;background:#FCFAF3;border:1px solid rgba(34,32,27,.30);
+  border-radius:3px;box-shadow:2px 2px 0 rgba(34,32,27,.08);}
+.app-card.is-selected{border-color:var(--amber);box-shadow:2px 2px 0 rgba(142,47,34,.22);}
+.app-card.is-selected::after{content:'已归档';position:absolute;right:9px;bottom:7px;
+  font-size:10.5px;font-weight:700;letter-spacing:.16em;color:var(--amber);
+  border:2px solid var(--amber);padding:0 5px;transform:rotate(-8deg);opacity:.8;}
+.ac-idx,.b-count,.tile .n,.ri-idx{font-family:var(--mono);letter-spacing:.06em;}
+.bucket{background:#E7DAC3;border:2px solid rgba(34,32,27,.45);border-radius:3px;}
+.b-drop{border:1px dashed rgba(34,32,27,.40);background:#F8F2E4;border-radius:2px;}
+.btn{border-radius:2px;}
+.btn.primary{letter-spacing:.06em;}
+.chip{border-radius:2px;}
+.tile{border-radius:3px;background:#FCFAF3;}
+.submitbar{border-top:2px solid rgba(34,32,27,.35);}
+.res-item{border-radius:3px;}
+</style>
 </head>
 <body>
 

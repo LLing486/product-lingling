@@ -6,123 +6,174 @@
 <title>第 06 期 · 技术监理 · 灵灵 · 每周实验</title>
 <style>
 /* ══════════════════════════════════════════════════════════
-   设计令牌 · 沿用 frontend/index.html（浅色刊物风）
+   第 06 期主题「翻面」—— 暖陶土纸 + 单一一枚橙
+   与其余五期共用站点框架（顶栏/期号条/页脚），内容区独立配色
    ══════════════════════════════════════════════════════════ */
 :root {
-  --paper: #FAF8F3;
-  --paper-2: #F3EFE6;
-  --ink: #2C2A26;
-  --ink-2: #6B6558;
-  --ink-3: #9C958A;
-  --amber: #B8860B;
-  --amber-soft: #E8D9B0;
-  --amber-bg: #F5EEDC;
-  --terra: #C4572E;
-  --terra-soft: #EDCDBF;
-  --terra-bg: #F7E9E2;
-  --hairline: rgba(44,42,38,.14);
+  --paper: #F6EFE4;
+  --paper-2: #EFE3D2;
+  --surface: #FFFCF6;
+  --ink: #2B211A;
+  --ink-2: #6B5C4E;
+  --ink-3: #9A8B7B;
+  --accent: #B94A26;
+  --accent-ink: #9C3F1F;
+  --accent-soft: #E8CFC0;
+  --accent-bg: #F6E4D9;
+  --hairline: rgba(43,33,26,.16);
   --card-r: 16px;
   --ctl-r: 10px;
   --serif: Georgia, 'Times New Roman', 'Songti SC', 'SimSun', serif;
   --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --mono: 'SF Mono', 'JetBrains Mono', Menlo, Consolas, monospace;
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
-body { background: var(--paper); color: var(--ink); font-family: var(--sans);
-  font-size: 15px; line-height: 1.65; min-height: 100vh; overflow-x: hidden; }
+body {
+  background: var(--paper); color: var(--ink); font-family: var(--sans);
+  font-size: 15px; line-height: 1.65; min-height: 100vh; overflow-x: hidden;
+}
 button { font-family: inherit; cursor: pointer; }
 a { color: var(--ink-2); text-decoration: underline; text-underline-offset: 2px; }
-a:hover { color: var(--amber); }
+a:hover { color: var(--accent-ink); }
 [hidden] { display: none !important; }
-strong { font-weight: 700; }
+strong, b { font-weight: 700; }
 .wrap { max-width: 1120px; margin: 0 auto; padding: 0 16px 34px; }
 
+/* ── 刊头 ── */
 .masthead { padding: 22px 0 14px; border-bottom: 2px solid var(--ink); }
 .mast-top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
 .brand { font-family: var(--serif); font-size: 26px; font-weight: 700; letter-spacing: .04em; }
 .brand small { font-size: 12px; font-weight: 400; color: var(--ink-2); letter-spacing: .16em; margin-left: 8px; }
 .mast-meta { display: flex; gap: 10px; align-items: baseline; font-size: 12px; color: var(--ink-2); flex-wrap: wrap; }
-.issue-no { font-family: var(--serif); font-weight: 700; color: var(--ink); letter-spacing: .08em; }
-.mock-pill { color: var(--ink); border: 1px solid var(--terra-soft); background: var(--terra-bg);
+.issue-no { font-family: var(--serif); font-weight: 700; color: var(--accent-ink); letter-spacing: .08em; }
+.mock-pill { color: var(--accent-ink); border: 1px solid var(--accent-soft); background: var(--accent-bg);
   border-radius: 999px; padding: 2px 10px; font-size: 11.5px; white-space: nowrap; }
 
-.lede { padding: 18px 0 4px; }
-.lede-title { font-family: var(--serif); font-size: 25px; line-height: 1.34; font-weight: 700; }
-.lede-sub { font-size: 14.5px; color: var(--ink-2); margin-top: 8px; max-width: 41em; }
+/* ── 题头 ── */
+.lede { padding: 20px 0 2px; }
+.lede-title { font-family: var(--serif); font-size: 26px; line-height: 1.32; font-weight: 700; letter-spacing: -.01em; }
+.lede-sub { font-size: 14.5px; color: var(--ink-2); margin-top: 9px; max-width: 40em; }
 .lede-sub b { color: var(--ink); }
 
-/* ── 技能选择 ── */
-.pick-h { margin-top: 18px; font-family: var(--serif); font-size: 15px; font-weight: 700; letter-spacing: .04em; }
-.pick-note { font-size: 12.5px; color: var(--ink-2); margin-top: 3px; }
+/* ── 三个步骤 ── */
+.steps { list-style: none; display: flex; flex-wrap: wrap; gap: 6px; margin-top: 16px; }
+.steps li {
+  display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px 4px 5px;
+  border: 1px solid var(--hairline); border-radius: 999px; background: var(--surface);
+  font-size: 11.5px; color: var(--ink-2);
+}
+.steps i {
+  font-style: normal; font-family: var(--mono); font-size: 10px; font-weight: 700;
+  width: 17px; height: 17px; display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 50%; background: var(--accent); color: #fff;
+}
+
+/* ── 第 1 步：选技能 ── */
+.pick-h { margin-top: 22px; font-family: var(--serif); font-size: 16px; font-weight: 700; letter-spacing: .03em; }
+.pick-note { font-size: 12.5px; color: var(--ink-2); margin-top: 2px; }
 .skills { list-style: none; display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 8px; margin-top: 10px; }
-@media (min-width: 700px) { .skills { grid-template-columns: repeat(3, minmax(0,1fr)); } }
+@media (min-width: 720px) { .skills { grid-template-columns: repeat(3, minmax(0,1fr)); } }
 .skill {
-  width: 100%; min-height: 56px; padding: 8px 11px; text-align: left;
-  border: 1px solid var(--hairline); border-radius: 12px; background: #fff; color: var(--ink);
-  display: flex; flex-direction: column; justify-content: center; gap: 1px;
+  width: 100%; min-height: 60px; padding: 9px 12px; text-align: left;
+  border: 1px solid var(--hairline); border-radius: 12px; background: var(--surface); color: var(--ink);
+  display: flex; flex-direction: column; justify-content: center; gap: 2px;
+  transition: border-color .12s, background .12s, transform .12s;
 }
 .skill b { font-size: 13.5px; font-weight: 700; line-height: 1.4; }
-.skill span { font-size: 11px; color: var(--ink-2); }
-.skill:hover { border-color: var(--amber); background: var(--amber-bg); }
-.skill:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
-.skill[aria-pressed="true"] { border-color: var(--ink); background: var(--paper-2); }
+.skill span { font-family: var(--mono); font-size: 10.5px; color: var(--ink-3); letter-spacing: .02em; }
+.skill:hover { border-color: var(--accent); background: var(--accent-bg); transform: translateY(-1px); }
+.skill:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.skill[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-bg); box-shadow: inset 0 0 0 1px var(--accent); }
+.skill[aria-pressed="true"] span { color: var(--accent-ink); }
 
-/* ── 结果面板 ── */
-.out { margin-top: 18px; border: 1px solid var(--hairline); border-radius: var(--card-r); background: #fff; overflow: hidden; }
-.out-head { padding: 14px 16px 10px; border-bottom: 1px solid var(--hairline); }
-.out-k { font-size: 11px; letter-spacing: .08em; color: var(--ink-2); font-weight: 700; }
-.out-title { font-family: var(--serif); font-size: 19px; font-weight: 700; line-height: 1.4; margin-top: 3px; }
+/* ── 第 2 步：翻面（左正面 / 右背面）── */
+.spread { margin-top: 22px; display: grid; grid-template-columns: 1fr; gap: 10px; }
+@media (min-width: 860px) { .spread { grid-template-columns: minmax(0,.82fr) minmax(0,1.18fr); gap: 14px; align-items: stretch; } }
 
-.meter-wrap { margin-top: 10px; }
-.meter-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; font-size: 11.5px; color: var(--ink-2); }
-.meter { height: 8px; border-radius: 999px; background: var(--paper-2); border: 1px solid var(--hairline); overflow: hidden; margin-top: 4px; }
-.meter i { display: block; height: 100%; background: var(--terra); }
-
-.rows { padding: 4px 16px 12px; }
-.row { display: grid; grid-template-columns: 84px 1fr; gap: 10px; padding: 11px 0; border-bottom: 1px dashed var(--hairline); }
-.row:last-child { border-bottom: 0; }
-.row-k { font-size: 11.5px; font-weight: 700; color: var(--ink-2); letter-spacing: .04em; line-height: 1.6; }
-.row-v { font-size: 13.5px; line-height: 1.7; }
-
-/* ── 训练场 ── */
-.drill { margin-top: 16px; border: 1px solid var(--ink); border-radius: var(--card-r); background: var(--paper-2); padding: 14px 16px; }
-.drill-h { font-family: var(--serif); font-size: 15px; font-weight: 700; display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; align-items: baseline; }
-.drill-count { font-family: var(--serif); font-size: 20px; font-weight: 700; }
-.drill-log { list-style: none; margin-top: 10px; display: grid; gap: 8px; }
-.drill-log li { font-size: 13px; line-height: 1.72; padding: 9px 11px; border-radius: 10px; background: #fff; border: 1px solid var(--hairline); }
-.drill-log li b { font-weight: 700; }
-.btn {
-  margin-top: 12px; min-height: 46px; width: 100%; padding: 0 16px; border-radius: var(--ctl-r);
-  border: 1px solid var(--ink); background: var(--ink); color: var(--paper); font-size: 13.5px; font-weight: 700;
+.face { border-radius: var(--card-r); padding: 16px; }
+.face-front {
+  background: var(--paper-2); border: 1px dashed var(--hairline);
+  display: flex; flex-direction: column; gap: 8px;
 }
-.btn:hover { background: #1D1C19; }
-.btn:focus-visible { outline: 2px solid var(--amber); outline-offset: 3px; }
-.btn[disabled] { background: #fff; color: var(--ink-2); border-color: var(--hairline); cursor: default; }
-.unlock { margin-top: 12px; padding: 11px 13px; border-radius: 10px; background: var(--amber-bg);
-  border: 1px solid var(--amber-soft); font-size: 13px; line-height: 1.7; }
-.unlock b { font-weight: 700; }
+.face-back {
+  background: var(--surface); border: 1px solid var(--hairline);
+  border-left: 4px solid var(--accent); padding-left: 18px;
+}
+.face-k {
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--ink-3);
+}
+.face-back .face-k { color: var(--accent-ink); }
+.face-title { font-family: var(--serif); font-size: 19px; font-weight: 700; line-height: 1.4; }
+.face-front .face-title { color: var(--ink-2); }
+.face-now { font-size: 13px; line-height: 1.75; color: var(--ink-2); }
+.meter-wrap { margin-top: 4px; }
+.meter-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; font-size: 11px; color: var(--ink-2); }
+.meter-top b { font-family: var(--mono); font-size: 15px; color: var(--accent-ink); }
+.meter { height: 8px; border-radius: 999px; background: rgba(43,33,26,.1); overflow: hidden; margin-top: 5px; }
+.meter i { display: block; height: 100%; background: var(--accent); }
+.face-front .meter { background: rgba(43,33,26,.12); }
 
-/* ── 收尾判词 ── */
-.turn { margin-top: 18px; padding: 15px 16px; border-left: 3px solid var(--amber); background: var(--amber-bg);
-  border-radius: 0 12px 12px 0; font-size: 13.5px; line-height: 1.8; }
-.turn b { font-weight: 700; }
+.rows { margin-top: 12px; }
+.row { padding: 11px 0; border-top: 1px dashed var(--hairline); }
+.row:first-child { border-top: 0; padding-top: 4px; }
+.row-k { font-family: var(--mono); font-size: 10.5px; letter-spacing: .1em; color: var(--accent-ink); text-transform: uppercase; }
+.row-v { font-size: 13.5px; line-height: 1.75; margin-top: 3px; }
 
-.empty { padding: 18px 16px; font-size: 13.5px; color: var(--ink-2); }
+/* ── 第 3 步：接单票据 ── */
+.drill { margin-top: 18px; background: var(--surface); border: 1px solid var(--hairline); border-radius: var(--card-r); padding: 0 16px 16px; }
+.receipt-head {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap;
+  padding: 14px 0 10px; border-bottom: 2px dashed var(--hairline);
+}
+.receipt-head .t { font-family: var(--serif); font-size: 16px; font-weight: 700; }
+.receipt-head .n { font-family: var(--mono); font-size: 13px; color: var(--accent-ink); letter-spacing: .06em; }
+.orders { list-style: none; display: grid; gap: 8px; margin-top: 12px; }
+.order {
+  display: grid; grid-template-columns: 44px 1fr; gap: 10px; align-items: start;
+  padding: 11px 12px; border: 1px solid var(--hairline); border-radius: 12px; background: var(--paper);
+}
+.stamp {
+  font-family: var(--mono); font-size: 10px; font-weight: 700; line-height: 1.25; text-align: center;
+  color: var(--accent-ink); border: 1.5px solid var(--accent); border-radius: 6px;
+  padding: 5px 2px; transform: rotate(-3deg); letter-spacing: .04em;
+}
+.order p { font-size: 13px; line-height: 1.72; }
+.order p b { color: var(--accent-ink); }
+.btn {
+  margin-top: 14px; min-height: 48px; width: 100%; padding: 0 16px; border-radius: var(--ctl-r);
+  border: 1px solid var(--accent); background: var(--accent); color: #fff;
+  font-size: 13.5px; font-weight: 700; letter-spacing: .02em;
+}
+.btn:hover { background: var(--accent-ink); border-color: var(--accent-ink); }
+.btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+.btn[disabled] { background: transparent; color: var(--ink-3); border-color: var(--hairline); cursor: default; }
+.unlock { margin-top: 12px; padding: 12px 14px; border-radius: 10px; background: var(--accent-bg);
+  border: 1px solid var(--accent-soft); font-size: 13px; line-height: 1.72; }
+.unlock b { color: var(--accent-ink); }
 
+/* ── 落点 ── */
+.turn { margin-top: 20px; padding: 16px 18px; border-radius: var(--card-r);
+  background: var(--ink); color: var(--paper); font-size: 13.5px; line-height: 1.8; }
+.turn b { color: #F3C9B3; }
+
+/* ── 页脚 ── */
 .foot { margin-top: 30px; padding-top: 14px; border-top: 1px solid var(--hairline); font-size: 11.5px; color: var(--ink-2); display: flex; flex-direction: column; gap: 5px; }
 .foot .mock-line { color: var(--ink); }
 .foot-link-row { display: flex; }
 .foot-link { display: inline-flex; align-items: center; min-height: 44px; padding: 0 12px;
-  border: 1px solid var(--hairline); border-radius: var(--ctl-r); background: #fff;
+  border: 1px solid var(--hairline); border-radius: var(--ctl-r); background: var(--surface);
   font-size: 12.5px; font-weight: 600; text-decoration: none; color: var(--ink); }
-.foot-link:hover { border-color: var(--amber); background: var(--amber-bg); color: var(--ink); }
-.foot-link:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+.foot-link:hover { border-color: var(--accent); background: var(--accent-bg); color: var(--accent-ink); }
+.foot-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important;
     transition-duration: .001ms !important; scroll-behavior: auto !important; }
 }
 
+/* ── 站点框架（全站统一，不随主题变） ── */
 .lnav{position:sticky;top:0;z-index:9999;display:flex;align-items:center;gap:16px;flex-wrap:wrap;
   padding:6px 14px;background:#12141c;border-bottom:1px solid rgba(255,255,255,.14);
   font-family:inherit;font-size:13px;line-height:1}
@@ -134,34 +185,34 @@ strong { font-weight: 700; }
 .lnav-i[aria-current="page"]{color:#fff;font-weight:600}
 
 .pnav{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
-  padding:10px 14px;border-bottom:1px solid rgba(0,0,0,.08);font-size:14px}
+  padding:10px 14px;border-bottom:1px solid rgba(0,0,0,.08);font-size:14px;background:var(--paper)}
 .pnav a,.pnav span{display:inline-flex;align-items:center;min-height:44px}
 .pnav-prev,.pnav-next{font-weight:600;text-decoration:none}
 .pnav-prev.is-off,.pnav-next.is-off{opacity:.38}
 .pnav-list{display:inline-flex;gap:6px}
 .pnav-list a{min-width:44px;justify-content:center;text-decoration:none;border-radius:8px;padding:0 6px}
-.pnav-list a[aria-current="page"]{font-weight:700;background:rgba(0,0,0,.07);text-decoration:none}
+.pnav-list a[aria-current="page"]{font-weight:700;background:var(--accent-bg);color:var(--accent-ink);text-decoration:none}
 
-.psrc{max-width:1120px;margin:0 auto;padding:6px 16px 40px}
+.psrc{max-width:1120px;margin:0 auto;padding:6px 16px 40px;background:var(--paper)}
 .psrc-h{font-family:var(--serif);font-size:17px;font-weight:700;letter-spacing:.06em;margin-bottom:9px}
 .psrc-meta{font-size:12.5px;color:var(--ink-2);margin-bottom:12px;overflow-wrap:anywhere}
 .psrc-line{font-size:13.5px;line-height:1.78;margin:10px 0;overflow-wrap:anywhere}
 .psrc-line b{font-weight:700}
-.psrc-note{font-size:12px;line-height:1.72;color:var(--ink-2);margin:8px 0;padding-left:11px;border-left:2px solid var(--amber-soft);}
+.psrc-note{font-size:12px;line-height:1.72;color:var(--ink-2);margin:8px 0;padding-left:11px;border-left:2px solid var(--accent-soft);}
 .psrc-links{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0 12px}
 .psrc-links a{display:inline-flex;align-items:center;min-height:44px;padding:0 13px;
-  border:1px solid var(--hairline);border-radius:var(--ctl-r);background:#fff;
+  border:1px solid var(--hairline);border-radius:var(--ctl-r);background:var(--surface);
   color:var(--ink);font-size:12.5px;font-weight:600;text-decoration:none;}
-.psrc-links a:hover{border-color:var(--amber);background:var(--amber-bg);color:var(--ink)}
-.psrc-links a:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+.psrc-links a:hover{border-color:var(--accent);background:var(--accent-bg);color:var(--accent-ink)}
+.psrc-links a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .psrc-data{font-size:11.5px;line-height:1.66;color:var(--ink-2);margin-top:12px;padding-top:12px;border-top:1px solid var(--hairline);}
 
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
 
 @media (min-width: 760px) {
-  .lede-title { font-size: 31px; }
-  .row { grid-template-columns: 96px 1fr; }
-  .btn { width: auto; min-width: 260px; }
+  body { font-size: 15.5px; }
+  .lede-title { font-size: 34px; }
+  .btn { width: auto; min-width: 280px; }
 }
 </style>
 </head>
@@ -191,39 +242,51 @@ strong { font-weight: 700; }
   </header>
 
   <section class="lede">
-    <h1 class="lede-title">被 Agent 挤出去的人，怎么变成 Agent 的必需品</h1>
-    <p class="lede-sub">选一个你身上「正在被替代」的技能。然后看它换一个位置之后，长成什么样子——<b>不是升级，是改写。</b></p>
+    <h1 class="lede-title">被 Agent 挤出去的人，<br>怎么变成 Agent 的必需品</h1>
+    <p class="lede-sub">选一个你身上「正在被替代」的技能 —— <b>不是升级它，是翻到它的背面。</b></p>
   </section>
 
+  <ol class="steps" aria-hidden="true">
+    <li><i>1</i>挑一个技能</li>
+    <li><i>2</i>看它翻面</li>
+    <li><i>3</i>接一单</li>
+  </ol>
+
   <section aria-labelledby="pickH">
-    <h2 class="pick-h" id="pickH">先挑一个</h2>
-    <p class="pick-note">都行。差别只在于「这件事被 Agent 接管的程度」。</p>
+    <h2 class="pick-h" id="pickH">第 1 步 · 挑一个技能</h2>
+    <p class="pick-note">都行。差别只在于它被 Agent 接管的程度。</p>
     <ul class="skills" id="skills" role="group" aria-labelledby="pickH"></ul>
   </section>
 
-  <section class="out" id="out" hidden aria-live="polite">
-    <div class="out-head">
-      <div class="out-k">监理化之后</div>
-      <div class="out-title" id="outTitle"></div>
+  <div class="spread" id="spread" hidden aria-live="polite">
+    <section class="face face-front" aria-labelledby="frontK">
+      <div class="face-k" id="frontK">正面 · 它现在的样子</div>
+      <div class="face-title" id="frontTitle"></div>
+      <p class="face-now" id="frontNow"></p>
       <div class="meter-wrap">
-        <div class="meter-top"><span>这项任务被 Agent 接管的程度</span><span id="meterVal"></span></div>
+        <div class="meter-top"><span>被 Agent 接管</span><b id="meterVal">0%</b></div>
         <div class="meter"><i id="meterBar" style="width:0"></i></div>
       </div>
-    </div>
-    <div class="rows">
-      <div class="row"><div class="row-k">你判定什么</div><div class="row-v" id="rJudge"></div></div>
-      <div class="row"><div class="row-k">谁付钱</div><div class="row-v" id="rPayer"></div></div>
-      <div class="row"><div class="row-k">第一个客户</div><div class="row-v" id="rFirst"></div></div>
-      <div class="row"><div class="row-k">差在哪</div><div class="row-v" id="rDiff"></div></div>
-    </div>
-  </section>
+    </section>
+
+    <section class="face face-back" aria-labelledby="backK">
+      <div class="face-k" id="backK">背面 · 翻过来之后</div>
+      <div class="face-title" id="outTitle"></div>
+      <div class="rows">
+        <div class="row"><div class="row-k">你判定什么</div><div class="row-v" id="rJudge"></div></div>
+        <div class="row"><div class="row-k">谁付钱</div><div class="row-v" id="rPayer"></div></div>
+        <div class="row"><div class="row-k">第一个客户</div><div class="row-v" id="rFirst"></div></div>
+        <div class="row"><div class="row-k">差在哪</div><div class="row-v" id="rDiff"></div></div>
+      </div>
+    </section>
+  </div>
 
   <section class="drill" id="drill" hidden aria-labelledby="drillH">
-    <div class="drill-h">
-      <span id="drillH">训练场：你被允许犯错的次数</span>
-      <span class="drill-count" id="drillCount">0 / 3</span>
+    <div class="receipt-head">
+      <span class="t" id="drillH">第 3 步 · 接单台账</span>
+      <span class="n" id="drillCount">0 / 3 单</span>
     </div>
-    <ul class="drill-log" id="drillLog"></ul>
+    <ul class="orders" id="drillLog"></ul>
     <button class="btn" id="drillBtn" type="button">接第一单（200 元）</button>
     <div class="unlock" id="unlock" hidden></div>
   </section>
@@ -251,14 +314,14 @@ strong { font-weight: 700; }
   <p class="psrc-meta">2026-10-20 · 机会卡《「AI 学徒制」平台：让被 Agent 挤出初级岗位的开发者，成为中小企业 AI 交付项目的技术监理》</p>
   <p class="psrc-line"><b>原始信号：</b>DeepSeek-V4.1-Flash-20261017 登顶 Code Arena: WebDev 开源模型榜首。</p>
   <p class="psrc-note">以上是机会卡与行业信号的真实记录，未作改写、未加演绎。</p>
-  <p class="psrc-line"><b>灵灵据此延伸的设想：</b>大多数「AI 抢工作」的讨论停在「谁被替代」，灵灵往下问了一格：<b>被替代的到底是人，还是那条练手的路？</b>如果是后者，那这个人的技能没有贬值，只是找不到地方用了——所以这一期做成了一个改写器：把你手上正在贬值的技能，翻到它背面。</p>
+  <p class="psrc-line"><b>灵灵据此延伸的设想：</b>大多数「AI 抢工作」的讨论停在「谁被替代」，灵灵往下问了一格：<b>被替代的到底是人，还是那条练手的路？</b>如果是后者，那这个人的技能没有贬值，只是找不到地方用了 —— 所以这一期做成了一张能翻面的卡：正面是你现在做的事，背面是同一件事换个位置之后的样子。</p>
   <p class="psrc-note">这一段是灵灵的二次创作，不是原文内容。六个技能、三行改写与接单记录均为本实验编写的示例，不代表 DeepSeek 或任何机构的口径。</p>
   <p class="psrc-links">
     <a href="https://aihot.news/items/bm95oliei5mcgy2tau7e22d59" target="_blank" rel="noopener noreferrer">阅读原文 ↗</a>
     <a href="../cards.html?id=275">看这张机会卡 ›</a>
     <a href="../cards-all.html">全部机会卡 ›</a>
   </p>
-  <p class="psrc-data">示例数据 · 规则模拟 —— 本期的技能映射、改写文案与训练场进度都由页面本地规则算出，未接入真实模型，无后端调用、无 API key、无外部请求。</p>
+  <p class="psrc-data">示例数据 · 规则模拟 —— 本期的技能映射、改写文案与接单台账都由页面本地规则算出，未接入真实模型，无后端调用、无 API key、无外部请求。</p>
 </section>
 
 <section class="psrc" data-shell="judgment" data-no="6"></section>
@@ -272,48 +335,54 @@ strong { font-weight: 700; }
   var SKILLS = [
     {
       id: 'crud', name: '写 CRUD 接口', replace: 95,
+      now: '你写 40 行接口，测试绿灯，交上去。有人问权限怎么定的，你说「按老规矩」。',
       title: '你不再是写接口的人，是「签字放行」的人',
-      judge: 'AI 生成的这个接口，有没有偷偷把权限校验放宽一格——它不会报错，测试也是绿的。',
+      judge: 'AI 生成的这个接口，有没有偷偷把权限校验放宽一格 —— 它不会报错，测试也是绿的。',
       payer: '中小企业主。他看不懂代码，但他怕客户数据被人拖走，所以愿意为「有人看过」付钱。',
       first: '你上一家公司的供应商。他们的后台还是 2019 年的写法，没人愿意接维护。',
       diff: '以前你交付的是「能跑的代码」；现在你交付的是「我确认过它能跑」。前者按行计价，后者按事故计价。'
     },
     {
       id: 'bug', name: '修小 bug', replace: 88,
+      now: '你花一下午定位，改 3 行，发版。没人知道你改过。',
       title: '你不再是修 bug 的人，是「判断它修没修坏」的人',
-      judge: '这个修复有没有顺手弄坏另一个边界条件——AI 修 bug 最爱干的就是按下葫芦浮起瓢。',
+      judge: '这个修复有没有顺手弄坏另一个边界条件 —— AI 修 bug 最爱干的就是按下葫芦浮起瓢。',
       payer: '一个人盯三个项目的独立开发者。他缺的不是手，是有第二个人说「这版我能发」。',
       first: '开源项目的 issue 区：有人贴了复现步骤，挂了两个月没人接。',
       diff: '以前你的价值是「找得到 bug」；现在 bug 是它找的，你的价值是「敢说这条修复能上线」。'
     },
     {
       id: 'copy', name: '改文案 / 调样式', replace: 92,
+      now: '你改 12 句文案，老板说「再顺一点」，你改第 13 句。',
       title: '你不再是改字的人，是「替这家公司说话」的人',
-      judge: '改完之后那句话，还是不是这家公司敢说出口的话——AI 写得很顺，但经常不像人说的。',
+      judge: '改完之后那句话，还是不是这家公司敢说出口的话 —— AI 写得很顺，但经常不像人说的。',
       payer: '本地商家。他要的不是「好看」，是「不像 AI 写的」。这句话现在值钱。',
       first: '你朋友圈里那个开店的。官网三年没更新，微信头像还是默认的。',
       diff: '以前你卖的是工时；现在你卖的是「我知道这家店不该说什么」。'
     },
     {
       id: 'report', name: '做表 / 写周报', replace: 90,
+      now: '你拉 6 张表，做成一张图，会上被问一句「这个数怎么来的」。',
       title: '你不再做表，是「这张表能不能拿去开会」的人',
-      judge: '这张表的口径经不经得起追问——老板问「这个数怎么来的」，你答不上来它就废了。',
+      judge: '这张表的口径经不经得起追问 —— 老板问「这个数怎么来的」，你答不上来它就废了。',
       payer: '20 人以下的小公司老板。他自己不做表，但每个月都要拿表做决定。',
       first: '你朋友开的店：每月手工对账两小时，错一次要赔半天。',
       diff: '以前你交的是数据；现在你交的是「这个数我敢在会上被问」。'
     },
     {
       id: 'scope', name: '接需求 / 拆任务', replace: 60,
+      now: '客户说「简单改一下」，你照着做，做完他说不是这个意思。',
       title: '你不再是接需求的人，是「听出客户没说的那句」的人',
-      judge: '客户说的「简单改一下」里，哪些是没说的——AI 会照着字面做，然后交付一个错的东西。',
+      judge: '客户说的「简单改一下」里，哪些是没说的 —— AI 会照着字面做，然后交付一个错的东西。',
       payer: '外包公司。他们不缺开发，缺一个能在开工前跟客户对齐的人。',
       first: '外包群里那句「有没有人明天来对个需求」，通常没人回。',
       diff: '以前你按需求文档干活；现在你的产出是「把模糊的话变成能开工的句子」。'
     },
     {
       id: 'client', name: '跟客户对需求', replace: 45,
+      now: '你转述客户的话给开发，开发说做不了，你回去再传一遍。',
       title: '你不再是传话的人，是「敢说这个不做」的人',
-      judge: '哪些需求该被拒绝——AI 不会拒绝，它会把所有要求都接住，然后一起做砸。',
+      judge: '哪些需求该被拒绝 —— AI 不会拒绝，它会把所有要求都接住，然后一起做砸。',
       payer: '做 AI 交付的小团队。技术很强，但一遇到客户改需求就崩。',
       first: '你上一个项目的甲方。他们现在还在为「需求又变了」吵架。',
       diff: '以前你卖的是沟通；现在你卖的是「我替你挡掉了不该做的三件事」。'
@@ -321,14 +390,14 @@ strong { font-weight: 700; }
   ];
 
   var CASES = [
-    '第一单：你收 <b>200 元</b>，做的事是把它 AI 生成的 40 行代码逐行看一遍，标出 3 处「这里它会悄悄改掉边界条件」。你没有写一行代码。',
-    '第二单是第一个人介绍的。他的原话是「他看得懂 AI 写的东西」—— 你第一次发现，你卖的不是技术，是<b>敢签字</b>。',
-    '第三单你收了 <b>800 元</b>。因为你手里有三个「我判过、并且判对了」的案例。<b>这才是简历上被 Agent 替代不了的部分。</b>'
+    { stamp: '第<br>1 单', text: '你收 <b>200 元</b>，做的事是把它 AI 生成的 40 行代码逐行看一遍，标出 3 处「这里它会悄悄改掉边界条件」。你没有写一行代码。' },
+    { stamp: '第<br>2 单', text: '第二单是第一个人介绍的。他的原话是「他看得懂 AI 写的东西」—— 你第一次发现，你卖的不是技术，是<b>敢签字</b>。' },
+    { stamp: '第<br>3 单', text: '第三单你收了 <b>800 元</b>。因为你手里有三个「我判过、并且判对了」的案例。<b>这才是简历上被 Agent 替代不掉的部分。</b>' }
   ];
 
   var current = null, drillCount = 0;
   var elSkills = document.getElementById('skills');
-  var elOut = document.getElementById('out');
+  var elSpread = document.getElementById('spread');
   var elDrill = document.getElementById('drill');
   var elLog = document.getElementById('drillLog');
   var elBtn = document.getElementById('drillBtn');
@@ -341,18 +410,20 @@ strong { font-weight: 700; }
       var s = SKILLS[i];
       html += '<li><button class="skill" type="button" data-id="' + s.id + '" aria-pressed="' +
         (current && current.id === s.id ? 'true' : 'false') + '">' +
-        '<b>' + s.name + '</b><span>被接管 ' + s.replace + '%</span></button></li>';
+        '<b>' + s.name + '</b><span>接管 ' + s.replace + '%</span></button></li>';
     }
     elSkills.innerHTML = html;
   }
 
   function renderOut() {
     if (!current) return;
-    elOut.hidden = false;
+    elSpread.hidden = false;
     elDrill.hidden = false;
-    document.getElementById('outTitle').textContent = current.title;
+    document.getElementById('frontTitle').textContent = current.name;
+    document.getElementById('frontNow').textContent = current.now;
     document.getElementById('meterVal').textContent = current.replace + '%';
     document.getElementById('meterBar').style.width = current.replace + '%';
+    document.getElementById('outTitle').textContent = current.title;
     document.getElementById('rJudge').textContent = current.judge;
     document.getElementById('rPayer').textContent = current.payer;
     document.getElementById('rFirst').textContent = current.first;
@@ -362,15 +433,18 @@ strong { font-weight: 700; }
 
   function renderDrill() {
     var html = '';
-    for (var i = 0; i < drillCount; i++) html += '<li>' + CASES[i] + '</li>';
+    for (var i = 0; i < drillCount; i++) {
+      html += '<li class="order"><span class="stamp" aria-hidden="true">' + CASES[i].stamp +
+        '</span><p>' + CASES[i].text + '</p></li>';
+    }
     elLog.innerHTML = html;
-    elCount.textContent = drillCount + ' / 3';
+    elCount.textContent = drillCount + ' / 3 单';
     if (drillCount >= 3) {
       elBtn.disabled = true;
-      elBtn.textContent = '训练场满了';
+      elBtn.textContent = '台账满了';
       elUnlock.hidden = false;
       elUnlock.innerHTML = '<b>现在你能接 2000 元一单的活。</b>因为客户买的不是「你会写代码」，是「你手上已经有三个判过的案例」。' +
-        '这个位置 Agent 抢不走——它没有办法替自己签字。';
+        '这个位置 Agent 抢不走 —— 它没有办法替自己签字。';
     } else {
       elBtn.disabled = false;
       elBtn.textContent = drillCount === 0 ? '接第一单（200 元）' : '再接一单';

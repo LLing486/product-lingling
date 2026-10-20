@@ -190,7 +190,14 @@
   function renderIlist(el, list) {
     var base = el.getAttribute('data-base') || '';
     el.innerHTML = list.map(function (ep) {
-      return '<li><a class="icard" href="' + esc(linkTo(base, ep.file)) + '">\n' +
+      var th = ep.theme || {};
+      var vars = ' style="' +
+        '--c-bg:' + esc(th.bg || '#FFFFFF') + ';' +
+        '--c-ink:' + esc(th.ink || '#2C2A26') + ';' +
+        '--c-accent:' + esc(th.accent || '#B8860B') + ';' +
+        '--c-accent-ink:' + esc(th.accentInk || '#8A6508') + ';' +
+        '--c-soft:' + esc(th.soft || '#F5EEDC') + '"';
+      return '<li><a class="icard" href="' + esc(linkTo(base, ep.file)) + '"' + vars + '>\n' +
         '  <span class="icard-top"><b class="icard-no">' + esc(issueLabel(noOf(ep))) + '</b>' +
           '<span class="icard-date">' + esc(ep.date) + '</span></span>\n' +
         '  <span class="icard-tag">' + esc(ep.tag) + '</span>\n' +
