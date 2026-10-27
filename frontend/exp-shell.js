@@ -177,10 +177,17 @@
     var base = el.getAttribute('data-base') || '';
     var latest = list[list.length - 1];        /* 列表已按 no 升序，末条即期号最大 */
     el.setAttribute('href', linkTo(base, latest.file));
+    var t = text(latest.short) || text(latest.title);
     el.innerHTML =
-      '<span class="cta-k">直接开玩 →</span>' +
-      '<span class="cta-v">' + esc(issueLabel(noOf(latest))) + ' · ' +
-        esc(text(latest.short) || text(latest.title)) + '</span>';
+      '<span class="cta-id">' +
+        '<span class="cta-k">最新一期</span>' +
+        '<span class="cta-no">' + pad(noOf(latest)) + '</span>' +
+      '</span>' +
+      '<span class="cta-main">' +
+        '<span class="cta-issue">' + esc(issueLabel(noOf(latest))) + '</span>' +
+        '<span class="cta-title">' + esc(t) + '</span>' +
+      '</span>' +
+      '<span class="cta-go">直接开玩 →</span>';
   }
 
   /* ══════════════════════════════════════════════════════
@@ -192,17 +199,19 @@
     el.innerHTML = list.map(function (ep) {
       var th = ep.theme || {};
       var vars = ' style="' +
-        '--c-bg:' + esc(th.bg || '#FFFFFF') + ';' +
-        '--c-ink:' + esc(th.ink || '#2C2A26') + ';' +
-        '--c-accent:' + esc(th.accent || '#B8860B') + ';' +
-        '--c-accent-ink:' + esc(th.accentInk || '#8A6508') + ';' +
-        '--c-soft:' + esc(th.soft || '#F5EEDC') + '"';
-      return '<li><a class="icard" href="' + esc(linkTo(base, ep.file)) + '"' + vars + '>\n' +
-        '  <span class="icard-top"><b class="icard-no">' + esc(issueLabel(noOf(ep))) + '</b>' +
-          '<span class="icard-date">' + esc(ep.date) + '</span></span>\n' +
-        '  <span class="icard-tag">' + esc(ep.tag) + '</span>\n' +
-        '  <span class="icard-title">' + esc(ep.title) + '</span>\n' +
-        '  <span class="icard-go">进入 →</span>\n' +
+        '--c-accent:' + esc(th.accent || '#8A6508') + ';' +
+        '--c-accent-ink:' + esc(th.accentInk || '#8A6508') + '"';
+      return '<li class="irow"><a class="irow-link" href="' + esc(linkTo(base, ep.file)) + '"' + vars + '>\n' +
+        '  <span class="irow-bar" aria-hidden="true"></span>\n' +
+        '  <span class="irow-no">' + pad(noOf(ep)) + '</span>\n' +
+        '  <span class="irow-body">\n' +
+        '    <span class="irow-title">' + esc(ep.title) + '</span>\n' +
+        '    <span class="irow-meta">' + esc(ep.date) + ' · ' + esc(ep.motif) + '</span>\n' +
+        '  </span>\n' +
+        '  <span class="irow-side">\n' +
+        '    <span class="irow-tag">' + esc(ep.tag) + '</span>\n' +
+        '    <span class="irow-go">进入 →</span>\n' +
+        '  </span>\n' +
         '</a></li>';
     }).join('\n');
   }
