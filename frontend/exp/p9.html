@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>第 09 期 · 推送单 · 灵灵 · 每周实验</title>
+<style>
+/* ══════════════════════════════════════════════════════════
+   第 09 期 · 主题「推送单」
+   形态：一张有五个位置的今日推送单，和十二条候选预警。
+   你只能推五条 —— 推多了没人看，推少了会漏。
+   ══════════════════════════════════════════════════════════ */
+:root{
+  --paper:#ECEFF3; --paper-2:#DFE4EA; --surface:#FBFCFD;
+  --ink:#18202A; --ink-2:#56616E; --ink-3:#8B95A1;
+  --accent:#3D4A5C; --accent-ink:#2E3949; --accent-bg:#DEE3EA;
+  --hot:#A0341F; --hot-bg:#F1DDD7;
+  --line:rgba(24,32,42,.18); --line-soft:rgba(24,32,42,.09);
+  --serif: Georgia,'Times New Roman','Songti SC','SimSun',serif;
+  --sans: -apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;
+  --mono:'SF Mono','JetBrains Mono',Menlo,Consolas,monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:15.5px;line-height:1.7;min-height:100vh;overflow-x:hidden}
+button{font-family:inherit;cursor:pointer}
+a{color:var(--ink-2);text-decoration:underline;text-underline-offset:2px}
+a:hover{color:var(--accent-ink)}
+[hidden]{display:none!important}
+b,strong{font-weight:700}
+.wrap{max-width:1040px;margin:0 auto;padding:0 20px 64px}
+
+.masthead{padding:32px 0 16px;border-bottom:1px solid var(--line)}
+.mast-top{display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap}
+.brand{font-family:var(--serif);font-size:24px;font-weight:700;letter-spacing:.02em}
+.brand small{font-size:11px;font-weight:400;color:var(--ink-3);letter-spacing:.14em;margin-left:8px}
+.mast-meta{display:flex;gap:12px;align-items:baseline;font-size:11.5px;color:var(--ink-3);flex-wrap:wrap;font-variant-numeric:tabular-nums}
+.issue-no{font-family:var(--mono);font-weight:700;color:var(--ink);letter-spacing:.08em}
+
+.lede{padding:24px 0 0}
+.lede-title{font-family:var(--serif);font-size:clamp(26px,3.4vw,34px);font-weight:700;letter-spacing:-.02em;line-height:1.2}
+.lede-sub{font-size:15px;color:var(--ink-2);margin-top:12px;max-width:36em}
+.lede-sub b{color:var(--ink)}
+
+/* 推送单 */
+.sheet{margin-top:26px;background:var(--surface);border:1px solid var(--line);border-top:3px solid var(--accent)}
+.sheet-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;padding:14px 18px 10px;border-bottom:1px solid var(--line-soft)}
+.sheet-h{font-family:var(--serif);font-size:18px;font-weight:700}
+.sheet-n{font-family:var(--mono);font-size:12px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.slots{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;padding:14px 18px}
+@media (max-width:600px){.slots{grid-template-columns:repeat(3,1fr)}}
+.slot{min-height:86px;border:1px dashed var(--line);background:var(--paper);padding:8px;display:flex;flex-direction:column;justify-content:space-between;gap:4px;text-align:left;color:var(--ink)}
+.slot-k{font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;color:var(--ink-3)}
+.slot-t{font-size:11.5px;line-height:1.45;font-weight:600}
+.slot.filled{border-style:solid;border-color:var(--accent);background:var(--accent-bg)}
+.slot.filled .slot-k{color:var(--accent-ink)}
+.slot:hover{border-color:var(--accent)}
+.slot:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.meters{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border-top:1px solid var(--line)}
+.meters div{background:var(--surface);padding:9px 12px}
+.m-k{font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3)}
+.m-v{font-family:var(--mono);font-size:19px;font-weight:700;font-variant-numeric:tabular-nums}
+.m-v.bad{color:var(--hot)}
+
+/* 候选 */
+.pool{margin-top:22px}
+.pool-h{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;padding-bottom:8px;border-bottom:1px solid var(--line)}
+.pool-t{font-family:var(--serif);font-size:17px;font-weight:700}
+.pool-n{font-family:var(--mono);font-size:11px;color:var(--ink-3)}
+.list{list-style:none}
+.item{display:grid;grid-template-columns:56px 1fr auto;gap:10px;align-items:start;padding:11px 0;border-bottom:1px solid var(--line-soft)}
+.item-time{font-family:var(--mono);font-size:10.5px;color:var(--ink-3);padding-top:2px;font-variant-numeric:tabular-nums}
+.item-t{font-size:14px;line-height:1.55;font-weight:600}
+.item-c{font-size:11.5px;color:var(--ink-2);margin-top:3px;line-height:1.6}
+.item-b{min-height:44px;min-width:64px;padding:0 10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:12px;font-weight:700}
+.item-b:hover{border-color:var(--accent);background:var(--accent-bg)}
+.item-b:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.item-b[disabled]{opacity:.35;cursor:default}
+.item.is-picked .item-t{color:var(--accent-ink)}
+
+.actions{margin-top:18px;display:flex;gap:8px;flex-wrap:wrap}
+.btn{min-height:46px;padding:0 18px;border:1px solid var(--ink);background:var(--ink);color:var(--paper);font-size:13.5px;font-weight:700}
+.btn:hover{background:#10161F}
+.btn:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.btn[disabled]{opacity:.4;cursor:default}
+.btn.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+
+/* 结算 */
+.final{margin-top:24px;padding:20px;background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--accent)}
+.final-h{font-family:var(--serif);font-size:22px;font-weight:700;letter-spacing:-.01em}
+.final-body{font-size:14px;line-height:1.8;margin-top:8px}
+.reveal{list-style:none;margin-top:14px;display:grid;gap:4px}
+.reveal li{display:grid;grid-template-columns:64px 1fr auto;gap:10px;padding:6px 0;border-top:1px solid var(--line-soft);font-size:12.5px;align-items:baseline}
+.lvl{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.1em;padding:1px 6px;border:1px solid var(--line);text-align:center}
+.lvl.p0{color:var(--hot);border-color:var(--hot)}
+.lvl.p1{color:var(--accent-ink);border-color:var(--accent)}
+.lvl.p2{color:var(--ink-3)}
+.rv{font-family:var(--mono);font-size:11px;letter-spacing:.06em;white-space:nowrap}
+.rv.hit{color:var(--accent-ink)}
+.rv.miss{color:var(--hot)}
+.rv.noise{color:var(--ink-3)}
+
+.foot{margin-top:32px;padding-top:14px;border-top:1px solid var(--line);font-size:11.5px;color:var(--ink-2);display:flex;flex-direction:column;gap:5px}
+.foot .mock-line{color:var(--ink)}
+.foot-link-row{display:flex}
+.foot-link{display:inline-flex;align-items:center;min-height:44px;padding:0 12px;border:1px solid var(--line);background:var(--surface);font-size:12.5px;font-weight:600;text-decoration:none;color:var(--ink)}
+.foot-link:hover{border-color:var(--accent);background:var(--accent-bg)}
+.foot-link:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}}
+
+.lnav{position:sticky;top:0;z-index:9999;display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:6px 14px;background:#12141c;border-bottom:1px solid rgba(255,255,255,.14);font-family:inherit;font-size:13px;line-height:1}
+.lnav a{color:rgba(255,255,255,.74);text-decoration:none;display:inline-flex;align-items:center;min-height:44px;padding:0 2px}
+.lnav a:hover{color:#fff;text-decoration:underline}
+.lnav a:focus-visible{color:#fff;outline:2px solid #7cc4ff;outline-offset:2px;border-radius:3px}
+.lnav-brand{font-weight:700;color:#fff!important;letter-spacing:.04em}
+.lnav-sep{width:1px;height:16px;background:rgba(255,255,255,.22)}
+.lnav-i[aria-current="page"]{color:#fff;font-weight:600}
+
+.pnav{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:10px 14px;border-bottom:1px solid rgba(0,0,0,.08);font-size:14px;background:var(--paper)}
+.pnav a,.pnav span{display:inline-flex;align-items:center;min-height:44px}
+.pnav-prev,.pnav-next{font-weight:600;text-decoration:none}
+.pnav-prev.is-off,.pnav-next.is-off{opacity:.38}
+.pnav-list{display:inline-flex;gap:6px}
+.pnav-list a{min-width:44px;justify-content:center;text-decoration:none;padding:0 6px}
+.pnav-list a[aria-current="page"]{font-weight:700;background:var(--accent-bg);color:var(--accent-ink);text-decoration:none}
+
+.psrc{max-width:1040px;margin:0 auto;padding:6px 20px 40px;background:var(--paper)}
+.psrc-h{font-family:var(--serif);font-size:17px;font-weight:700;letter-spacing:.04em;margin-bottom:9px}
+.psrc-meta{font-size:12.5px;color:var(--ink-2);margin-bottom:12px;overflow-wrap:anywhere}
+.psrc-line{font-size:13.5px;line-height:1.78;margin:10px 0;overflow-wrap:anywhere}
+.psrc-note{font-size:12px;line-height:1.72;color:var(--ink-2);margin:8px 0;padding-left:11px;border-left:2px solid var(--accent-bg)}
+.psrc-links{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0 12px}
+.psrc-links a{display:inline-flex;align-items:center;min-height:44px;padding:0 13px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:12.5px;font-weight:600;text-decoration:none}
+.psrc-links a:hover{border-color:var(--accent);background:var(--accent-bg)}
+.psrc-data{font-size:11.5px;line-height:1.66;color:var(--ink-2);margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+</style>
+</head>
+<body>
+
+<nav class="lnav" aria-label="站点导航">
+  <a class="lnav-brand" href="../index.html">灵灵</a>
+  <span class="lnav-sep" aria-hidden="true"></span>
+  <a class="lnav-i" href="../index.html" aria-current="page">全部实验</a>
+  <a class="lnav-i" href="../cards.html">机会卡</a>
+  <a class="lnav-i" href="../cards-all.html">全部卡片</a>
+</nav>
+
+<div class="pnav" role="navigation" aria-label="期号切换" data-shell="pnav" data-no="9" data-base="p" data-pos="top"></div>
+
+<div class="wrap">
+  <header class="masthead">
+    <div class="mast-top">
+      <div class="brand">灵灵<small>每周实验</small></div>
+      <div class="mast-meta">
+        <span class="issue-no">第 09 期</span>
+        <span>2026-11-14</span>
+        <span>示例数据 · 规则模拟</span>
+      </div>
+    </div>
+  </header>
+
+  <section class="lede">
+    <h1 class="lede-title">一天推 40 条预警，<br>等于一条都没推</h1>
+    <p class="lede-sub">今天有 12 条预警，你的推送单只有 <b>5 个位置</b>。推错了不是错，推多了才是 —— 因为没人会看第 6 条。</p>
+  </section>
+
+  <section class="sheet" aria-labelledby="sheetH">
+    <div class="sheet-head">
+      <span class="sheet-h" id="sheetH">今日推送单</span>
+      <span class="sheet-n" id="sheetN">0 / 5 已填</span>
+    </div>
+    <div class="slots" id="slots"></div>
+    <div class="meters">
+      <div><div class="m-k">已放入</div><div class="m-v" id="mFill">0</div></div>
+      <div><div class="m-k">打扰（推了噪音）</div><div class="m-v" id="mNoise">0</div></div>
+      <div><div class="m-k">漏掉的关键</div><div class="m-v" id="mMiss">—</div></div>
+    </div>
+  </section>
+
+  <div class="pool">
+    <div class="pool-h">
+      <span class="pool-t">待分拣的 12 条</span>
+      <span class="pool-n">按发生时间</span>
+    </div>
+    <ul class="list" id="list"></ul>
+  </div>
+
+  <div class="actions">
+    <button class="btn" id="publish" type="button" disabled>发布今日推送</button>
+    <button class="btn ghost" id="reset" type="button">清空重来</button>
+  </div>
+
+  <section class="final" id="final" hidden>
+    <div class="final-h" id="finalH"></div>
+    <div class="final-body" id="finalB"></div>
+    <ul class="reveal" id="reveal"></ul>
+  </section>
+
+  <footer class="foot">
+    <span class="mock-line">本页为 <strong>示例数据 · 规则模拟</strong>：十二条预警是按真实值班场景改写的示例，分级由页面内写死的规则算出，本轮<strong>没有</strong>接入任何真实模型。</span>
+    <span>灵感来源：真实机会卡《AI 一级市场情报 Agent：把融资与 IPO 信号自动转成投资决策简报》＋ 本人产品笔记里「预警先分级、只推高风险，推多了就没人看」</span>
+    <span class="foot-link-row">
+      <a class="foot-link" href="../cards.html?id=312" target="_blank" rel="noopener noreferrer">看这张机会卡 ↗</a>
+    </span>
+    <span>零依赖单文件 · 可离线双击打开 · 无外部请求 · 无密钥</span>
+  </footer>
+</div>
+
+<div class="pnav" role="navigation" aria-label="期号切换" data-shell="pnav" data-no="9" data-base="p" data-pos="bottom"></div>
+
+<section class="psrc" aria-label="这一期的灵感来源">
+  <h2 class="psrc-h">这一期的灵感来源</h2>
+  <p class="psrc-meta">2026-11-14 · 机会卡《AI 一级市场情报 Agent：把融资与 IPO 信号自动转成投资决策简报》＋ 本人产品笔记</p>
+  <p class="psrc-line"><b>原始信号：</b>把海量信号自动收敛成一份能直接用来做判断的简报。</p>
+  <p class="psrc-note">机会卡与信号是真实记录；「预警先分级、只推高风险」来自本人的产品笔记（内部资料，不公开）。</p>
+  <p class="psrc-line"><b>灵灵据此延伸的设想：</b>预警产品的失败不是「没发现」，是<b>发现了太多</b>。当一天推 40 条，用户会关掉通知 —— 那一刻你的系统等于不存在。所以这一期把推送做成一张只有 5 个位置的单子：你必须放弃 7 条。</p>
+  <p class="psrc-note">这一段是灵灵的二次创作。十二条预警、分级与判词均为本实验编写的示例，不代表任何公司口径。</p>
+  <p class="psrc-links">
+    <a href="../cards.html?id=312">看这张机会卡 ›</a>
+    <a href="../cards-all.html">全部机会卡 ›</a>
+  </p>
+  <p class="psrc-data">示例数据 · 规则模拟 —— 本期的预警、分级与判词都由页面本地规则算出，未接入真实模型，无后端调用、无 API key、无外部请求。</p>
+</section>
+
+<section class="psrc" data-shell="judgment" data-no="9"></section>
+
+<script src="episodes.js"></script>
+<script src="../exp-shell.js"></script>
+<script>
+(function(){
+  'use strict';
+
+  var CAP = 5;
+  var ITEMS = [
+    { id:'w01', time:'08:12', t:'支付成功率 99.2% → 94.1%', c:'近 10 分钟 · 三个渠道同时下跌 · 未恢复', lvl:'P0' },
+    { id:'w02', time:'08:40', t:'12 条「订单未发货」投诉', c:'2 小时内 · 集中在同一个仓', lvl:'P1' },
+    { id:'w03', time:'09:05', t:'某经营报表刷新延迟 20 分钟', c:'只影响一个看板 · 已恢复', lvl:'P2' },
+    { id:'w04', time:'09:20', t:'主数据同步任务失败', c:'下游 4 张表停更 · 首次出现 · 无重试', lvl:'P0' },
+    { id:'w05', time:'10:02', t:'磁盘使用率 78%', c:'周环比 +2% · 无单次突增', lvl:'P2' },
+    { id:'w06', time:'10:31', t:'登录接口 P99 800ms → 1.2s', c:'全端 · 持续 20 分钟 · 未见恢复', lvl:'P1' },
+    { id:'w07', time:'11:10', t:'测试环境 500 错误', c:'仅测试环境 · 主流程不受影响', lvl:'P2' },
+    { id:'w08', time:'11:44', t:'供应商 API 限流', c:'影响 1 个内部工具 · 已有降级方案', lvl:'P2' },
+    { id:'w09', time:'12:05', t:'用户手机号在日志中明文出现', c:'首次发现 · 涉及生产库 · 无法回滚已落盘日志', lvl:'P0' },
+    { id:'w10', time:'13:20', t:'库存同步延迟 5 分钟', c:'常态波动范围内 · 已自动补齐', lvl:'P2' },
+    { id:'w11', time:'14:03', t:'大客户专属接口超时', c:'影响 2 个 KA 客户 · 已有人工介入', lvl:'P1' },
+    { id:'w12', time:'14:50', t:'推送到达率 98% → 96.5%', c:'全量 · 持续 3 小时', lvl:'P1' }
+  ];
+
+  var picked = [];   // ids in slot order
+  var elSlots = document.getElementById('slots');
+  var elList = document.getElementById('list');
+  var elN = document.getElementById('sheetN');
+  var mFill = document.getElementById('mFill');
+  var mNoise = document.getElementById('mNoise');
+  var mMiss = document.getElementById('mMiss');
+  var btnPub = document.getElementById('publish');
+  var btnReset = document.getElementById('reset');
+  var elFinal = document.getElementById('final');
+  var elFinalH = document.getElementById('finalH');
+  var elFinalB = document.getElementById('finalB');
+  var elReveal = document.getElementById('reveal');
+
+  function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  function byId(id){ for (var i=0;i<ITEMS.length;i++) if (ITEMS[i].id===id) return ITEMS[i]; return null; }
+
+  function render(){
+    // 槽位
+    var sh = '';
+    for (var i=0;i<CAP;i++){
+      var it = picked[i] ? byId(picked[i]) : null;
+      sh += '<button class="slot' + (it?' filled':'') + '" type="button" data-slot="'+i+'"' +
+        (it?' aria-label="移除 '+esc(it.t)+'"':' disabled') + '>' +
+        '<span class="slot-k">' + String(i+1).padStart(2,'0') + '</span>' +
+        '<span class="slot-t">' + (it ? esc(it.t) : '空') + '</span></button>';
+    }
+    elSlots.innerHTML = sh;
+
+    // 候选
+    elList.innerHTML = ITEMS.map(function(it){
+      var used = picked.indexOf(it.id) >= 0;
+      return '<li class="item' + (used?' is-picked':'') + '">' +
+        '<span class="item-time">' + esc(it.time) + '</span>' +
+        '<div><div class="item-t">' + esc(it.t) + '</div><div class="item-c">' + esc(it.c) + '</div></div>' +
+        '<button class="item-b" type="button" data-add="' + it.id + '"' + (used||picked.length>=CAP?' disabled':'') + '>' +
+        (used ? '已在单上' : '放入') + '</button></li>';
+    }).join('');
+
+    elN.textContent = picked.length + ' / ' + CAP + ' 已填';
+    mFill.textContent = picked.length;
+    var noise = picked.map(byId).filter(function(x){return x && x.lvl==='P2';}).length;
+    mNoise.textContent = noise;
+    mNoise.className = 'm-v' + (noise>0?' bad':'');
+    mMiss.textContent = '—';
+    btnPub.disabled = picked.length !== CAP;
+    elFinal.hidden = true;
+  }
+
+  function add(id){
+    if (picked.length >= CAP || picked.indexOf(id) >= 0) return;
+    picked.push(id);
+    render();
+  }
+  function removeSlot(i){
+    if (!picked[i]) return;
+    picked.splice(i,1);
+    render();
+  }
+
+  function publish(){
+    var chosen = picked.map(byId);
+    var p0 = ITEMS.filter(function(x){return x.lvl==='P0';});
+    var missed = p0.filter(function(x){ return picked.indexOf(x.id) < 0; });
+    var noise = chosen.filter(function(x){ return x.lvl==='P2'; }).length;
+    var hit = chosen.filter(function(x){ return x.lvl==='P0'; }).length;
+
+    elFinal.hidden = false;
+    var head, body;
+    if (missed.length === 0 && noise === 0) {
+      head = '这张推送单是对的：3 条关键全在，零噪音';
+      body = '你推了 ' + chosen.length + ' 条，其中 3 条是真正会出事的那三条。' +
+        '用户的注意力被完整地留给了该看的东西 —— 这是预警产品最难达到的状态。';
+    } else if (missed.length > 0) {
+      head = '漏了 ' + missed.length + ' 条关键，其中 ' + missed[0].t;
+      body = '你推的 ' + chosen.length + ' 条里有 ' + hit + ' 条关键，但漏掉的这几条不会因为你没推就不发生。' +
+        '<br><br>注意线索：<b>首次出现、无法回滚、下游连带</b> —— 这三类即使影响面看起来小，也该进单。';
+    } else {
+      head = '关键没漏，但推了 ' + noise + ' 条噪音';
+      body = '单子里有 ' + noise + ' 条是已恢复 / 常态波动 / 只影响测试环境。' +
+        '它们不会造成事故，但会消耗注意力 —— 而注意力是预警产品唯一的资源。';
+    }
+    body += '<br><br>排队时值得记住的一条：<b>推 5 条有人看，推 40 条等于没推。</b>';
+    elFinalH.textContent = head;
+    elFinalB.innerHTML = body;
+
+    elReveal.innerHTML = ITEMS.map(function(it){
+      var inList = picked.indexOf(it.id) >= 0;
+      var mark = it.lvl === 'P0' ? (inList ? ['接住','hit'] : ['漏了','miss'])
+               : it.lvl === 'P1' ? (inList ? ['有用','hit'] : ['可接受','noise'])
+               : (inList ? ['噪音','miss'] : ['没推，对','noise']);
+      return '<li><span class="lvl ' + it.lvl.toLowerCase() + '">' + it.lvl + '</span>' +
+        '<span>' + esc(it.t) + '</span><span class="rv ' + mark[1] + '">' + mark[0] + '</span></li>';
+    }).join('');
+  }
+
+  elSlots.addEventListener('click', function(e){
+    var b = e.target.closest ? e.target.closest('button[data-slot]') : null;
+    if (!b) return;
+    removeSlot(Number(b.getAttribute('data-slot')));
+  });
+  elList.addEventListener('click', function(e){
+    var b = e.target.closest ? e.target.closest('button[data-add]') : null;
+    if (!b || b.disabled) return;
+    add(b.getAttribute('data-add'));
+  });
+  btnPub.addEventListener('click', publish);
+  btnReset.addEventListener('click', function(){ picked = []; render(); });
+
+  render();
+})();
+</script>
+</body>
+</html>

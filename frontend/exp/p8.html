@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>第 08 期 · 追问树 · 灵灵 · 每周实验</title>
+<style>
+/* ══════════════════════════════════════════════════════════
+   第 08 期 · 主题「追问树」
+   形态：一条归因链。每层三个假设，你选一个往下追；
+   每一步都要接受一个数字：它解释了几个百分点。
+   ══════════════════════════════════════════════════════════ */
+:root{
+  --paper:#F2ECE2; --paper-2:#E8DFD1; --surface:#FFFCF7;
+  --ink:#241C16; --ink-2:#6A5B4C; --ink-3:#9A8A79;
+  --accent:#6B4A2F; --accent-ink:#593C25; --accent-bg:#EEDFCF;
+  --good:#2F6B4F; --good-bg:#DEEBE2;
+  --bad:#A23B24; --bad-bg:#F2DCD5;
+  --line:rgba(36,28,22,.18); --line-soft:rgba(36,28,22,.09);
+  --serif: Georgia,'Times New Roman','Songti SC','SimSun',serif;
+  --sans: -apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;
+  --mono:'SF Mono','JetBrains Mono',Menlo,Consolas,monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:15.5px;line-height:1.7;min-height:100vh;overflow-x:hidden}
+button{font-family:inherit;cursor:pointer}
+a{color:var(--ink-2);text-decoration:underline;text-underline-offset:2px}
+a:hover{color:var(--accent-ink)}
+[hidden]{display:none!important}
+b,strong{font-weight:700}
+.wrap{max-width:1000px;margin:0 auto;padding:0 20px 64px}
+
+.masthead{padding:32px 0 16px;border-bottom:1px solid var(--line)}
+.mast-top{display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap}
+.brand{font-family:var(--serif);font-size:24px;font-weight:700;letter-spacing:.02em}
+.brand small{font-size:11px;font-weight:400;color:var(--ink-3);letter-spacing:.14em;margin-left:8px}
+.mast-meta{display:flex;gap:12px;align-items:baseline;font-size:11.5px;color:var(--ink-3);flex-wrap:wrap;font-variant-numeric:tabular-nums}
+.issue-no{font-family:var(--mono);font-weight:700;color:var(--ink);letter-spacing:.08em}
+
+.lede{padding:24px 0 0}
+.lede-title{font-family:var(--serif);font-size:clamp(26px,3.4vw,34px);font-weight:700;letter-spacing:-.02em;line-height:1.2}
+.lede-sub{font-size:15px;color:var(--ink-2);margin-top:12px;max-width:36em}
+.lede-sub b{color:var(--ink)}
+
+/* 缺口条 */
+.gap{margin-top:28px;padding:16px 18px;background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--bad)}
+.gap-top{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+.gap-h{font-family:var(--serif);font-size:20px;font-weight:700;letter-spacing:-.01em}
+.gap-v{font-family:var(--mono);font-size:22px;font-weight:700;color:var(--bad);font-variant-numeric:tabular-nums}
+.gap-sub{font-size:12.5px;color:var(--ink-2);margin-top:4px}
+.track{margin-top:12px;height:10px;background:var(--paper-2);border:1px solid var(--line);position:relative;overflow:hidden}
+.track i{display:block;height:100%;width:0;background:var(--accent);transition:width 300ms cubic-bezier(.2,.7,.2,1)}
+.track-k{display:flex;justify-content:space-between;font-family:var(--mono);font-size:10px;color:var(--ink-3);margin-top:5px;letter-spacing:.08em}
+
+/* 追问链 */
+.chain{margin-top:22px}
+.q{position:relative;padding-left:22px;border-left:1px solid var(--line);margin-bottom:14px}
+.q:last-child{border-left-color:transparent}
+.q-k{font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--ink-3);text-transform:uppercase}
+.q-t{font-size:13.5px;color:var(--ink-2);margin-top:2px}
+.picked{margin-top:8px;padding:10px 12px;background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--accent)}
+.picked-h{display:flex;justify-content:space-between;gap:10px;align-items:baseline;flex-wrap:wrap}
+.picked-t{font-weight:700;font-size:14px}
+.pp{font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.04em;white-space:nowrap}
+.pp.plus{color:var(--good)}
+.pp.zero{color:var(--bad)}
+.pp.scope{color:var(--ink-3);font-weight:400}
+.picked-ev{font-size:12.5px;color:var(--ink-2);margin-top:4px;line-height:1.7}
+
+.opts{list-style:none;display:grid;gap:8px;margin-top:10px}
+.opt{width:100%;min-height:56px;padding:10px 14px;text-align:left;background:var(--surface);border:1px solid var(--line);color:var(--ink);display:flex;flex-direction:column;gap:2px}
+.opt b{font-size:14px;font-weight:700;line-height:1.45}
+.opt span{font-size:11.5px;color:var(--ink-3)}
+.opt:hover{border-color:var(--accent);background:var(--accent-bg)}
+.opt:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.btn{min-height:46px;padding:0 18px;border:1px solid var(--ink);background:var(--ink);color:var(--paper);font-size:13.5px;font-weight:700}
+.btn:hover{background:#180F0A}
+.btn:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.btn.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+.btn.ghost:hover{background:var(--surface);border-color:var(--accent)}
+
+/* 结论 */
+.final{margin-top:24px;padding:20px;background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--accent)}
+.final-h{font-family:var(--serif);font-size:22px;font-weight:700;letter-spacing:-.01em}
+.final-body{font-size:14px;line-height:1.8;margin-top:8px}
+.final-body b{color:var(--ink)}
+
+.foot{margin-top:32px;padding-top:14px;border-top:1px solid var(--line);font-size:11.5px;color:var(--ink-2);display:flex;flex-direction:column;gap:5px}
+.foot .mock-line{color:var(--ink)}
+.foot-link-row{display:flex}
+.foot-link{display:inline-flex;align-items:center;min-height:44px;padding:0 12px;border:1px solid var(--line);background:var(--surface);font-size:12.5px;font-weight:600;text-decoration:none;color:var(--ink)}
+.foot-link:hover{border-color:var(--accent);background:var(--accent-bg)}
+.foot-link:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}}
+
+.lnav{position:sticky;top:0;z-index:9999;display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:6px 14px;background:#12141c;border-bottom:1px solid rgba(255,255,255,.14);font-family:inherit;font-size:13px;line-height:1}
+.lnav a{color:rgba(255,255,255,.74);text-decoration:none;display:inline-flex;align-items:center;min-height:44px;padding:0 2px}
+.lnav a:hover{color:#fff;text-decoration:underline}
+.lnav a:focus-visible{color:#fff;outline:2px solid #7cc4ff;outline-offset:2px;border-radius:3px}
+.lnav-brand{font-weight:700;color:#fff!important;letter-spacing:.04em}
+.lnav-sep{width:1px;height:16px;background:rgba(255,255,255,.22)}
+.lnav-i[aria-current="page"]{color:#fff;font-weight:600}
+
+.pnav{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:10px 14px;border-bottom:1px solid rgba(0,0,0,.08);font-size:14px;background:var(--paper)}
+.pnav a,.pnav span{display:inline-flex;align-items:center;min-height:44px}
+.pnav-prev,.pnav-next{font-weight:600;text-decoration:none}
+.pnav-prev.is-off,.pnav-next.is-off{opacity:.38}
+.pnav-list{display:inline-flex;gap:6px}
+.pnav-list a{min-width:44px;justify-content:center;text-decoration:none;padding:0 6px}
+.pnav-list a[aria-current="page"]{font-weight:700;background:var(--accent-bg);color:var(--accent-ink);text-decoration:none}
+
+.psrc{max-width:1000px;margin:0 auto;padding:6px 20px 40px;background:var(--paper)}
+.psrc-h{font-family:var(--serif);font-size:17px;font-weight:700;letter-spacing:.04em;margin-bottom:9px}
+.psrc-meta{font-size:12.5px;color:var(--ink-2);margin-bottom:12px;overflow-wrap:anywhere}
+.psrc-line{font-size:13.5px;line-height:1.78;margin:10px 0;overflow-wrap:anywhere}
+.psrc-note{font-size:12px;line-height:1.72;color:var(--ink-2);margin:8px 0;padding-left:11px;border-left:2px solid var(--accent-bg)}
+.psrc-links{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0 12px}
+.psrc-links a{display:inline-flex;align-items:center;min-height:44px;padding:0 13px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:12.5px;font-weight:600;text-decoration:none}
+.psrc-links a:hover{border-color:var(--accent);background:var(--accent-bg)}
+.psrc-data{font-size:11.5px;line-height:1.66;color:var(--ink-2);margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+</style>
+</head>
+<body>
+
+<nav class="lnav" aria-label="站点导航">
+  <a class="lnav-brand" href="../index.html">灵灵</a>
+  <span class="lnav-sep" aria-hidden="true"></span>
+  <a class="lnav-i" href="../index.html" aria-current="page">全部实验</a>
+  <a class="lnav-i" href="../cards.html">机会卡</a>
+  <a class="lnav-i" href="../cards-all.html">全部卡片</a>
+</nav>
+
+<div class="pnav" role="navigation" aria-label="期号切换" data-shell="pnav" data-no="8" data-base="p" data-pos="top"></div>
+
+<div class="wrap">
+  <header class="masthead">
+    <div class="mast-top">
+      <div class="brand">灵灵<small>每周实验</small></div>
+      <div class="mast-meta">
+        <span class="issue-no">第 08 期</span>
+        <span>2026-11-08</span>
+        <span>示例数据 · 规则模拟</span>
+      </div>
+    </div>
+  </header>
+
+  <section class="lede">
+    <h1 class="lede-title">销售额降了 12%，<br>AI 说「因为华东」</h1>
+    <p class="lede-sub">归因不是找一个听起来对的原因，是找一个<b>能量化解释掉大部分缺口</b>的原因。你每追一层，都要接受一个数字：它解释了几个百分点。</p>
+  </section>
+
+  <div class="gap">
+    <div class="gap-top">
+      <div>
+        <div class="gap-h">缺口：环比 −12%</div>
+        <div class="gap-sub" id="gapSub">还没追任何一层。已解释 0 个百分点。</div>
+      </div>
+      <div class="gap-v" id="gapV">0 / 12 pp</div>
+    </div>
+    <div class="track"><i id="trackFill"></i></div>
+    <div class="track-k"><span>0</span><span>主因线 8 pp</span><span>12</span></div>
+  </div>
+
+  <div class="chain" id="chain"></div>
+
+  <div class="actions" id="actions"></div>
+
+  <section class="final" id="final" hidden>
+    <div class="final-h" id="finalH"></div>
+    <div class="final-body" id="finalB"></div>
+    <button class="btn ghost" id="reset" type="button" style="margin-top:14px">换一条链再追一次</button>
+  </section>
+
+  <footer class="foot">
+    <span class="mock-line">本页为 <strong>示例数据 · 规则模拟</strong>：缺口、假设与贡献值都是按真实归因场景改写的示例，由页面内写死的树算出，本轮<strong>没有</strong>接入任何真实模型。</span>
+    <span>灵感来源：真实机会卡《决策工程平台：把企业里成千上万次「分类/路由/打分」的人工判断换成 AI 决策服务》＋ 本人问数产品笔记里的「问数 → 归因 → 预警」三步</span>
+    <span class="foot-link-row">
+      <a class="foot-link" href="../cards.html?id=282" target="_blank" rel="noopener noreferrer">看这张机会卡 ↗</a>
+    </span>
+    <span>零依赖单文件 · 可离线双击打开 · 无外部请求 · 无密钥</span>
+  </footer>
+</div>
+
+<div class="pnav" role="navigation" aria-label="期号切换" data-shell="pnav" data-no="8" data-base="p" data-pos="bottom"></div>
+
+<section class="psrc" aria-label="这一期的灵感来源">
+  <h2 class="psrc-h">这一期的灵感来源</h2>
+  <p class="psrc-meta">2026-11-08 · 机会卡《决策工程平台：把企业里成千上万次「分类/路由/打分」的人工判断，换成 10 倍速、低成本的 AI 决策服务》＋ 本人问数产品笔记</p>
+  <p class="psrc-line"><b>原始信号：</b>把企业里反复发生的人工判断（分类 / 路由 / 打分）沉淀成可评测的 AI 决策服务。</p>
+  <p class="psrc-note">机会卡与信号是真实记录；「问数 → 归因 → 报告预警」三步与归因纪律来自本人的产品笔记（内部资料，不公开）。</p>
+  <p class="psrc-line"><b>灵灵据此延伸的设想：</b>问数解决「多少」，归因解决「为什么」—— 但归因最容易变成讲故事：任何一个听起来合理的原因，都能被讲成答案。所以这一期给每个假设配一个数字：<b>它解释了几个百分点</b>。解释不了 8 pp 以上，就不是主因。</p>
+  <p class="psrc-note">这一段是灵灵的二次创作。缺口、假设与贡献值均为本实验编写的示例，不代表任何公司口径。</p>
+  <p class="psrc-links">
+    <a href="../cards.html?id=282">看这张机会卡 ›</a>
+    <a href="../cards-all.html">全部机会卡 ›</a>
+  </p>
+  <p class="psrc-data">示例数据 · 规则模拟 —— 本期的树结构、贡献值与判词都由页面本地规则算出，未接入真实模型，无后端调用、无 API key、无外部请求。</p>
+</section>
+
+<section class="psrc" data-shell="judgment" data-no="8"></section>
+
+<script src="episodes.js"></script>
+<script src="../exp-shell.js"></script>
+<script>
+(function(){
+  'use strict';
+
+  var GAP = 12;
+  /* 第一层是"线索"，只带影响面（scope），不计入已解释；
+     第二层才是"原因"，带 delta，才是真正解释掉的百分点。 */
+  var TREE = {
+    q: '销售额环比 −12%，先看哪一层？',
+    opts: [
+      { id:'a', label:'华东区域下滑最明显', hint:'占大盘 38% 的区域', scope:8,
+        ev:'华东确实掉得最多（−31%）—— 但「区域下滑」只是线索，说明缺口在哪，不说明为什么。往下追。',
+        next:[
+          { id:'a1', label:'华东经销商库存积压，压着不进货', hint:'渠道侧反馈', delta:9, ev:'华东 Top5 经销商库存周转从 32 天涨到 58 天 —— 进货停了，销售自然掉。它能解释 9 pp，是主因。' },
+          { id:'a2', label:'华东天气异常，到店人流下降', hint:'天气数据', delta:0, ev:'天气偏离常年 1.2 个标准差，但同期线上订单没掉。解释不了缺口。' },
+          { id:'a3', label:'华东新开了两家竞品门店', hint:'竞品监测', delta:2, ev:'新店确实分流了，但只在两个城市、影响 2 pp。是次因，不是主因。' }
+        ]},
+      { id:'b', label:'品类 A 缺货', hint:'供应链侧', scope:3,
+        ev:'品类 A 缺货 3 天，影响面最多 3 pp。真实，但撑不起 12 pp 的缺口。',
+        next:[
+          { id:'b1', label:'缺货是因为主力供应商延迟', hint:'采购记录', delta:3, ev:'供应商延迟 4 天，缺货 3 天。这条链总共解释 3 pp —— 真实，但只是次因。' },
+          { id:'b2', label:'缺货其实是结果：卖不动才不补货', hint:'反查因果方向', delta:0, ev:'对。补货停了是因为预测到需求下滑 —— 你把结果当成了原因。' }
+        ]},
+      { id:'c', label:'渠道 B 投放停了', hint:'市场侧', scope:1,
+        ev:'B 渠道投放确实停了 40%，但 B 只占大盘 8%，影响面最多 1 pp。',
+        next:[
+          { id:'c1', label:'B 渠道换成了低价流量，转化更差', hint:'投放明细', delta:1, ev:'转化率从 3.1% 掉到 2.4%，但体量太小，仍然只有 1 pp。' },
+          { id:'c2', label:'B 停了之后自然流量补上了', hint:'交叉验证', delta:0, ev:'自然流量同期 +6%，恰好补平。这条线索没有解释力。' }
+        ]}
+    ]
+  };
+
+  var path = [];
+  var elChain = document.getElementById('chain');
+  var elActions = document.getElementById('actions');
+  var elGapV = document.getElementById('gapV');
+  var elGapSub = document.getElementById('gapSub');
+  var elFill = document.getElementById('trackFill');
+  var elFinal = document.getElementById('final');
+  var elFinalH = document.getElementById('finalH');
+  var elFinalB = document.getElementById('finalB');
+  var elReset = document.getElementById('reset');
+
+  function sumDelta(){
+    if (!path.length) return 0;
+    var last = path[path.length - 1];
+    return typeof last.delta === 'number' ? last.delta : 0;
+  }
+
+  function render(){
+    var total = sumDelta();
+    elGapV.textContent = Math.round(total) + ' / ' + GAP + ' pp';
+    elFill.style.width = Math.min(100, (total / GAP) * 100) + '%';
+    elGapSub.textContent = path.length === 0
+      ? '还没追任何一层。已解释 0 个百分点。'
+      : (typeof path[path.length-1].delta !== 'number'
+          ? '这是线索（影响面 ' + path[path.length-1].scope + ' pp），还不是原因 —— 至少再追一层。'
+          : '已追 ' + path.length + ' 层，解释了 ' + Math.round(total) + ' 个百分点，残差 ' + Math.max(0, Math.round(GAP - total)) + ' pp。');
+
+    var html = '';
+    for (var i = 0; i < path.length; i++) {
+      var p = path[i];
+      var isLeaf = typeof p.delta === 'number';
+      var amt = isLeaf ? (p.delta > 0 ? '+' + p.delta + ' pp' : '0 pp') : ('影响面 ' + p.scope + ' pp');
+      var cls = isLeaf ? (p.delta > 0 ? 'plus' : 'zero') : 'scope';
+      html += '<div class="q"><div class="q-k">第 ' + (i+1) + ' 层</div>' +
+        '<div class="picked"><div class="picked-h"><span class="picked-t">' + p.label + '</span>' +
+        '<span class="pp ' + cls + '">' + amt + '</span></div>' +
+        '<div class="picked-ev">' + p.ev + '</div></div></div>';
+    }
+
+    var node = current();
+    if (node) {
+      html += '<div class="q"><div class="q-k">' + (path.length === 0 ? '第一层' : '第 ' + (path.length+1) + ' 层') + '</div>' +
+        '<div class="q-t">' + node.q + '</div>' +
+        '<ul class="opts">' + node.opts.map(function(o){
+          return '<li><button class="opt" type="button" data-id="' + o.id + '">' +
+            '<b>' + o.label + '</b><span>' + o.hint + '</span></button></li>';
+        }).join('') + '</ul></div>';
+    }
+    elChain.innerHTML = html;
+
+    elActions.innerHTML = '';
+    if (!node && path.length > 0) {
+      var b = document.createElement('button');
+      b.className = 'btn';
+      b.type = 'button';
+      b.textContent = '收网，看这条链站不站得住';
+      b.addEventListener('click', showFinal);
+      elActions.appendChild(b);
+    }
+  }
+
+  function current(){
+    if (path.length === 0) return TREE;
+    var node = TREE;
+    for (var i = 0; i < path.length; i++) {
+      var p = path[i];
+      var found = null;
+      (node.opts || []).forEach(function(o){ if (o.id === p.id) found = o; });
+      if (!found) return null;
+      if (i === path.length - 1) return found.next ? { q:'顺着这条再追一层？', opts: found.next } : null;
+      node = found.next ? { q:'', opts: found.next } : null;
+      if (!node) return null;
+    }
+    return null;
+  }
+
+  function pick(id){
+    var node = current();
+    if (!node) return;
+    var chose = null;
+    (node.opts || []).forEach(function(o){ if (o.id === id) chose = o; });
+    if (!chose) return;
+    path.push(chose);
+    render();
+    if (path.length >= 2) {
+      // 两层之后给"收网"入口，但仍然允许继续追（若有下一层）
+      var n = current();
+      if (!n) {
+        var b = document.createElement('button');
+        b.className = 'btn';
+        b.type = 'button';
+        b.textContent = '收网，看这条链站不站得住';
+        b.addEventListener('click', showFinal);
+        elActions.innerHTML = '';
+        elActions.appendChild(b);
+      }
+    }
+  }
+
+  function showFinal(){
+    var total = Math.round(sumDelta());
+    var residual = Math.max(0, GAP - total);
+    elFinal.hidden = false;
+    if (total >= 8) {
+      elFinalH.textContent = '这条链站得住：解释 ' + total + ' pp，残差 ' + residual + ' pp';
+      elFinalB.innerHTML = '主因找到了 —— 它能量化解释掉大部分缺口。剩下的 ' + residual + ' pp 仍然要交代，' +
+        '但你已经可以说清「主要因为什么」。<br><br>' +
+        '注意：这条链里有一步是<b>反查因果方向</b>（缺货是结果还是原因）。归因最容易错的地方不是找不到原因，' +
+        '是<b>把结果当成了原因</b>。';
+    } else {
+      elFinalH.textContent = '这条链站不住：只解释 ' + total + ' pp，还差 ' + residual + ' pp';
+      elFinalB.innerHTML = '你选的每一层听起来都合理，但加起来解释不了 12 pp。' +
+        '这就是归因的陷阱：<b>相关性高 ≠ 解释力强</b>。要么换一条链，要么承认「原因还没找到」。' +
+        '<br><br>判断标准只有一条：<b>它解释了几个百分点。</b>解释不到 8 pp，就不是主因。';
+    }
+  }
+
+  elChain.addEventListener('click', function(e){
+    var btn = e.target.closest ? e.target.closest('button[data-id]') : null;
+    if (!btn) return;
+    pick(btn.getAttribute('data-id'));
+  });
+
+  elReset.addEventListener('click', function(){
+    path = []; elFinal.hidden = true; elActions.innerHTML = ''; render();
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>

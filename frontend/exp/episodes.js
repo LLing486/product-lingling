@@ -11,7 +11,7 @@
  * 字段说明见 docs/episode-contract.md
  */
 window.LING_EPISODES = {
-  updated: "2026-10-20",
+  updated: "2026-11-14",
   episodes: [
     {
       no: 1,
@@ -106,6 +106,54 @@ window.LING_EPISODES = {
       signal: "DeepSeek-V4.1-Flash-20261017 登顶 Code Arena: WebDev 开源模型榜首。",
       sourceTitle: "阅读原文 ↗",
       sourceUrl: "https://aihot.news/items/bm95oliei5mcgy2tau7e22d59",
+      judgmentCurrent: "",
+      reviewPrev: ""
+    },
+    {
+      no: 7,
+      date: "2026-10-25",
+      file: "p7.html",
+      tag: "对账单",
+      title: "同一句「上个月卖了多少」，三个数都对",
+      short: "三个数都对",
+      motif: "判断类",
+      card: { id: 198, title: "把企业数据仪表盘变成「可对话的短视频」——原生多模态模型驱动的数据叙事引擎" },
+      theme: { bg: "#EBF1F0", ink: "#16211F", accent: "#0F6E7A", accentInk: "#0B5A64", soft: "#DCEBEC" },
+      signal: "WorkBuddy 上线 DeepSeek V4.1-Flash，免费试用两周。",
+      sourceTitle: "阅读原文 ↗",
+      sourceUrl: "https://aihot.news/items/cmtvqbs1q03q9rofb98re4l3n",
+      judgmentCurrent: "",
+      reviewPrev: ""
+    },
+    {
+      no: 8,
+      date: "2026-11-08",
+      file: "p8.html",
+      tag: "追问树",
+      title: "销售额降了 12%，AI 说「因为华东」",
+      short: "AI 说因为华东",
+      motif: "分支类",
+      card: { id: 282, title: "决策工程平台：把企业里成千上万次「分类/路由/打分」的人工判断，换成 10 倍速、低成本的 AI 决策服务" },
+      theme: { bg: "#F2ECE2", ink: "#241C16", accent: "#6B4A2F", accentInk: "#593C25", soft: "#EEDFCF" },
+      signal: "OpenAI 正式发布 Decisions API，面向低延迟低成本小决策。",
+      sourceTitle: "阅读原文 ↗",
+      sourceUrl: "https://aihot.news/items/xffhf8h0e0r145getmi9k1zgs",
+      judgmentCurrent: "",
+      reviewPrev: ""
+    },
+    {
+      no: 9,
+      date: "2026-11-14",
+      file: "p9.html",
+      tag: "推送单",
+      title: "一天推 40 条预警，等于一条都没推",
+      short: "推多了等于没推",
+      motif: "取舍类",
+      card: { id: 312, title: "AI 一级市场情报 Agent：把融资与 IPO 信号自动转成投资决策简报" },
+      theme: { bg: "#ECEFF3", ink: "#18202A", accent: "#3D4A5C", accentInk: "#2E3949", soft: "#DEE3EA" },
+      signal: "Anthropic 拟感恩节前 IPO，接受低于预期的估值，募资 800–1000 亿美元。",
+      sourceTitle: "阅读原文 ↗",
+      sourceUrl: "https://aihot.news/items/okhx4jjwucd647299qwzsl6ua",
       judgmentCurrent: "",
       reviewPrev: ""
     }

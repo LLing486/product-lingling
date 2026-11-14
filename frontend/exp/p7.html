@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>第 07 期 · 对账单 · 灵灵 · 每周实验</title>
+<style>
+/* ══════════════════════════════════════════════════════════
+   第 07 期 · 主题「对账单」
+   形态：一张张对账单。左边四行条件（白盒），右边一个数。
+   你要判的不是"数字合不合理"，是"这四个条件对不对得上你问的那句话"。
+   ══════════════════════════════════════════════════════════ */
+:root{
+  --paper:#EBF1F0; --paper-2:#DEE8E6; --surface:#FDFEFD;
+  --ink:#16211F; --ink-2:#57665F; --ink-3:#8A988F;
+  --accent:#0F6E7A; --accent-ink:#0B5A64; --accent-bg:#DCEBEC;
+  --warn:#A2451F; --warn-bg:#F4E3DA;
+  --line:rgba(22,33,31,.18); --line-soft:rgba(22,33,31,.09);
+  --serif: Georgia,'Times New Roman','Songti SC','SimSun',serif;
+  --sans: -apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;
+  --mono:'SF Mono','JetBrains Mono',Menlo,Consolas,monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:15.5px;line-height:1.7;min-height:100vh;overflow-x:hidden}
+button{font-family:inherit;cursor:pointer}
+a{color:var(--ink-2);text-decoration:underline;text-underline-offset:2px}
+a:hover{color:var(--accent-ink)}
+[hidden]{display:none!important}
+b,strong{font-weight:700}
+.wrap{max-width:1000px;margin:0 auto;padding:0 20px 64px}
+
+.masthead{padding:32px 0 16px;border-bottom:1px solid var(--line)}
+.mast-top{display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap}
+.brand{font-family:var(--serif);font-size:24px;font-weight:700;letter-spacing:.02em}
+.brand small{font-size:11px;font-weight:400;color:var(--ink-3);letter-spacing:.14em;margin-left:8px}
+.mast-meta{display:flex;gap:12px;align-items:baseline;font-size:11.5px;color:var(--ink-3);flex-wrap:wrap;font-variant-numeric:tabular-nums}
+.issue-no{font-family:var(--mono);font-weight:700;color:var(--ink);letter-spacing:.08em}
+
+.lede{padding:24px 0 0}
+.lede-title{font-family:var(--serif);font-size:clamp(26px,3.4vw,34px);font-weight:700;letter-spacing:-.02em;line-height:1.2}
+.lede-sub{font-size:15px;color:var(--ink-2);margin-top:12px;max-width:36em}
+.lede-sub b{color:var(--ink)}
+
+/* 进度 */
+.prog{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:32px 0 0;padding-bottom:10px;border-bottom:1px solid var(--line)}
+.prog-k{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;color:var(--ink-3);text-transform:uppercase}
+.prog-v{font-family:var(--mono);font-size:12px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+
+/* 对账单 */
+.bill{margin-top:16px;background:var(--surface);border:1px solid var(--line);border-top:3px solid var(--accent)}
+.bill-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;padding:14px 20px 12px;border-bottom:1px solid var(--line-soft)}
+.bill-no{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;color:var(--ink-3)}
+.bill-ask{font-family:var(--serif);font-size:19px;font-weight:700;line-height:1.4;margin-top:4px}
+.bill-body{display:grid;grid-template-columns:1fr;gap:0}
+@media (min-width:760px){.bill-body{grid-template-columns:minmax(0,1fr) minmax(0,320px)}}
+
+.conds{padding:14px 20px;border-bottom:1px solid var(--line-soft)}
+@media (min-width:760px){.conds{border-bottom:0;border-right:1px solid var(--line-soft)}}
+.conds-k{font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--ink-3);text-transform:uppercase;margin-bottom:8px}
+.cond{display:grid;grid-template-columns:64px 1fr;gap:10px;padding:7px 0;border-top:1px solid var(--line-soft);font-size:13.5px}
+.cond:first-of-type{border-top:0}
+.cond-k{color:var(--ink-3);font-size:12px}
+.cond-v{font-variant-numeric:tabular-nums}
+
+.amount{padding:14px 20px;display:flex;flex-direction:column;justify-content:center;gap:4px;background:var(--paper-2)}
+.amount-k{font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--ink-3);text-transform:uppercase}
+.amount-v{font-family:var(--serif);font-size:clamp(32px,5vw,44px);font-weight:700;line-height:1.05;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.amount-u{font-size:12px;color:var(--ink-2)}
+
+.judge{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:14px 20px 18px;border-top:1px solid var(--line-soft)}
+.jbtn{min-height:48px;padding:8px 12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:14px;font-weight:700;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:1px}
+.jbtn span{font-family:var(--mono);font-size:10px;font-weight:400;color:var(--ink-3);letter-spacing:.08em}
+.jbtn:hover{border-color:var(--accent);background:var(--accent-bg)}
+.jbtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.jbtn[disabled]{opacity:.45;cursor:default}
+.jbtn.yes.is-picked{border-color:var(--accent);background:var(--accent-bg)}
+.jbtn.no.is-picked{border-color:var(--warn);background:var(--warn-bg)}
+
+.verdict{padding:14px 20px 18px;border-top:1px solid var(--line-soft)}
+.verdict-k{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;margin-bottom:6px}
+.verdict.ok .verdict-k{color:var(--accent-ink)}
+.verdict.bad .verdict-k{color:var(--warn)}
+.verdict p{font-size:13.5px;line-height:1.75}
+.verdict b{color:var(--ink)}
+
+/* 结算 */
+.final{margin-top:24px;padding:20px;background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--accent)}
+.final-h{font-family:var(--serif);font-size:22px;font-weight:700;letter-spacing:-.01em}
+.final-body{font-size:14px;line-height:1.8;margin-top:8px}
+.recap{list-style:none;margin-top:14px;display:grid;gap:6px}
+.recap li{display:grid;grid-template-columns:52px 1fr auto;gap:10px;font-size:12.5px;padding:7px 0;border-top:1px solid var(--line-soft);align-items:baseline}
+.recap li .rn{font-family:var(--mono);color:var(--ink-3)}
+.recap li .rv{font-family:var(--mono);font-size:11px;letter-spacing:.08em}
+.recap li .rv.hit{color:var(--accent-ink)}
+.recap li .rv.miss{color:var(--warn)}
+.reset{margin-top:16px;min-height:44px;padding:0 18px;border:1px solid var(--ink);background:var(--ink);color:var(--paper);font-size:13px;font-weight:700}
+.reset:hover{background:#0C1412}
+.reset:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+
+.foot{margin-top:32px;padding-top:14px;border-top:1px solid var(--line);font-size:11.5px;color:var(--ink-2);display:flex;flex-direction:column;gap:5px}
+.foot .mock-line{color:var(--ink)}
+.foot-link-row{display:flex}
+.foot-link{display:inline-flex;align-items:center;min-height:44px;padding:0 12px;border:1px solid var(--line);background:var(--surface);font-size:12.5px;font-weight:600;text-decoration:none;color:var(--ink)}
+.foot-link:hover{border-color:var(--accent);background:var(--accent-bg);color:var(--accent-ink)}
+.foot-link:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}}
+
+.lnav{position:sticky;top:0;z-index:9999;display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:6px 14px;background:#12141c;border-bottom:1px solid rgba(255,255,255,.14);font-family:inherit;font-size:13px;line-height:1}
+.lnav a{color:rgba(255,255,255,.74);text-decoration:none;display:inline-flex;align-items:center;min-height:44px;padding:0 2px}
+.lnav a:hover{color:#fff;text-decoration:underline}
+.lnav a:focus-visible{color:#fff;outline:2px solid #7cc4ff;outline-offset:2px;border-radius:3px}
+.lnav-brand{font-weight:700;color:#fff!important;letter-spacing:.04em}
+.lnav-sep{width:1px;height:16px;background:rgba(255,255,255,.22)}
+.lnav-i[aria-current="page"]{color:#fff;font-weight:600}
+
+.pnav{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:10px 14px;border-bottom:1px solid rgba(0,0,0,.08);font-size:14px;background:var(--paper)}
+.pnav a,.pnav span{display:inline-flex;align-items:center;min-height:44px}
+.pnav-prev,.pnav-next{font-weight:600;text-decoration:none}
+.pnav-prev.is-off,.pnav-next.is-off{opacity:.38}
+.pnav-list{display:inline-flex;gap:6px}
+.pnav-list a{min-width:44px;justify-content:center;text-decoration:none;padding:0 6px}
+.pnav-list a[aria-current="page"]{font-weight:700;background:var(--accent-bg);color:var(--accent-ink);text-decoration:none}
+
+.psrc{max-width:1000px;margin:0 auto;padding:6px 20px 40px;background:var(--paper)}
+.psrc-h{font-family:var(--serif);font-size:17px;font-weight:700;letter-spacing:.04em;margin-bottom:9px}
+.psrc-meta{font-size:12.5px;color:var(--ink-2);margin-bottom:12px;overflow-wrap:anywhere}
+.psrc-line{font-size:13.5px;line-height:1.78;margin:10px 0;overflow-wrap:anywhere}
+.psrc-note{font-size:12px;line-height:1.72;color:var(--ink-2);margin:8px 0;padding-left:11px;border-left:2px solid var(--accent-bg)}
+.psrc-links{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0 12px}
+.psrc-links a{display:inline-flex;align-items:center;min-height:44px;padding:0 13px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:12.5px;font-weight:600;text-decoration:none}
+.psrc-links a:hover{border-color:var(--accent);background:var(--accent-bg)}
+.psrc-data{font-size:11.5px;line-height:1.66;color:var(--ink-2);margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+</style>
+</head>
+<body>
+
+<nav class="lnav" aria-label="站点导航">
+  <a class="lnav-brand" href="../index.html">灵灵</a>
+  <span class="lnav-sep" aria-hidden="true"></span>
+  <a class="lnav-i" href="../index.html" aria-current="page">全部实验</a>
+  <a class="lnav-i" href="../cards.html">机会卡</a>
+  <a class="lnav-i" href="../cards-all.html">全部卡片</a>
+</nav>
+
+<div class="pnav" role="navigation" aria-label="期号切换" data-shell="pnav" data-no="7" data-base="p" data-pos="top"></div>
+
+<div class="wrap">
+  <header class="masthead">
+    <div class="mast-top">
+      <div class="brand">灵灵<small>每周实验</small></div>
+      <div class="mast-meta">
+        <span class="issue-no">第 07 期</span>
+        <span>2026-10-25</span>
+        <span>示例数据 · 规则模拟</span>
+      </div>
+    </div>
+  </header>
+
+  <section class="lede">
+    <h1 class="lede-title">同一句「上个月卖了多少」，<br>三个数都对</h1>
+    <p class="lede-sub">问数工具不会报错，它只会给你一个**看起来对**的数字。这里不给你 SQL，只给你白盒的四个条件 —— <b>你要判的是这四个条件对不对得上你问的那句话</b>。</p>
+  </section>
+
+  <div class="prog">
+    <span class="prog-k">对账单</span>
+    <span class="prog-v" id="progV">01 / 05</span>
+  </div>
+
+  <div id="bills"></div>
+
+  <section class="final" id="final" hidden>
+    <div class="final-h" id="finalH"></div>
+    <div class="final-body" id="finalB"></div>
+    <ul class="recap" id="recap"></ul>
+    <button class="reset" id="reset" type="button">重新对一遍</button>
+  </section>
+
+  <footer class="foot">
+    <span class="mock-line">本页为 <strong>示例数据 · 规则模拟</strong>：五张对账单是按真实问数场景改写的示例，判定由页面内写死的口径规则算出，本轮<strong>没有</strong>接入任何真实模型。</span>
+    <span>灵感来源：真实机会卡《把企业数据仪表盘变成「可对话的短视频」》＋ 我自己做企业问答/问数时的口径教训（内部资料，不公开）</span>
+    <span class="foot-link-row">
+      <a class="foot-link" href="https://aihot.news/items/cmtvqbs1q03q9rofb98re4l3n" target="_blank" rel="noopener noreferrer">原文链接 ↗</a>
+    </span>
+    <span>零依赖单文件 · 可离线双击打开 · 无外部请求 · 无密钥</span>
+  </footer>
+</div>
+
+<div class="pnav" role="navigation" aria-label="期号切换" data-shell="pnav" data-no="7" data-base="p" data-pos="bottom"></div>
+
+<section class="psrc" aria-label="这一期的灵感来源">
+  <h2 class="psrc-h">这一期的灵感来源</h2>
+  <p class="psrc-meta">2026-10-25 · 机会卡《把企业数据仪表盘变成「可对话的短视频」》＋ 本人做企业知识问答与问数时的口径教训</p>
+  <p class="psrc-line"><b>原始信号：</b>原生多模态模型驱动的数据叙事引擎 —— 让仪表盘可以被"问"。</p>
+  <p class="psrc-note">机会卡与信号是真实记录；「白盒四条件」与口径陷阱来自本人的产品笔记（内部资料，不公开）。</p>
+  <p class="psrc-line"><b>灵灵据此延伸的设想：</b>大家都在讨论问数"准不准"，但真正的失败不是报错，是<b>语法对、图表正常、口径错了 —— 而没有人发现</b>。所以这一期把问数结果拆成一张对账单：条件在左，数字在右，你只能靠条件判断它可不可信。</p>
+  <p class="psrc-note">这一段是灵灵的二次创作。五张对账单、条件与数字均为本实验编写的示例，不代表任何公司口径。</p>
+  <p class="psrc-links">
+    <a href="../cards.html?id=198">看这张机会卡 ›</a>
+    <a href="../cards-all.html">全部机会卡 ›</a>
+  </p>
+  <p class="psrc-data">示例数据 · 规则模拟 —— 本期的账单、条件与判定都由页面本地规则算出，未接入真实模型，无后端调用、无 API key、无外部请求。</p>
+</section>
+
+<section class="psrc" data-shell="judgment" data-no="7"></section>
+
+<script src="episodes.js"></script>
+<script src="../exp-shell.js"></script>
+<script>
+(function(){
+  'use strict';
+
+  var BILLS = [
+    {
+      no:'01', ask:'上个月我们卖了多少单？', value:'12,480', unit:'单',
+      conds:[['时间','2026-09-01 ~ 09-30，按下单时间'],['指标','已支付订单数'],['分组','不分组（全渠道）'],['排序','无']],
+      trust:true,
+      why:'四个条件和你问的「卖了多少单」对得上：按下单时间、已支付、不分组。这个数能信。'
+    },
+    {
+      no:'02', ask:'上个月 GMV 多少？', value:'1,284', unit:'万元',
+      conds:[['时间','2026-09-01 ~ 09-30，按支付时间'],['指标','GMV（<b>含退款订单</b>）'],['分组','全区域'],['排序','无']],
+      trust:false,
+      why:'问题问 GMV，条件里却含退款订单。数字不会报错，图也正常 —— 但口径已经不是你要的那个。正确做法：先确认 GMV 是否扣退款，再取数。'
+    },
+    {
+      no:'03', ask:'上个月有多少活跃用户？', value:'86.4', unit:'万人',
+      conds:[['时间','2026-09-01 ~ 09-30'],['指标','<b>日活（DAU）</b>'],['分组','全端'],['排序','无']],
+      trust:false,
+      why:'「活跃用户」在多数团队指去重月活，这里给的是 DAU 月均值。两个数都"对"，但不是同一个问题 —— 这类错误最难发现，因为量级看着合理。'
+    },
+    {
+      no:'04', ask:'上个月华东卖了多少？', value:'312', unit:'万元',
+      conds:[['时间','2026-09-01 ~ 09-30，按支付时间'],['指标','销售额（已支付、扣退款）'],['分组','按<b>收货地址</b>归华东'],['排序','无']],
+      trust:true,
+      why:'条件写明了「按收货地址」—— 这是华东口径里最容易吵架的一处，写清楚就能信。记不住这一条的人，下次会问出另一个数。'
+    },
+    {
+      no:'05', ask:'上个月客单价多少？', value:'1,028', unit:'元',
+      conds:[['时间','2026-09-01 ~ 09-30'],['指标','GMV ÷ 已支付订单数'],['分组','全渠道'],['排序','无']],
+      trust:true,
+      why:'分子分母同期间、同口径（都扣退款），除法本身没有陷阱。客单价能信，前提是它引用的那两个数都能信。'
+    }
+  ];
+
+  var idx = 0, answers = [];
+  var elBills = document.getElementById('bills');
+  var elProg = document.getElementById('progV');
+  var elFinal = document.getElementById('final');
+  var elFinalH = document.getElementById('finalH');
+  var elFinalB = document.getElementById('finalB');
+  var elRecap = document.getElementById('recap');
+  var elReset = document.getElementById('reset');
+
+  function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+
+  function renderBill(){
+    if (idx >= BILLS.length) { renderFinal(); return; }
+    var b = BILLS[idx];
+    elProg.textContent = String(idx+1).padStart(2,'0') + ' / ' + String(BILLS.length).padStart(2,'0');
+    elFinal.hidden = true;
+    var conds = b.conds.map(function(c){
+      return '<div class="cond"><span class="cond-k">'+esc(c[0])+'</span><span class="cond-v">'+c[1]+'</span></div>';
+    }).join('');
+    elBills.innerHTML =
+      '<article class="bill">' +
+        '<div class="bill-head"><div><div class="bill-no">对账单 NO.'+b.no+'</div>' +
+          '<div class="bill-ask">'+esc(b.ask)+'</div></div></div>' +
+        '<div class="bill-body">' +
+          '<div class="conds"><div class="conds-k">取数条件（白盒）</div>'+conds+'</div>' +
+          '<div class="amount"><div class="amount-k">结果</div>' +
+            '<div class="amount-v">'+esc(b.value)+'</div><div class="amount-u">'+esc(b.unit)+'</div></div>' +
+        '</div>' +
+        '<div class="judge">' +
+          '<button class="jbtn yes" type="button" data-j="1"><b>能信</b><span>条件对得上这个问题</span></button>' +
+          '<button class="jbtn no" type="button" data-j="0"><b>存疑</b><span>条件有问题 / 说不清</span></button>' +
+        '</div>' +
+        '<div class="verdict" id="vd" hidden></div>' +
+      '</article>';
+  }
+
+  function judge(trust){
+    var b = BILLS[idx];
+    answers.push({no:b.no, said:trust, right:b.trust});
+    var vd = document.getElementById('vd');
+    var correct = (trust === b.trust);
+    vd.className = 'verdict ' + (correct ? 'ok' : 'bad');
+    vd.innerHTML = '<div class="verdict-k">' + (correct ? '判对了' : '判错了') + ' · 这张单的真相</div><p>' + b.why + '</p>';
+    vd.hidden = false;
+    var btns = document.querySelectorAll('.jbtn');
+    for (var i=0;i<btns.length;i++){
+      btns[i].disabled = true;
+      if (btns[i].getAttribute('data-j') === (trust?'1':'0')) btns[i].classList.add('is-picked');
+    }
+    var next = document.createElement('div');
+    next.className = 'judge';
+    next.innerHTML = '<button class="jbtn yes" type="button" id="nextBtn" style="grid-column:1/-1"><b>下一张 →</b><span>' +
+      (idx+1 < BILLS.length ? '还剩 ' + (BILLS.length-idx-1) + ' 张' : '看结算') + '</span></button>';
+    document.querySelector('.bill').appendChild(next);
+    document.getElementById('nextBtn').addEventListener('click', function(){ idx++; renderBill(); });
+  }
+
+  function renderFinal(){
+    elBills.innerHTML = '';
+    elProg.textContent = '完成';
+    elFinal.hidden = false;
+    var wrong = answers.filter(function(a){ return a.said !== a.right; }).length;
+    var trustedBad = answers.filter(function(a){ return a.said && !a.right; }).length;
+    elFinalH.textContent = wrong === 0
+      ? '五张全判对：你信的是条件，不是数字'
+      : (trustedBad > 0
+          ? '你判错了 ' + wrong + ' 张，其中把 ' + trustedBad + ' 个错数当成能信的'
+          : '你判错了 ' + wrong + ' 张 —— 全是把能信的当成存疑，保守，但会白查很多数');
+    elFinalB.innerHTML =
+      '问数最贵的错误不是报错，是<b>语法对、图表正常、口径错了而没人发现</b>。所以判断顺序应该是：' +
+      '先看四个条件对不对得上你问的那句话，再看数字合不合理 —— 反过来就一定会被骗。' +
+      '<br><br>你这一轮信的 ' + answers.filter(function(a){return a.said;}).length + ' 张里，有 ' + trustedBad + ' 张其实口径有问题。' +
+      '这就是「AI 解决率」永远比「准确率」更值得报的原因：<b>错的那部分不会举手。</b>';
+    elRecap.innerHTML = answers.map(function(a){
+      var ok = a.said === a.right;
+      return '<li><span class="rn">NO.'+a.no+'</span><span>你判：'+(a.said?'能信':'存疑')+' · 实际：'+(a.right?'能信':'存疑')+'</span>' +
+        '<span class="rv '+(ok?'hit':'miss')+'">'+(ok?'✓':'✗')+'</span></li>';
+    }).join('');
+  }
+
+  elBills.addEventListener('click', function(e){
+    var btn = e.target.closest ? e.target.closest('button[data-j]') : null;
+    if (!btn || btn.disabled) return;
+    judge(btn.getAttribute('data-j') === '1');
+  });
+
+  elReset.addEventListener('click', function(){ idx = 0; answers = []; renderBill(); });
+
+  renderBill();
+})();
+</script>
+</body>
+</html>
